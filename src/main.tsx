@@ -3,13 +3,19 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { ProjectProvider } from './contexts/ProjectContext.tsx';
+import { MemberProvider } from './contexts/MemberContext.tsx';
+import { ExpenseProvider } from './contexts/ExpenseContext.tsx';
 import './index.scss'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
       <ProjectProvider>
-        <App />
+        <MemberProvider>
+          <ExpenseProvider>
+            <App />
+          </ExpenseProvider>
+        </MemberProvider>
       </ProjectProvider>
     </AuthProvider>
   </React.StrictMode>,
