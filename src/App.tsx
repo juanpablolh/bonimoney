@@ -14,7 +14,7 @@ import ExpensesSection from './components/ExpensesSection';
 import CookieBanner from './components/CookieBanner';
 import { useAuth } from './contexts/AuthContext';
 import AuthModal from './components/auth/AuthModal';
-// import UserProfile from './components/auth/UserProfile'; // TODO: Add to settings page
+import { ProjectSelector } from './components/projects/ProjectSelector';
 
 function App() {
   const { user, signOut } = useAuth();
@@ -424,12 +424,17 @@ function App() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {/* Header */}
       <Header aria-label="Bonimoney">
         <div style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center' }}>
           <HeaderName href="#" prefix="" style={{ fontSize: '20px' }}>
             Bonimoney
           </HeaderName>
+
+          {/* Project Selector */}
+          <div style={{ marginLeft: '2rem' }}>
+            <ProjectSelector />
+          </div>
+
           <HeaderGlobalBar style={{ marginLeft: 'auto' }}>
             {user ? (
               <>
