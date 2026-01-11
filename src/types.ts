@@ -6,22 +6,27 @@ export interface Member {
 
 export type Currency = 'CLP' | 'USD' | 'BRL' | 'ARS' | 'EUR' | 'GBP' | 'PEN';
 
-export type ExpenseIcon = 
-  | 'Restaurant' 
-  | 'Car' 
-  | 'ShoppingCart' 
-  | 'Home' 
-  | 'Airplane' 
-  | 'GasStation' 
-  | 'Hospital' 
-  | 'Education' 
-  | 'ShoppingBag' 
-  | 'Cafe' 
-  | 'Movie' 
-  | 'Music' 
-  | 'Gift' 
-  | 'Receipt' 
+export type ExpenseIcon =
+  | 'Restaurant'
+  | 'Car'
+  | 'ShoppingCart'
+  | 'Home'
+  | 'Airplane'
+  | 'GasStation'
+  | 'Hospital'
+  | 'Education'
+  | 'ShoppingBag'
+  | 'Cafe'
+  | 'Movie'
+  | 'Music'
+  | 'Gift'
+  | 'Receipt'
   | 'Wallet';
+
+export interface Split {
+  memberId: string;
+  amountOwed: number;
+}
 
 export interface Expense {
   id: string;
@@ -33,6 +38,7 @@ export interface Expense {
   date: Date;
   icon?: ExpenseIcon;
   lastModified?: number; // timestamp
+  splits?: Split[]; // Optional splits for advanced calculation
 }
 
 export interface Balance {

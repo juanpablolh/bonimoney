@@ -94,13 +94,23 @@ export const calculateBalancesByCurrency = (
     }
 
     // Calculate how much each person owes
-    const splitAmount = expense.amount / expense.splitBetween.length;
-    expense.splitBetween.forEach((memberId) => {
-      const balance = balances.get(memberId);
-      if (balance) {
-        balance.totalOwed += splitAmount;
-      }
-    });
+    if (expense.splits && expense.splits.length > 0) {
+      expense.splits.forEach((split) => {
+        const balance = balances.get(split.memberId);
+        if (balance) {
+          balance.totalOwed += split.amountOwed;
+        }
+      });
+    } else {
+      // Fallback to equal split if no splits provided (legacy)
+      const splitAmount = expense.amount / expense.splitBetween.length;
+      expense.splitBetween.forEach((memberId) => {
+        const balance = balances.get(memberId);
+        if (balance) {
+          balance.totalOwed += splitAmount;
+        }
+      });
+    }
   });
 
   // Calculate final balance for each currency

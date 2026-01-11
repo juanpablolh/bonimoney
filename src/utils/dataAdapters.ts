@@ -35,6 +35,10 @@ export function adaptExpense(contextExpense: ExpenseWithSplits): OldExpense {
         date: new Date(contextExpense.date),
         icon: undefined, // TODO: Add icon support to database
         lastModified: new Date(contextExpense.updated_at).getTime(),
+        splits: contextExpense.splits.map(s => ({
+            memberId: s.member_id,
+            amountOwed: s.amount_owed
+        }))
     };
 }
 

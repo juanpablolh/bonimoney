@@ -58,7 +58,8 @@ function App() {
       description: expense.description,
       amount: expense.amount,
       paid_by: expense.paidBy,
-      split_between: expense.splitBetween,
+      split_details: expense.splitBetween.map(id => ({ member_id: id })),
+      split_method: 'equal',
     });
   };
 
@@ -67,7 +68,8 @@ function App() {
       description: expense.description,
       amount: expense.amount,
       paid_by: expense.paidBy,
-      split_between: expense.splitBetween,
+      split_details: expense.splitBetween.map(id => ({ member_id: id })),
+      split_method: 'equal',
     });
   };
 

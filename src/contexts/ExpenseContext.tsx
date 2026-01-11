@@ -4,6 +4,10 @@ import { useProject } from './ProjectContext';
 import { supabase } from '../utils/supabase';
 import { Currency } from '../types';
 
+export type SplitMethod = 'equal' | 'exact' | 'percentage' | 'shares' | 'manual';
+export type PaymentMethod = 'cash' | 'paypal' | 'venmo' | 'transfer' | 'zelle' | 'other';
+export type ExpenseType = 'expense' | 'settlement' | 'payment';
+
 export interface Expense {
     id: string;
     project_id: string;
@@ -11,9 +15,13 @@ export interface Expense {
     amount: number;
     currency: Currency;
     paid_by: string; // project_member id
-    expense_type: 'expense' | 'settlement';
+    expense_type: ExpenseType;
     settled_to?: string; // project_member id (for settlements)
     date: string;
+    split_method: SplitMethod;
+    payment_method?: PaymentMethod;
+    payment_reference?: string;
+    metadata?: any;
     created_by?: string;
     deleted_at?: string;
     created_at: string;
@@ -25,11 +33,22 @@ export interface Split {
     expense_id: string;
     member_id: string;
     amount_owed: number;
+    percentage?: number;
+    shares?: number;
+    notes?: string;
 }
 
 // Expense with splits loaded
 export interface ExpenseWithSplits extends Expense {
     splits: Split[];
+}
+
+export interface SplitDetail {
+    member_id: string;
+    amount?: number;      // For exact amounts/manual
+    percentage?: number;  // For percentages
+    shares?: number;      // For shares
+    notes?: string;
 }
 
 interface ExpenseContextType {
@@ -41,12 +60,16 @@ interface ExpenseContextType {
     deleteExpense: (id: string) => Promise<void>;
 }
 
-interface AddExpenseData {
+export interface AddExpenseData {
     description: string;
     amount: number;
     paid_by: string; // member_id
-    split_between: string[]; // array of member_ids
-    expense_type?: 'expense' | 'settlement';
+    expense_type?: ExpenseType;
+    split_method?: SplitMethod;
+    split_details: SplitDetail[];
+    payment_method?: PaymentMethod;
+    payment_reference?: string;
+    metadata?: any;
     settled_to?: string;
 }
 
@@ -89,12 +112,56 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Helper to calculate split amounts based on method
+    const calculateSplitAmounts = (
+        totalAmount: number,
+        splitMethod: SplitMethod,
+        splitDetails: SplitDetail[]
+    ): { member_id: string; amount_owed: number }[] => {
+        switch (splitMethod) {
+            case 'equal': {
+                const amountPerPerson = totalAmount / splitDetails.length;
+                return splitDetails.map(d => ({
+                    member_id: d.member_id,
+                    amount_owed: amountPerPerson,
+                }));
+            }
+            case 'exact':
+            case 'manual':
+                return splitDetails.map(d => ({
+                    member_id: d.member_id,
+                    amount_owed: d.amount || 0,
+                }));
+            case 'percentage':
+                return splitDetails.map(d => ({
+                    member_id: d.member_id,
+                    amount_owed: totalAmount * ((d.percentage || 0) / 100),
+                }));
+            case 'shares': {
+                const totalShares = splitDetails.reduce((sum, d) => sum + (d.shares || 0), 0);
+                return splitDetails.map(d => ({
+                    member_id: d.member_id,
+                    amount_owed: totalShares > 0 ? (totalAmount * (d.shares || 0)) / totalShares : 0,
+                }));
+            }
+            default:
+                return [];
+        }
+    };
+
     // Add expense with splits
     const addExpense = async (data: AddExpenseData): Promise<Expense> => {
         if (!currentProject || !user) throw new Error('No project selected or user not authenticated');
 
         try {
-            // 1. Create expense
+            // 1. Calculate split amounts
+            const splits = calculateSplitAmounts(
+                data.amount,
+                data.split_method || 'equal',
+                data.split_details
+            );
+
+            // 2. Create expense
             const { data: newExpense, error: expenseError } = await supabase
                 .from('expenses')
                 .insert({
@@ -103,6 +170,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     amount: data.amount,
                     paid_by: data.paid_by,
                     expense_type: data.expense_type || 'expense',
+                    split_method: data.split_method || 'equal',
+                    payment_method: data.payment_method,
+                    payment_reference: data.payment_reference,
+                    metadata: data.metadata,
                     settled_to: data.settled_to,
                     date: new Date().toISOString(),
                     created_by: user.id,
@@ -112,17 +183,19 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             if (expenseError) throw expenseError;
 
-            // 2. Create splits
-            const amountPerPerson = data.amount / data.split_between.length;
-            const splits = data.split_between.map(member_id => ({
+            // 3. Create splits
+            const splitsToInsert = splits.map((split, index) => ({
                 expense_id: newExpense.id,
-                member_id,
-                amount_owed: amountPerPerson,
+                member_id: split.member_id,
+                amount_owed: split.amount_owed,
+                percentage: data.split_details[index].percentage,
+                shares: data.split_details[index].shares,
+                notes: data.split_details[index].notes,
             }));
 
             const { error: splitsError } = await supabase
                 .from('splits')
-                .insert(splits);
+                .insert(splitsToInsert);
 
             if (splitsError) throw splitsError;
 
@@ -144,6 +217,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             if (data.description) updateData.description = data.description;
             if (data.amount) updateData.amount = data.amount;
             if (data.paid_by) updateData.paid_by = data.paid_by;
+            if (data.expense_type) updateData.expense_type = data.expense_type;
+            if (data.split_method) updateData.split_method = data.split_method;
+            if (data.payment_method) updateData.payment_method = data.payment_method;
+            if (data.payment_reference) updateData.payment_reference = data.payment_reference;
+            if (data.metadata) updateData.metadata = data.metadata;
+            if (data.settled_to) updateData.settled_to = data.settled_to;
 
             const { error: expenseError } = await supabase
                 .from('expenses')
@@ -152,27 +231,54 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             if (expenseError) throw expenseError;
 
-            // 2. Update splits if split_between changed
-            if (data.split_between && data.amount) {
-                // Delete old splits
-                await supabase
-                    .from('splits')
-                    .delete()
-                    .eq('expense_id', id);
+            // 2. Update splits if split_details or amount changed
+            if ((data.split_details || data.amount) && id) {
+                // We need the full current data for calculation if only part is provided
+                const currentExpense = expenses.find(e => e.id === id);
+                if (currentExpense) {
+                    const totalAmount = data.amount || currentExpense.amount;
+                    const splitMethod = data.split_method || currentExpense.split_method;
 
-                // Create new splits
-                const amountPerPerson = data.amount / data.split_between.length;
-                const splits = data.split_between.map(member_id => ({
-                    expense_id: id,
-                    member_id,
-                    amount_owed: amountPerPerson,
-                }));
+                    // Reconstruct split details if not provided
+                    let splitDetails = data.split_details;
+                    if (!splitDetails) {
+                        splitDetails = currentExpense.splits.map(s => ({
+                            member_id: s.member_id,
+                            amount: s.amount_owed,
+                            percentage: s.percentage,
+                            shares: s.shares,
+                            notes: s.notes,
+                        }));
+                    }
 
-                const { error: splitsError } = await supabase
-                    .from('splits')
-                    .insert(splits);
+                    const calculatedSplits = calculateSplitAmounts(
+                        totalAmount,
+                        splitMethod,
+                        splitDetails
+                    );
 
-                if (splitsError) throw splitsError;
+                    // Delete old splits
+                    await supabase
+                        .from('splits')
+                        .delete()
+                        .eq('expense_id', id);
+
+                    // Create new splits
+                    const splitsToInsert = calculatedSplits.map((split, index) => ({
+                        expense_id: id,
+                        member_id: split.member_id,
+                        amount_owed: split.amount_owed,
+                        percentage: splitDetails![index].percentage,
+                        shares: splitDetails![index].shares,
+                        notes: splitDetails![index].notes,
+                    }));
+
+                    const { error: splitsError } = await supabase
+                        .from('splits')
+                        .insert(splitsToInsert);
+
+                    if (splitsError) throw splitsError;
+                }
             }
 
             // Reload expenses to get updated splits
