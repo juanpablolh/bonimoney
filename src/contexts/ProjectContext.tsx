@@ -97,10 +97,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (!user) throw new Error('Must be authenticated to create project');
 
         try {
+            // Generate short ID (8 characters, alphanumeric)
+            const generateId = () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let id = '';
+                for (let i = 0; i < 8; i++) {
+                    id += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return id;
+            };
+
+            const projectId = generateId();
+
             // 1. Create project
             const { data: newProject, error: projectError } = await supabase
                 .from('projects')
                 .insert({
+                    id: projectId,
                     name: data.name,
                     description: data.description,
                     currency: data.currency || 'CLP',
