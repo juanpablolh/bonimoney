@@ -30,14 +30,14 @@ export function getAvailableColor(existingMembers: { avatarColor?: { bg: string;
       .map(m => m.avatarColor?.bg)
       .filter(Boolean) as string[]
   );
-  
+
   // Find first available color
   const availableColor = CARBON_TAG_COLORS.find(color => !usedColors.has(color.bg));
-  
+
   if (availableColor) {
     return availableColor;
   }
-  
+
   // If all colors are used, find the least used color
   const colorUsage = new Map<string, number>();
   existingMembers.forEach(member => {
@@ -45,11 +45,11 @@ export function getAvailableColor(existingMembers: { avatarColor?: { bg: string;
       colorUsage.set(member.avatarColor.bg, (colorUsage.get(member.avatarColor.bg) || 0) + 1);
     }
   });
-  
+
   // Find color with minimum usage
   let minUsage = Infinity;
   let leastUsedColor = CARBON_TAG_COLORS[0];
-  
+
   CARBON_TAG_COLORS.forEach(color => {
     const usage = colorUsage.get(color.bg) || 0;
     if (usage < minUsage) {
@@ -57,7 +57,7 @@ export function getAvailableColor(existingMembers: { avatarColor?: { bg: string;
       leastUsedColor = color;
     }
   });
-  
+
   return leastUsedColor;
 }
 
@@ -70,13 +70,18 @@ export function getMemberAvatarColor(member: { name: string; avatarColor?: { bg:
   if (member.avatarColor) {
     return member.avatarColor;
   }
-  
+
+  // Safety check for null/undefined name
+  if (!member || !member.name) {
+    return CARBON_TAG_COLORS[0]; // Return default color
+  }
+
   // Fallback: Generate a consistent color based on name (for backward compatibility)
   let hash = 0;
   for (let i = 0; i < member.name.length; i++) {
     hash = member.name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   const index = Math.abs(hash) % CARBON_TAG_COLORS.length;
   return CARBON_TAG_COLORS[index];
 }
