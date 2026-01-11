@@ -27,8 +27,13 @@ export interface Split {
     amount_owed: number;
 }
 
+// Expense with splits loaded
+export interface ExpenseWithSplits extends Expense {
+    splits: Split[];
+}
+
 interface ExpenseContextType {
-    expenses: Expense[];
+    expenses: ExpenseWithSplits[];
     loading: boolean;
     loadExpenses: () => Promise<void>;
     addExpense: (data: AddExpenseData) => Promise<Expense>;
@@ -50,7 +55,7 @@ const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 export function ExpenseProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const { currentProject } = useProject();
-    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
     const [loading, setLoading] = useState(false);
 
     // Load expenses for current project
@@ -65,14 +70,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             const { data, error } = await supabase
                 .from('expenses')
-                .select('*')
+                .select(`
+          *,
+          splits(*)
+        `)
                 .eq('project_id', currentProject.id)
                 .is('deleted_at', null)
                 .order('date', { ascending: false });
 
             if (error) throw error;
 
-            setExpenses(data || []);
+            // Cast to ExpenseWithSplits[]
+            setExpenses((data || []) as ExpenseWithSplits[]);
         } catch (error) {
             console.error('Error loading expenses:', error);
         } finally {
@@ -117,7 +126,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             if (splitsError) throw splitsError;
 
-            setExpenses(prev => [newExpense, ...prev]);
+            // Reload expenses to get splits
+            await loadExpenses();
+
             return newExpense;
         } catch (error) {
             console.error('Error adding expense:', error);
@@ -164,10 +175,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                 if (splitsError) throw splitsError;
             }
 
-            // Update local state
-            setExpenses(prev =>
-                prev.map(e => (e.id === id ? { ...e, ...updateData } : e))
-            );
+            // Reload expenses to get updated splits
+            await loadExpenses();
         } catch (error) {
             console.error('Error updating expense:', error);
             throw error;
