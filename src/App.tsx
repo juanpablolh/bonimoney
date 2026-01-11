@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header, HeaderName, HeaderGlobalBar, HeaderGlobalAction, Modal, TextInput, Button as CarbonButton } from '@carbon/react';
-import { Add, Copy, Checkmark } from '@carbon/icons-react';
+import { Add, Copy, Checkmark, Login } from '@carbon/icons-react';
 import { Member, Expense, AppData } from './types';
 import { loadData, saveData, clearData } from './utils/storage';
 import { calculateBalancesByCurrency, optimizeTransactionsByCurrency } from './utils/calculations';
@@ -12,8 +12,12 @@ import Dashboard from './components/Dashboard';
 import MembersSection from './components/MembersSection';
 import ExpensesSection from './components/ExpensesSection';
 import CookieBanner from './components/CookieBanner';
+import { useAuth } from './contexts/AuthContext';
+import AuthModal from './components/auth/AuthModal';
+// import UserProfile from './components/auth/UserProfile'; // TODO: Add to settings page
 
 function App() {
+  const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'expenses'>('dashboard');
@@ -25,6 +29,7 @@ function App() {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedSharedData, setHasLoadedSharedData] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const isReceivingUpdateRef = useRef(false);
   const isSyncingRef = useRef(false);
   const timeoutRefs = useRef<Set<NodeJS.Timeout>>(new Set());
@@ -33,23 +38,23 @@ function App() {
   useEffect(() => {
     const hash = window.location.hash;
     const shareMatch = hash.match(/^#share=([A-Za-z0-9]{8})$/);
-    
+
     if (shareMatch && shareMatch[1]) {
       // We're joining a shared group
       const id = shareMatch[1];
       setGroupId(id);
       setIsLoading(true);
-      
+
       // Load data from Supabase (only once)
       extractSharedDataFromUrl().then(shared => {
         console.log('📥 Datos recibidos de extractSharedDataFromUrl:', shared);
-        
+
         if (shared) {
           console.log('✅ Datos encontrados:', {
             members: shared.members?.length || 0,
             expenses: shared.expenses?.length || 0
           });
-          
+
           // Cargar datos incluso si están vacíos (puede ser un grupo nuevo)
           setMembers(shared.members || []);
           setExpenses(shared.expenses || []);
@@ -59,7 +64,7 @@ function App() {
           // No data found - could be empty group
           console.warn('⚠️ No se encontraron datos compartidos para el ID:', id);
           console.warn('Esto puede ser normal si el grupo está vacío. Se cargará un grupo vacío.');
-          
+
           // Load empty group (user can start adding data)
           setMembers([]);
           setExpenses([]);
@@ -87,20 +92,20 @@ function App() {
   // Subscribe to real-time updates when in shared group mode
   useEffect(() => {
     if (!groupId || isLoading) return;
-    
+
     console.log('🔔 Suscribiéndose a actualizaciones en tiempo real para grupo:', groupId);
-    
+
     const unsubscribe = subscribeToGroup(groupId, (data) => {
       // Usar refs para evitar dependencias en el callback
       if (isSyncingRef.current || isReceivingUpdateRef.current) {
         console.log('⏸️ Omitiendo actualización: sincronizando o recibiendo actualización');
         return;
       }
-      
+
       if (data && hasLoadedSharedData) {
         // Marcar que estamos recibiendo una actualización (evitar loop)
         isReceivingUpdateRef.current = true;
-        
+
         // Obtener valores actuales usando función de actualización
         setMembers(currentMembers => {
           setExpenses(currentExpenses => {
@@ -108,13 +113,13 @@ function App() {
             const currentExpensesCount = currentExpenses.length;
             const newMembersCount = data.members?.length || 0;
             const newExpensesCount = data.expenses?.length || 0;
-            
+
             // Detectar si hay nuevos miembros o gastos
             const hasNewMembers = newMembersCount > currentMembersCount;
             const hasNewExpenses = newExpensesCount > currentExpensesCount;
             const hasRemovedMembers = newMembersCount < currentMembersCount;
             const hasRemovedExpenses = newExpensesCount < currentExpensesCount;
-            
+
             if (hasNewMembers || hasNewExpenses || hasRemovedMembers || hasRemovedExpenses) {
               console.log('🆕 Cambios detectados:', {
                 nuevosMiembros: hasNewMembers ? `+${newMembersCount - currentMembersCount}` : '0',
@@ -122,34 +127,34 @@ function App() {
                 miembrosEliminados: hasRemovedMembers ? `${currentMembersCount - newMembersCount}` : '0',
                 gastosEliminados: hasRemovedExpenses ? `${currentExpensesCount - newExpensesCount}` : '0',
               });
-              
+
               if (hasNewMembers || hasNewExpenses) {
                 console.log('✨ ¡Nuevos datos disponibles!');
               }
             }
-            
+
             console.log('📨 Actualización en tiempo real aplicada:', {
               miembros: `${currentMembersCount} → ${newMembersCount}`,
               gastos: `${currentExpensesCount} → ${newExpensesCount}`
             });
-            
+
             // Save to local storage as backup (pero NO a Supabase para evitar loop)
             saveData(data);
-            
+
             // Reset flag after a delay (with cleanup)
             const timeoutId = setTimeout(() => {
               isReceivingUpdateRef.current = false;
               timeoutRefs.current.delete(timeoutId);
             }, 2000);
             timeoutRefs.current.add(timeoutId);
-            
+
             return data.expenses || [];
           });
           return data.members || [];
         });
       }
     });
-    
+
     return () => {
       console.log('🔕 Desuscribiéndose de actualizaciones en tiempo real');
       unsubscribe();
@@ -170,16 +175,16 @@ function App() {
     if (isLoading || !hasLoadedSharedData) {
       return;
     }
-    
+
     // Don't save if we're receiving an update from real-time (evitar loop)
     if (isReceivingUpdateRef.current) {
       console.log('⏸️ Omitiendo guardado: actualización en tiempo real en progreso');
       return;
     }
-    
+
     // Save to local storage
     saveData({ members, expenses });
-    
+
     // If in shared group mode, also save to Supabase
     if (groupId && !isSyncingRef.current && hasLoadedSharedData) {
       isSyncingRef.current = true;
@@ -187,7 +192,7 @@ function App() {
         members: members.length,
         expenses: expenses.length
       });
-      
+
       upsertGroup(groupId, { members, expenses })
         .then(() => {
           console.log('✅ Datos guardados en Supabase correctamente');
@@ -244,7 +249,7 @@ function App() {
       console.warn('Intento de agregar gasto sin pagador o sin participantes');
       return;
     }
-    
+
     const newExpense: Expense = updateExpenseTimestamp({
       ...expense,
       id: crypto.randomUUID(),
@@ -275,7 +280,7 @@ function App() {
     // Create a settlement expense
     const fromMember = members.find((m) => m.id === fromId);
     const toMember = members.find((m) => m.id === toId);
-    
+
     if (fromMember && toMember) {
       const settlementExpense: Expense = {
         id: crypto.randomUUID(),
@@ -309,27 +314,27 @@ function App() {
         setCopied(false);
         return;
       }
-      
+
       // Validate data before sharing
       if (members.length === 0 && expenses.length === 0) {
         alert('No hay datos para compartir. Agrega al menos un integrante o gasto primero.');
         return;
       }
-      
+
       // Create new group
       const url = await generateShareUrl({ members, expenses });
       const shareMatch = url.match(/#share=([A-Za-z0-9]{8})$/);
       if (shareMatch && shareMatch[1]) {
         const newGroupId = shareMatch[1];
         setGroupId(newGroupId);
-        
+
         // Update browser URL to include the share ID
         // This ensures the user is in "shared group mode" and will sync to Supabase
         window.history.replaceState(null, '', url);
-        
+
         // Mark that shared data has been loaded (since we just created it)
         setHasLoadedSharedData(true);
-        
+
         console.log('✅ Grupo creado y URL actualizada:', newGroupId);
       }
       setShareUrl(url);
@@ -388,7 +393,7 @@ function App() {
   const handleJoinGroup = () => {
     const hash = window.location.hash;
     const shareMatch = hash.match(/^#share=([A-Za-z0-9]{8})$/);
-    
+
     if (shareMatch && shareMatch[1]) {
       const id = shareMatch[1];
       setGroupId(id);
@@ -420,6 +425,21 @@ function App() {
             Bonimoney
           </HeaderName>
           <HeaderGlobalBar style={{ marginLeft: 'auto' }}>
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 1rem' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
+                  {user.email}
+                </span>
+              </div>
+            ) : (
+              <HeaderGlobalAction
+                aria-label="Iniciar Sesión"
+                onClick={() => setAuthModalOpen(true)}
+                tooltipAlignment="end"
+              >
+                <Login size={20} />
+              </HeaderGlobalAction>
+            )}
             <HeaderGlobalAction
               aria-label="Agregar Gasto"
               onClick={() => setActiveTab('expenses')}
@@ -434,7 +454,7 @@ function App() {
       </Header>
 
       {/* Navigation Tabs */}
-      <nav style={{ 
+      <nav style={{
         width: '100%',
         backgroundColor: '#f4f4f4',
         borderBottom: '1px solid #e0e0e0',
@@ -442,9 +462,9 @@ function App() {
         top: '56px',
         zIndex: 10
       }}>
-        <div style={{ 
-          maxWidth: '1280px', 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
           padding: '0 1rem'
         }}>
           <div style={{
@@ -459,7 +479,7 @@ function App() {
                 members: 'Mi Grupo',
                 expenses: 'Gastos'
               };
-              
+
               return (
                 <button
                   key={tab}
@@ -600,14 +620,14 @@ function App() {
         {sharedData ? (
           <>
             <p style={{ marginBottom: '1rem' }}>
-              {groupId 
+              {groupId
                 ? "Te has unido a un grupo compartido. Los cambios se sincronizarán en tiempo real con todos los integrantes."
                 : "Se detectaron datos compartidos. Al importar, estos datos reemplazarán todos tus datos actuales."}
             </p>
-            
-            <div style={{ 
-              backgroundColor: 'var(--cds-layer-01)', 
-              padding: '1rem', 
+
+            <div style={{
+              backgroundColor: 'var(--cds-layer-01)',
+              padding: '1rem',
               borderRadius: '4px',
               marginBottom: '1rem'
             }}>
@@ -630,6 +650,13 @@ function App() {
           <p>Cargando...</p>
         )}
       </Modal>
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        reason="Inicia sesión para compartir grupos y sincronizar tus datos en tiempo real."
+      />
     </div>
   );
 }
