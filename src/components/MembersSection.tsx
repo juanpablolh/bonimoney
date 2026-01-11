@@ -23,7 +23,7 @@ function getTagTypeFromColor(bgColor: string): 'red' | 'magenta' | 'purple' | 'b
     '#5b21d0': 'purple',
     '#005d5d': 'teal',
   };
-  
+
   // Normalize color (remove spaces, convert to lowercase)
   const normalizedColor = bgColor.toLowerCase().trim();
   return colorMap[normalizedColor] || 'gray';
@@ -76,7 +76,7 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
   const rows = members.map((member) => {
     const avatarColors = getMemberAvatarColor(member);
     const isEditing = editingMemberId === member.id;
-    
+
     return {
       id: member.id,
       name: (
@@ -119,59 +119,59 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
           )}
         </div>
       ),
-    actions: (
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
-        {isEditing ? (
-          <>
-            <Button
-              kind="ghost"
-              size="sm"
-              hasIconOnly
-              iconDescription="Guardar"
-              onClick={() => handleSaveEdit(member.id)}
-              renderIcon={CheckmarkFilled}
-            />
-            <Button
-              kind="ghost"
-              size="sm"
-              hasIconOnly
-              iconDescription="Cancelar"
-              onClick={handleCancelEdit}
-              renderIcon={Close}
-            />
-          </>
-        ) : (
-          <>
-            <Button
-              kind="ghost"
-              size="sm"
-              hasIconOnly
-              iconDescription="Editar"
-              onClick={() => handleStartEdit(member)}
-              renderIcon={Edit}
-            />
-            <Button
-              kind="danger--tertiary"
-              size="sm"
-              hasIconOnly
-              iconDescription="Eliminar"
-              onClick={() => onDeleteMember(member.id)}
-              renderIcon={TrashCan}
-            />
-          </>
-        )}
-      </div>
-    ),
-  };
+      actions: (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+          {isEditing ? (
+            <>
+              <Button
+                kind="ghost"
+                size="sm"
+                hasIconOnly
+                iconDescription="Guardar"
+                onClick={() => handleSaveEdit(member.id)}
+                renderIcon={CheckmarkFilled}
+              />
+              <Button
+                kind="ghost"
+                size="sm"
+                hasIconOnly
+                iconDescription="Cancelar"
+                onClick={handleCancelEdit}
+                renderIcon={Close}
+              />
+            </>
+          ) : (
+            <>
+              <Button
+                kind="ghost"
+                size="sm"
+                hasIconOnly
+                iconDescription="Editar"
+                onClick={() => handleStartEdit(member)}
+                renderIcon={Edit}
+              />
+              <Button
+                kind="danger--tertiary"
+                size="sm"
+                hasIconOnly
+                iconDescription="Eliminar"
+                onClick={() => onDeleteMember(member.id)}
+                renderIcon={TrashCan}
+              />
+            </>
+          )}
+        </div>
+      ),
+    };
   });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Add Member Form */}
       <Tile>
-        <h3 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
+        <h3 style={{
+          fontSize: '1.25rem',
+          fontWeight: 500,
           marginBottom: '1rem',
           backgroundColor: 'rgba(141, 141, 141, 0.20)',
           padding: '0.75rem 1rem',
@@ -192,7 +192,7 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <Button 
+            <Button
               type="submit"
               style={{
                 display: 'inline-flex',
@@ -204,7 +204,7 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
                 padding: '0.75rem 1.5rem'
               }}
             >
-              <span style={{ 
+              <span style={{
                 display: 'inline-block',
                 textAlign: 'center',
                 width: '100%'
@@ -250,9 +250,9 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
       {/* Share Group */}
       {members.length > 0 && (
         <Tile>
-          <h3 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 500, 
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: 500,
             marginBottom: '1rem',
             backgroundColor: 'rgba(141, 141, 141, 0.20)',
             padding: '0.75rem 1rem',
@@ -261,7 +261,23 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
             marginTop: '-1rem',
             borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
           }}>Compartir Grupo</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{
+              background: 'var(--cds-layer-01)',
+              padding: '1rem',
+              borderRadius: '4px',
+              borderLeft: '3px solid #0f62fe'
+            }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                💡 Beneficios de iniciar sesión:
+              </p>
+              <ul style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', paddingLeft: '1.5rem', margin: 0 }}>
+                <li>Sincronización en tiempo real entre dispositivos</li>
+                <li>Compartir grupos con otros usuarios</li>
+                <li>No perder tus datos si cambias de dispositivo</li>
+                <li>Acceso desde cualquier lugar</li>
+              </ul>
+            </div>
             <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
               Comparte este grupo con otros integrantes para que puedan ver los gastos en sus dispositivos.
             </p>

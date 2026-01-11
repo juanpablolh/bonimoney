@@ -17,7 +17,7 @@ import AuthModal from './components/auth/AuthModal';
 // import UserProfile from './components/auth/UserProfile'; // TODO: Add to settings page
 
 function App() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'expenses'>('dashboard');
@@ -305,6 +305,12 @@ function App() {
 
   const handleShareGroup = async () => {
     try {
+      // ENFORCE AUTHENTICATION: User must be logged in to share groups
+      if (!user) {
+        setAuthModalOpen(true);
+        return;
+      }
+
       // If already in a group, use that ID
       if (groupId) {
         const currentUrl = window.location.origin + window.location.pathname;
@@ -426,11 +432,20 @@ function App() {
           </HeaderName>
           <HeaderGlobalBar style={{ marginLeft: 'auto' }}>
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 1rem' }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
-                  {user.email}
-                </span>
-              </div>
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 1rem', borderRight: '1px solid var(--cds-border-subtle)' }}>
+                  <span style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
+                    {user.email}
+                  </span>
+                </div>
+                <HeaderGlobalAction
+                  aria-label="Cerrar Sesión"
+                  onClick={() => signOut()}
+                  tooltipAlignment="end"
+                >
+                  Salir
+                </HeaderGlobalAction>
+              </>
             ) : (
               <HeaderGlobalAction
                 aria-label="Iniciar Sesión"
@@ -602,6 +617,35 @@ function App() {
             {copied ? 'Copiado' : 'Copiar'}
           </CarbonButton>
         </div>
+
+        {/* Social Share Buttons */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <CarbonButton
+            kind="tertiary"
+            size="md"
+            onClick={() => {
+              const text = encodeURIComponent('¡Únete a mi grupo de gastos en BoniMoney! 💰');
+              const url = encodeURIComponent(shareUrl);
+              window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+            }}
+            style={{ flex: '1 1 auto' }}
+          >
+            📱 Compartir en WhatsApp
+          </CarbonButton>
+          <CarbonButton
+            kind="tertiary"
+            size="md"
+            onClick={() => {
+              const text = encodeURIComponent('¡Únete a mi grupo de gastos en BoniMoney! 💰');
+              const url = encodeURIComponent(shareUrl);
+              window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+            }}
+            style={{ flex: '1 1 auto' }}
+          >
+            ✈️ Compartir en Telegram
+          </CarbonButton>
+        </div>
+
         <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
           <strong>Nota:</strong> Este link contiene todos los datos del grupo. Compártelo solo con personas de confianza.
         </p>
