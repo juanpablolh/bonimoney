@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { supabase } from '../utils/supabase';
 
 export interface Project {
     id: string;
@@ -41,7 +42,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Load user's projects
+    // Load user's projects from Supabase
     const loadProjects = async () => {
         if (!user) {
             setProjects([]);
@@ -53,10 +54,23 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         try {
             setLoading(true);
 
-            // TODO: Replace with actual Supabase query
-            // For now, return empty array
-            const userProjects: Project[] = [];
+            // Query projects where user is a member
+            const { data: projectsData, error } = await supabase
+                .from('projects')
+                .select(`
+          *,
+          project_members!inner(user_id, status)
+        `)
+                .eq('project_members.user_id', user.id)
+                .eq('project_members.status', 'accepted')
+                .order('updated_at', { ascending: false });
 
+            if (error) {
+                console.error('Error loading projects:', error);
+                throw error;
+            }
+
+            const userProjects = projectsData || [];
             setProjects(userProjects);
 
             // Set current project from localStorage or first project
@@ -83,22 +97,48 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (!user) throw new Error('Must be authenticated to create project');
 
         try {
-            // TODO: Replace with actual Supabase mutation
-            const newProject: Project = {
-                id: Math.random().toString(36).substring(7),
-                name: data.name,
-                description: data.description,
-                currency: data.currency || 'CLP',
-                icon: data.icon || '📊',
-                slug: data.name.toLowerCase().replace(/\s+/g, '-'),
-                owner_id: user.id,
-                view_mode: 'public',
-                share_token: crypto.randomUUID(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
+            // 1. Create project
+            const { data: newProject, error: projectError } = await supabase
+                .from('projects')
+                .insert({
+                    name: data.name,
+                    description: data.description,
+                    currency: data.currency || 'CLP',
+                    icon: data.icon || '📊',
+                    owner_id: user.id,
+                    view_mode: 'public',
+                })
+                .select()
+                .single();
 
-            setProjects(prev => [...prev, newProject]);
+            if (projectError) throw projectError;
+
+            // 2. Add creator as owner in project_members
+            const { error: memberError } = await supabase
+                .from('project_members')
+                .insert({
+                    project_id: newProject.id,
+                    user_id: user.id,
+                    role: 'owner',
+                    status: 'accepted',
+                    joined_at: new Date().toISOString(),
+                });
+
+            if (memberError) throw memberError;
+
+            // 3. Add to user_projects for quick access
+            const { error: userProjectError } = await supabase
+                .from('user_projects')
+                .insert({
+                    user_id: user.id,
+                    project_id: newProject.id,
+                    last_accessed_at: new Date().toISOString(),
+                });
+
+            if (userProjectError) throw userProjectError;
+
+            // Update local state
+            setProjects(prev => [newProject, ...prev]);
             setCurrentProject(newProject);
             localStorage.setItem('currentProjectId', newProject.id);
 
@@ -112,7 +152,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     // Update project
     const updateProject = async (id: string, data: Partial<Project>) => {
         try {
-            // TODO: Replace with actual Supabase mutation
+            const { error } = await supabase
+                .from('projects')
+                .update(data)
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Update local state
             setProjects(prev =>
                 prev.map(p => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p))
             );
@@ -126,10 +173,20 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Delete project
+    // Delete project (soft delete - archive)
     const deleteProject = async (id: string) => {
         try {
-            // TODO: Replace with actual Supabase mutation
+            const { error } = await supabase
+                .from('projects')
+                .update({
+                    archived: true,
+                    archived_at: new Date().toISOString(),
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            // Update local state
             setProjects(prev => prev.filter(p => p.id !== id));
 
             if (currentProject?.id === id) {
@@ -147,12 +204,22 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         loadProjects();
     }, [user]);
 
-    // Save current project to localStorage
+    // Save current project to localStorage and update last_accessed_at
     useEffect(() => {
-        if (currentProject) {
+        if (currentProject && user) {
             localStorage.setItem('currentProjectId', currentProject.id);
+
+            // Update last_accessed_at in background
+            supabase
+                .from('user_projects')
+                .update({ last_accessed_at: new Date().toISOString() })
+                .eq('user_id', user.id)
+                .eq('project_id', currentProject.id)
+                .then(({ error }) => {
+                    if (error) console.error('Error updating last_accessed_at:', error);
+                });
         }
-    }, [currentProject]);
+    }, [currentProject, user]);
 
     return (
         <ProjectContext.Provider
