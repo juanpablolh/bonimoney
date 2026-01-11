@@ -42,12 +42,18 @@ export function adaptExpense(contextExpense: ExpenseWithSplits): OldExpense {
  * Convert array of context Members to old format
  */
 export function adaptMembers(contextMembers: ContextMember[]): OldMember[] {
-    return contextMembers.map(adaptMember);
+    // Filter out any invalid members (null, undefined, or without name)
+    return contextMembers
+        .filter(m => m && m.name)
+        .map(adaptMember);
 }
 
 /**
  * Convert array of context Expenses to old format
  */
 export function adaptExpenses(contextExpenses: ExpenseWithSplits[]): OldExpense[] {
-    return contextExpenses.map(adaptExpense);
+    // Filter out any invalid expenses
+    return contextExpenses
+        .filter(e => e && e.description && e.splits && e.splits.length > 0)
+        .map(adaptExpense);
 }
