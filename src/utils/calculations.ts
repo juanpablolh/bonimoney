@@ -4,7 +4,9 @@ import { Member, Expense, Balance, Transaction, Currency } from '../types';
  * Capitalizes each word in a name
  * Example: "juan pablo" -> "Juan Pablo"
  */
-export const capitalizeName = (name: string): string => {
+export const capitalizeName = (name: string | null | undefined): string => {
+  if (!name) return '';
+
   return name
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -266,7 +268,7 @@ export const getCurrencySymbol = (currency: Currency): string => {
     style: 'currency',
     currency: currency,
   });
-  
+
   // Get the symbol by formatting 0 and extracting the symbol
   const parts = formatter.formatToParts(0);
   const symbolPart = parts.find(part => part.type === 'currency');
@@ -316,14 +318,14 @@ export const getThousandsSeparator = (currency: Currency): string => {
 export const getCurrencyPlaceholder = (currency: Currency): string => {
   // Get the formatted currency with 0 to see the format
   const formatted = formatCurrency(0, currency);
-  
+
   // Extract the number format pattern
   // For example: "$0.00" -> "0.00", "0,00 €" -> "0,00", "R$ 0,00" -> "0,00"
   const numberMatch = formatted.match(/[\d.,]+/);
   if (numberMatch) {
     return numberMatch[0];
   }
-  
+
   // Fallback based on currency locale
   const separator = getDecimalSeparator(currency);
   return `0${separator}00`;
@@ -335,24 +337,24 @@ export const getCurrencyPlaceholder = (currency: Currency): string => {
  */
 export const formatAmountInput = (value: string, currency: Currency): string => {
   if (!value) return '';
-  
+
   const MAX_VALUE = 99000000;
   const decimalSeparator = getDecimalSeparator(currency);
   const thousandsSeparator = '.';
-  
+
   // Remove all non-digit characters except dots and commas
   let cleaned = value.replace(/[^\d.,]/g, '');
-  
+
   if (decimalSeparator === ',') {
     // For currencies with comma as decimal separator (BRL, ARS, EUR)
     // All dots are thousands separators, comma is decimal separator
     const lastCommaIndex = cleaned.lastIndexOf(',');
-    
+
     if (lastCommaIndex !== -1) {
       // Has decimal part (or just the comma separator)
       const integerPart = cleaned.substring(0, lastCommaIndex).replace(/[,.]/g, '');
       const decimalPart = cleaned.substring(lastCommaIndex + 1).replace(/[,.]/g, '');
-      
+
       // Check if integer part exceeds maximum
       const integerValue = parseInt(integerPart || '0', 10);
       if (integerValue > MAX_VALUE) {
@@ -362,25 +364,25 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
         const formattedInteger = limitedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
         return formattedInteger + decimalSeparator + limitedDecimal;
       }
-      
+
       const limitedDecimal = decimalPart.substring(0, 2);
-      
+
       // Format integer part with thousands separator
       const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-      
+
       // Always show the decimal separator if it was typed, even if no digits after
       return formattedInteger + decimalSeparator + limitedDecimal;
     } else {
       // No decimal part, all dots are thousands separators
       const integerPart = cleaned.replace(/[,.]/g, '');
       const integerValue = parseInt(integerPart || '0', 10);
-      
+
       if (integerValue > MAX_VALUE) {
         // Limit to maximum
         const limitedInteger = MAX_VALUE.toString();
         return limitedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
       }
-      
+
       return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
     }
   } else {
@@ -389,17 +391,17 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
     // If it has 2 or fewer digits, it's a decimal separator
     const lastDotIndex = cleaned.lastIndexOf('.');
     const lastCommaIndex = cleaned.lastIndexOf(',');
-    
+
     // Determine if there's a decimal part
     let hasDecimal = false;
     let decimalPart = '';
     let integerPart = '';
-    
+
     if (lastDotIndex !== -1) {
       const afterLastDot = cleaned.substring(lastDotIndex + 1).replace(/[,.]/g, '');
       const beforeLastDot = cleaned.substring(0, lastDotIndex).replace(/[,.]/g, '');
       const dotCount = (cleaned.match(/\./g) || []).length;
-      
+
       // If there are more than 2 digits after the last dot, it's a thousands separator
       // Move those digits to the integer part
       if (afterLastDot.length > 2) {
@@ -434,30 +436,30 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
       // No decimal separator, all are thousands separators
       integerPart = cleaned.replace(/[,.]/g, '');
     }
-    
+
     // Check if integer part exceeds maximum
     const integerValue = parseInt(integerPart || '0', 10);
     if (integerValue > MAX_VALUE) {
       // Limit to maximum
       const limitedInteger = MAX_VALUE.toString();
       const formattedInteger = limitedInteger.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-      
+
       if (hasDecimal) {
         const limitedDecimal = decimalPart.substring(0, 2);
         return formattedInteger + (limitedDecimal ? decimalSeparator + limitedDecimal : '');
       }
       return formattedInteger;
     }
-    
+
     // Format integer part with thousands separator
     const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-    
+
     if (hasDecimal) {
       const limitedDecimal = decimalPart.substring(0, 2);
       // Always show decimal separator if it was typed, even if no digits after
       return formattedInteger + decimalSeparator + limitedDecimal;
     }
-    
+
     return formattedInteger;
   }
 };
