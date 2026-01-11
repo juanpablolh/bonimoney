@@ -28,7 +28,10 @@ const setCookie = (name: string, value: string, days: number = 365): void => {
   try {
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+
+    // Add Secure flag for HTTPS-only cookies
+    const secureFlag = window.location.protocol === 'https:' ? ';Secure' : '';
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax${secureFlag}`;
   } catch (error) {
     console.error('Error setting cookie:', error);
   }
@@ -67,7 +70,7 @@ const saveToCookies = (data: AppData): void => {
   try {
     const jsonString = JSON.stringify(data);
     const maxCookieSize = 4000; // ~4KB menos margen de seguridad
-    
+
     if (jsonString.length <= maxCookieSize) {
       // Si cabe en una cookie, guardamos normalmente
       setCookie(STORAGE_KEY, jsonString);
@@ -77,10 +80,10 @@ const saveToCookies = (data: AppData): void => {
       for (let i = 0; i < jsonString.length; i += maxCookieSize) {
         chunks.push(jsonString.slice(i, i + maxCookieSize));
       }
-      
+
       // Guardamos el número de chunks primero
       setCookie(`${STORAGE_KEY}_chunks`, chunks.length.toString());
-      
+
       // Guardamos cada chunk en una cookie separada
       chunks.forEach((chunk, index) => {
         setCookie(`${STORAGE_KEY}_${index}`, chunk);
@@ -103,12 +106,12 @@ const saveToCookies = (data: AppData): void => {
 const loadFromCookies = (): AppData | null => {
   try {
     const chunksCount = getCookie(`${STORAGE_KEY}_chunks`);
-    
+
     if (chunksCount) {
       // Datos divididos en múltiples cookies
       const numChunks = parseInt(chunksCount, 10);
       const chunks: string[] = [];
-      
+
       for (let i = 0; i < numChunks; i++) {
         const chunk = getCookie(`${STORAGE_KEY}_${i}`);
         if (chunk) {
@@ -118,7 +121,7 @@ const loadFromCookies = (): AppData | null => {
           return null;
         }
       }
-      
+
       const jsonString = chunks.join('');
       return JSON.parse(jsonString);
     } else {
@@ -157,11 +160,11 @@ export const loadData = (): AppData => {
   try {
     let stored: string | null = null;
     let data: AppData | null = null;
-    
+
     if (isOnline()) {
       // Online: usar cookies
       data = loadFromCookies();
-      
+
       // Migración: si no hay datos en cookies pero sí en localStorage, migrar
       if (!data) {
         stored = localStorage.getItem(STORAGE_KEY);
@@ -186,7 +189,7 @@ export const loadData = (): AppData => {
         data = JSON.parse(stored);
       }
     }
-    
+
     if (data) {
       // Convert date strings back to Date objects and add currency if missing (migration)
       data.expenses = data.expenses.map((expense: Expense) => ({

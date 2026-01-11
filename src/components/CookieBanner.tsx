@@ -62,9 +62,20 @@ export default function CookieBanner() {
             <h3 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '0.25rem' }}>
               Uso de Cookies
             </h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', lineHeight: '1.5' }}>
-              Utilizamos cookies para guardar tu información y que puedas acceder a ella en futuras visitas. 
+            <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
+              Utilizamos cookies esenciales para guardar tu información y que puedas acceder a ella en futuras visitas.
               Sin cookies, tus datos se perderán al cerrar el navegador.
+            </p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
+              Lee nuestra{' '}
+              <a href="/cookie-policy.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
+                Política de Cookies
+              </a>
+              {' '}y{' '}
+              <a href="/privacy-policy.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
+                Política de Privacidad
+              </a>
+              {' '}para más información.
             </p>
           </div>
         </div>
