@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useMediaQuery } from "../../hooks/use-media-query"
-import { useKeyboardHeight, useStableViewportHeight } from "../../hooks/use-keyboard-height"
+import { useKeyboardHeight } from "../../hooks/use-keyboard-height"
 import { cn } from "@/lib/utils"
 import {
     Dialog,
@@ -46,7 +46,6 @@ export function ResponsiveModal({
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const keyboardHeight = useKeyboardHeight()
-    const stableHeight = useStableViewportHeight()
 
     if (isDesktop) {
         return (
@@ -85,8 +84,7 @@ export function ResponsiveModal({
         <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
-                className={cn(hideHeader && "p-0 border-none")}
-                style={{ maxHeight: stableHeight ? `${stableHeight * 0.85}px` : '85vh' }}
+                className={cn("max-h-[85svh]", hideHeader && "p-0 border-none")}
             >
                 <KeyboardHeightContext.Provider value={keyboardHeight}>
                     {hideHeader ? (

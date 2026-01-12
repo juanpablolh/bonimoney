@@ -77,7 +77,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col h-full bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5">
+        <div className="flex flex-col h-[85svh] max-h-[85svh] bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5">
             {/* Header Wrapper to avoid corner slivers */}
             <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
                 <header className="px-6 py-5 flex items-center justify-between">

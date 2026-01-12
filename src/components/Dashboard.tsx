@@ -209,8 +209,24 @@ export default function Dashboard({
             </button>
           </div>
 
+          {/* TOTAL GASTO SECTION (Moved) */}
+          <div className="mt-4">
+            <p className="text-white/80 text-sm font-medium mb-1">
+              Gasto total
+            </p>
+            {currencies.length > 0 ? (
+              currencies.map(([curr, amount]) => (
+                <h3 key={curr} className="font-serif tracking-tighter text-white leading-none" style={{ fontSize: '32px' }}>
+                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide">{curr}</span>
+                </h3>
+              ))
+            ) : (
+              <h3 className="font-serif text-4xl tracking-tighter text-white/40">$ 0</h3>
+            )}
+          </div>
+
           {/* Input Section */}
-          <div className="mt-8 relative">
+          <div className="mt-4 relative">
             <Input
               value={newMemberName}
               onChange={(e) => setNewMemberName(e.target.value)}
@@ -285,26 +301,7 @@ export default function Dashboard({
             </button>
           </div>
 
-          {/* Gasto Total Section */}
-          <div className="px-4 pb-4 pt-4 border-b border-stone-100">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-center gap-2 text-stone-500">
-                <ArrowDownRight size={20} weight="regular" />
-                <p className="text-base font-medium">Gasto total</p>
-              </div>
-              <div className="text-right">
-                {currencies.length > 0 ? (
-                  currencies.map(([curr, amount]) => (
-                    <h3 key={curr} className="font-serif tracking-tighter text-stone-900" style={{ fontSize: '32px' }}>
-                      $ {amount.toLocaleString('es-CL')} <span className="text-lg font-sans text-stone-400 ml-1 tracking-wide">{curr}</span>
-                    </h3>
-                  ))
-                ) : (
-                  <h3 className="font-serif text-4xl tracking-tighter text-stone-300">$ 0</h3>
-                )}
-              </div>
-            </div>
-          </div>
+
 
           {/* Search Bar */}
           <div className="px-4 pb-4 pt-4">
