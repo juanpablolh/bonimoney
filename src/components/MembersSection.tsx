@@ -1,33 +1,28 @@
-import { useState } from 'react';
-import { TextInput, Button, Tile, TableContainer, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Tag } from '@carbon/react';
-import { TrashCan, Edit, CheckmarkFilled, Close, Share } from '@carbon/icons-react';
+import React, { useState } from 'react';
+import {
+  UserPlus,
+  PencilSimple,
+  Trash,
+  ShareNetwork,
+  Check,
+  X,
+  UsersThree,
+  Info
+} from '@phosphor-icons/react';
 import { Member } from '../types';
-import { getMemberAvatarColor } from '../utils/avatarColors';
+import { cn } from '@/lib/utils';
 import { capitalizeName } from '../utils/calculations';
-
-// Helper function to map hex color to Carbon Tag type
-function getTagTypeFromColor(bgColor: string): 'red' | 'magenta' | 'purple' | 'blue' | 'cyan' | 'teal' | 'green' | 'gray' | 'cool-gray' | 'warm-gray' {
-  const colorMap: Record<string, 'red' | 'magenta' | 'purple' | 'blue' | 'cyan' | 'teal' | 'green' | 'gray' | 'cool-gray' | 'warm-gray'> = {
-    '#002d9c': 'blue',
-    '#da1e28': 'red',
-    '#198038': 'green',
-    '#8d3f9b': 'purple',
-    '#0072c3': 'cyan',
-    '#007d79': 'teal',
-    '#a2191f': 'magenta',
-    '#004144': 'teal',
-    '#0043ce': 'blue',
-    '#00539a': 'blue',
-    '#6f2c3d': 'red',
-    '#0e6027': 'green',
-    '#5b21d0': 'purple',
-    '#005d5d': 'teal',
-  };
-
-  // Normalize color (remove spaces, convert to lowercase)
-  const normalizedColor = bgColor.toLowerCase().trim();
-  return colorMap[normalizedColor] || 'gray';
-}
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MembersSectionProps {
   members: Member[];
@@ -35,25 +30,117 @@ interface MembersSectionProps {
   onEditMember: (id: string, newName: string) => void;
   onDeleteMember: (id: string) => void;
   onShareGroup: () => void;
+  onDeleteProject: () => void;
 }
 
-export default function MembersSection({ members, onAddMember, onEditMember, onDeleteMember, onShareGroup }: MembersSectionProps) {
+import { useProject } from '@/contexts/ProjectContext';
+
+// ... (existing imports)
+
+export default function MembersSection({
+  members,
+  onAddMember,
+  onEditMember,
+  onDeleteMember,
+  onShareGroup,
+  onDeleteProject
+}: MembersSectionProps) {
+  const { currentProject } = useProject(); // Get current project context
   const [newMemberName, setNewMemberName] = useState('');
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteMemberDialogOpen, setDeleteMemberDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+
+  // Helper functions for colors (same as Dashboard)
+  const getProjectBgColor = () => {
+    const palette = [
+      'oklch(0.25 0.08 145)', // 0. Emerald
+      'oklch(0.23 0.08 175)', // 1. Deep Teal
+      'oklch(0.22 0.09 200)', // 2. Sky
+      'oklch(0.20 0.10 225)', // 3. Sapphire
+      'oklch(0.20 0.10 250)', // 4. Indigo
+      'oklch(0.20 0.10 265)', // 5. Deep Violet
+      'oklch(0.22 0.11 290)', // 6. Purple
+      'oklch(0.25 0.12 310)', // 7. Orchid
+      'oklch(0.22 0.12 330)', // 8. Magenta
+      'oklch(0.22 0.10 350)', // 9. Rose
+      'oklch(0.25 0.12 15)',  // 10. Crimson
+      'oklch(0.28 0.10 35)',  // 11. Red Orange
+      'oklch(0.28 0.09 55)',  // 12. Burnt Orange
+      'oklch(0.28 0.08 80)',  // 13. Amber
+      'oklch(0.26 0.07 110)', // 14. Olive
+    ];
+
+    if (currentProject?.color) {
+      switch (currentProject.color) {
+        case 'project-emerald': return palette[0];
+        case 'project-sky': return palette[2];
+        case 'project-indigo': return palette[4];
+        case 'project-rose': return palette[9];
+        case 'project-amber': return palette[13];
+      }
+    }
+
+    if (currentProject?.id) {
+      const id = currentProject.id;
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return palette[Math.abs(hash) % palette.length];
+    }
+    return palette[0];
+  };
+
+  const getProjectButtonBgColor = () => {
+    const palette = [
+      'oklch(0.18 0.06 145)', // 0. Emerald
+      'oklch(0.16 0.06 175)', // 1. Deep Teal
+      'oklch(0.15 0.07 200)', // 2. Sky
+      'oklch(0.14 0.08 225)', // 3. Sapphire
+      'oklch(0.14 0.08 250)', // 4. Indigo
+      'oklch(0.14 0.08 265)', // 5. Deep Violet
+      'oklch(0.15 0.09 290)', // 6. Purple
+      'oklch(0.18 0.10 310)', // 7. Orchid
+      'oklch(0.16 0.10 330)', // 8. Magenta
+      'oklch(0.16 0.08 350)', // 9. Rose
+      'oklch(0.18 0.10 15)',  // 10. Crimson
+      'oklch(0.20 0.08 35)',  // 11. Red Orange
+      'oklch(0.20 0.07 55)',  // 12. Burnt Orange
+      'oklch(0.20 0.06 80)',  // 13. Amber
+      'oklch(0.19 0.05 110)', // 14. Olive
+    ];
+
+    if (currentProject?.color) {
+      switch (currentProject.color) {
+        case 'project-emerald': return palette[0];
+        case 'project-sky': return palette[2];
+        case 'project-indigo': return palette[4];
+        case 'project-rose': return palette[9];
+        case 'project-amber': return palette[13];
+      }
+    }
+
+    if (currentProject?.id) {
+      const id = currentProject.id;
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return palette[Math.abs(hash) % palette.length];
+    }
+    return palette[0];
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMemberName.trim()) {
-      onAddMember(newMemberName);
+      onAddMember(newMemberName.trim());
       setNewMemberName('');
     }
   };
-
-  const headers = [
-    { key: 'name', header: 'Nombre' },
-    { key: 'actions', header: '' },
-  ];
 
   const handleStartEdit = (member: Member) => {
     setEditingMemberId(member.id);
@@ -73,224 +160,241 @@ export default function MembersSection({ members, onAddMember, onEditMember, onD
     setEditingName('');
   };
 
-  const rows = members.map((member) => {
-    const avatarColors = getMemberAvatarColor(member);
-    const isEditing = editingMemberId === member.id;
-
-    return {
-      id: member.id,
-      name: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '2.5rem',
-            height: '2.5rem',
-            borderRadius: '50%',
-            backgroundColor: avatarColors.bg,
-            color: avatarColors.text,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 500,
-            fontSize: '1rem',
-            flexShrink: 0
-          }}>
-            {member.name.charAt(0).toUpperCase()}
+  return (
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* 1. ADD MEMBER HERO CARD (Styled like Dashboard Project Card) */}
+      <section
+        className="rounded-xl p-4 text-white transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px]"
+        style={{ backgroundColor: getProjectBgColor() }}
+      >
+        <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
+          <div className="space-y-2">
+            <h3 className="text-[22px] font-serif tracking-tight leading-none text-white flex items-center gap-3">
+              <span className="text-4xl">{currentProject?.icon || <UsersThree size={32} weight="fill" />}</span>
+              Agranda el Círculo
+            </h3>
+            <p className="text-white/80 text-sm font-medium max-w-sm">
+              Agrega a los amigos con los que compartirás gastos en {currentProject?.name}.
+            </p>
           </div>
-          {isEditing ? (
-            <TextInput
-              id={`edit-member-${member.id}`}
-              labelText=""
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSaveEdit(member.id);
-                } else if (e.key === 'Escape') {
-                  handleCancelEdit();
+
+          <form onSubmit={handleSubmit} className="relative mt-4">
+            <div className="relative w-full">
+              <Input
+                placeholder="Nombre del amigo..."
+                value={newMemberName}
+                onChange={(e) => setNewMemberName(e.target.value)}
+                required
+                className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
+                style={{ backgroundColor: getProjectButtonBgColor() }}
+              >
+                <UserPlus size={16} weight="bold" className="text-white" />
+                <span className="text-sm font-semibold text-white">Agregar</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      {/* 2. MEMBERS LIST / GRID */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center px-4">
+          <h4 className="text-base font-normal tracking-[0.1px] text-stone-400">Integrantes ({members.length})</h4>
+        </div>
+
+        <div className="grid gap-4">
+          {members.length === 0 ? (
+            <div className="py-20 bg-stone-50 rounded-[2rem] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center space-y-3">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
+                <UsersThree size={32} className="text-stone-200" />
+              </div>
+              <p className="text-stone-400 font-bold text-sm italic">Todavía no hay nadie aquí...</p>
+            </div>
+          ) : (
+            members.map((member) => {
+              const isEditing = editingMemberId === member.id;
+              return (
+                <div
+                  key={member.id}
+                  className={cn(
+                    "bg-white rounded-xl p-4 border transition-all flex items-center justify-between group shadow-sm",
+                    isEditing ? "border-stone-900 ring-4 ring-stone-900/5 shadow-xl" : "border-stone-100 hover:border-stone-300 hover:shadow-md"
+                  )}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <Avatar className="w-12 h-12 shadow-sm ring-1 ring-stone-100">
+                      <AvatarImage src={member.avatar_url} />
+                      <AvatarFallback className="bg-stone-50 text-stone-900 font-black text-lg">
+                        {(member.name || '?').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    {isEditing ? (
+                      <Input
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit(member.id);
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        className="h-10 border-none bg-stone-50 rounded-xl font-bold text-lg focus-visible:ring-0"
+                      />
+                    ) : (
+                      <div>
+                        <p className="text-base font-medium text-stone-900 tracking-tight leading-none group-hover:translate-x-1 transition-transform">
+                          {member.name.charAt(0).toUpperCase() + member.name.slice(1)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={() => handleSaveEdit(member.id)}
+                          className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                        >
+                          <Check size={20} weight="bold" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="w-10 h-10 rounded-full bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100 transition-colors"
+                        >
+                          <X size={20} weight="bold" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleStartEdit(member)}
+                          className="w-12 h-10 rounded-full bg-transparent text-stone-400 md:text-stone-300 flex items-center justify-center hover:text-stone-900 hover:bg-stone-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                        >
+                          <PencilSimple size={18} weight="bold" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMemberToDelete(member);
+                            setDeleteMemberDialogOpen(true);
+                          }}
+                          className="w-12 h-10 rounded-full bg-transparent text-stone-400 md:text-stone-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-12"
+                        >
+                          <Trash size={18} weight="bold" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+
+      {/* 3. SHARE LINK CARD (Premium Polish) */}
+      {members.length > 0 && (
+        <section className="bg-stone-50 rounded-3xl p-6 border border-stone-100 space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-green-200 rounded-2xl flex items-center justify-center text-stone-400 shrink-0">
+              <Info size={24} weight="bold" className="text-green-700" />
+            </div>
+            <div className="space-y-1">
+              <h5 className="font-normal text-stone-900 text-lg">¿Sabías que puedes sincronizar?</h5>
+              <p className="text-xs text-stone-500 font-medium leading-relaxed">
+                Inicia sesión para compartir este grupo con otros integrantes y ver los cambios en tiempo real.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            onClick={onShareGroup}
+            className="w-full h-14 rounded-2xl bg-white border-stone-200 text-stone-900 font-semibold flex gap-2 active:scale-[0.98] transition-all"
+          >
+            <ShareNetwork size={20} weight="bold" />
+            Compartir Proyecto
+          </Button>
+        </section>
+      )}
+
+      {/* 4. DELETE PROJECT SECTION */}
+      <section className="flex justify-end pt-4 pb-8">
+        <button
+          onClick={() => setDeleteDialogOpen(true)}
+          className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors px-4 py-2"
+        >
+          <span className="font-medium text-sm">Datos del grupo</span>
+          <Trash size={16} />
+        </button>
+      </section>
+
+      {/* DELETE PROJECT DIALOG */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-2xl font-serif font-bold text-stone-900 text-left">Eliminar grupo</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left">
+              ¿Estás seguro que quieres eliminar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="h-12 px-6 rounded-2xl font-bold bg-stone-50 border-stone-100 hover:bg-stone-100 w-full sm:w-auto text-stone-900"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDeleteProject();
+                setDeleteDialogOpen(false);
+              }}
+              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DELETE MEMBER DIALOG */}
+      <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
+        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-2xl font-serif font-bold text-stone-900 text-left">Eliminar integrante</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left">
+              ¿Estás seguro que quieres eliminar a <span className="text-stone-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>? Si tiene gastos o deudas pendientes, no podrás eliminarlo hasta resolverlas.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteMemberDialogOpen(false)}
+              className="h-12 px-6 rounded-2xl font-bold bg-stone-50 border-stone-100 hover:bg-stone-100 w-full sm:w-auto text-stone-900"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (memberToDelete) {
+                  onDeleteMember(memberToDelete.id);
+                  setDeleteMemberDialogOpen(false);
                 }
               }}
-              autoFocus
-              style={{ flex: 1, minWidth: '150px' }}
-            />
-          ) : (
-            <Tag type={getTagTypeFromColor(avatarColors.bg)} size="sm">
-              {capitalizeName(member.name)}
-            </Tag>
-          )}
-        </div>
-      ),
-      actions: (
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
-          {isEditing ? (
-            <>
-              <Button
-                kind="ghost"
-                size="sm"
-                hasIconOnly
-                iconDescription="Guardar"
-                onClick={() => handleSaveEdit(member.id)}
-                renderIcon={CheckmarkFilled}
-              />
-              <Button
-                kind="ghost"
-                size="sm"
-                hasIconOnly
-                iconDescription="Cancelar"
-                onClick={handleCancelEdit}
-                renderIcon={Close}
-              />
-            </>
-          ) : (
-            <>
-              <Button
-                kind="ghost"
-                size="sm"
-                hasIconOnly
-                iconDescription="Editar"
-                onClick={() => handleStartEdit(member)}
-                renderIcon={Edit}
-              />
-              <Button
-                kind="danger--tertiary"
-                size="sm"
-                hasIconOnly
-                iconDescription="Eliminar"
-                onClick={() => onDeleteMember(member.id)}
-                renderIcon={TrashCan}
-              />
-            </>
-          )}
-        </div>
-      ),
-    };
-  });
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Add Member Form */}
-      <Tile>
-        <h3 style={{
-          fontSize: '1.25rem',
-          fontWeight: 500,
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(141, 141, 141, 0.20)',
-          padding: '0.75rem 1rem',
-          marginLeft: '-1rem',
-          marginRight: '-1rem',
-          marginTop: '-1rem',
-          borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-        }}>Agregar Integrante</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-            <TextInput
-              id="member-name"
-              labelText=""
-              placeholder="Nombre del integrante"
-              value={newMemberName}
-              onChange={(e) => setNewMemberName(e.target.value)}
-              required
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <Button
-              type="submit"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                width: 'auto',
-                minWidth: 'auto',
-                padding: '0.75rem 1.5rem'
-              }}
+              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
             >
-              <span style={{
-                display: 'inline-block',
-                textAlign: 'center',
-                width: '100%'
-              }}>
-                Agregar
-              </span>
+              Eliminar
             </Button>
-          </div>
-        </form>
-      </Tile>
-
-      {/* Members List */}
-      <Tile>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {headers.map((header) => (
-                  <TableHeader key={header.key}>{header.header}</TableHeader>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {members.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={headers.length} style={{ textAlign: 'center', color: 'var(--cds-text-secondary)' }}>
-                    No hay integrantes registrados. Agrega el primero arriba.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell style={{ paddingTop: 'calc(1rem + 4px)', paddingBottom: 'calc(1rem + 4px)' }}>{row.name}</TableCell>
-                    <TableCell style={{ paddingTop: 'calc(1rem + 4px)', paddingBottom: 'calc(1rem + 4px)', textAlign: 'right' }}>{row.actions}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Tile>
-
-      {/* Share Group */}
-      {members.length > 0 && (
-        <Tile>
-          <h3 style={{
-            fontSize: '1.25rem',
-            fontWeight: 500,
-            marginBottom: '1rem',
-            backgroundColor: 'rgba(141, 141, 141, 0.20)',
-            padding: '0.75rem 1rem',
-            marginLeft: '-1rem',
-            marginRight: '-1rem',
-            marginTop: '-1rem',
-            borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-          }}>Compartir Grupo</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{
-              background: 'var(--cds-layer-01)',
-              padding: '1rem',
-              borderRadius: '4px',
-              borderLeft: '3px solid #0f62fe'
-            }}>
-              <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-                💡 Beneficios de iniciar sesión:
-              </p>
-              <ul style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', paddingLeft: '1.5rem', margin: 0 }}>
-                <li>Sincronización en tiempo real entre dispositivos</li>
-                <li>Compartir grupos con otros usuarios</li>
-                <li>No perder tus datos si cambias de dispositivo</li>
-                <li>Acceso desde cualquier lugar</li>
-              </ul>
-            </div>
-            <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
-              Comparte este grupo con otros integrantes para que puedan ver los gastos en sus dispositivos.
-            </p>
-            <Button
-              kind="primary"
-              onClick={onShareGroup}
-              renderIcon={Share}
-            >
-              Generar Link de Compartir
-            </Button>
-          </div>
-        </Tile>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

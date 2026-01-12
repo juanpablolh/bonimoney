@@ -1,93 +1,60 @@
 import { useState, useEffect } from 'react';
-import { Button, Tile } from '@carbon/react';
-import { Information } from '@carbon/icons-react';
-
-/**
- * Detecta si la aplicación está corriendo online (no en localhost)
- */
-const isOnline = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location.hostname;
-  return hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.');
-};
-
-const COOKIE_CONSENT_KEY = 'split-cookie-consent';
+import { Button } from '@/components/ui/button';
+import { Info, X } from '@phosphor-icons/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CookieBanner() {
-  const [showBanner, setShowBanner] = useState(false);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Solo mostrar el banner si está online y no hay consentimiento previo
-    if (isOnline()) {
-      const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-      if (!consent) {
-        setShowBanner(true);
-      }
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
+      setShow(true);
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
-    setShowBanner(false);
+    localStorage.setItem('cookie-consent', 'true');
+    setShow(false);
   };
-
-  const handleReject = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'rejected');
-    setShowBanner(false);
-    // Si rechaza, limpiar los datos guardados en cookies
-    // (opcional, dependiendo de si quieres mantener los datos o no)
-  };
-
-  if (!showBanner) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      zIndex: 9999,
-      padding: '1rem',
-      maxWidth: '1280px',
-      margin: '0 auto'
-    }}>
-      <Tile style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flex: 1 }}>
-          <Information size={24} style={{ flexShrink: 0, marginTop: '0.125rem' }} />
-          <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '0.25rem' }}>
-              Uso de Cookies
-            </h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', lineHeight: '1.5', marginBottom: '0.5rem' }}>
-              Utilizamos cookies esenciales para guardar tu información y que puedas acceder a ella en futuras visitas.
-              Sin cookies, tus datos se perderán al cerrar el navegador.
-            </p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-              Lee nuestra{' '}
-              <a href="/cookie-policy.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
-                Política de Cookies
-              </a>
-              {' '}y{' '}
-              <a href="/privacy-policy.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
-                Política de Privacidad
-              </a>
-              {' '}para más información.
-            </p>
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          className="fixed bottom-6 left-6 right-6 z-[100] max-w-xl mx-auto"
+        >
+          <div className="bg-stone-900 text-white rounded-[2.5rem] p-6 shadow-2xl border border-white/10 flex flex-col sm:flex-row items-center gap-6">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+              <Info size={24} weight="bold" className="text-stone-400" />
+            </div>
+
+            <div className="flex-1 space-y-1">
+              <p className="text-xs font-bold leading-relaxed text-stone-300">
+                Usamos cookies para mejorar tu experiencia y sincronizar tus gastos de forma segura.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button
+                onClick={handleAccept}
+                className="flex-1 sm:flex-none h-12 px-8 rounded-2xl bg-white text-stone-900 font-black hover:bg-stone-100 transition-all active:scale-95"
+              >
+                Aceptar
+              </Button>
+              <button
+                onClick={() => setShow(false)}
+                className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-stone-500 hover:text-white transition-colors"
+              >
+                <X size={20} weight="bold" />
+              </button>
+            </div>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0, width: '100%' }}>
-          <Button kind="secondary" size="sm" onClick={handleReject} style={{ flex: '1 1 auto' }}>
-            Rechazar
-          </Button>
-          <Button kind="primary" size="sm" onClick={handleAccept} style={{ flex: '1 1 auto' }}>
-            Aceptar
-          </Button>
-        </div>
-      </Tile>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

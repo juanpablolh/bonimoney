@@ -1,57 +1,41 @@
-import { useState } from 'react';
-import { Button, Tile } from '@carbon/react';
-import { User, Logout } from '@carbon/icons-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { SignOut } from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function UserProfile() {
     const { user, signOut } = useAuth();
-    const [loading, setLoading] = useState(false);
 
-    const handleSignOut = async () => {
-        setLoading(true);
-        await signOut();
-        setLoading(false);
-    };
-
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     return (
-        <Tile style={{ marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                <div
-                    style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #0f62fe 0%, #0353e9 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                    }}
-                >
-                    <User size={24} />
-                </div>
-                <div style={{ flex: 1 }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                        {user.email}
-                    </h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)' }}>
-                        Cuenta verificada
+        <div className="bg-white rounded-[2rem] p-6 border border-stone-100 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-stone-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+
+            <div className="relative z-10 flex items-center gap-4">
+                <Avatar className="w-14 h-14 border-2 border-white shadow-md">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-stone-900 text-white font-black text-xl">
+                        {user.email?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-1">Cuenta</p>
+                    <p className="text-lg font-black text-stone-900 tracking-tighter truncate leading-none">
+                        {user.email?.split('@')[0]}
                     </p>
                 </div>
+
                 <Button
-                    kind="ghost"
-                    size="sm"
-                    renderIcon={Logout}
-                    onClick={handleSignOut}
-                    disabled={loading}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => signOut()}
+                    className="w-12 h-12 rounded-2xl bg-stone-50 hover:bg-orange-50 hover:text-orange-600 transition-all text-stone-400"
                 >
-                    {loading ? 'Saliendo...' : 'Cerrar sesión'}
+                    <SignOut size={22} weight="bold" />
                 </Button>
             </div>
-        </Tile>
+        </div>
     );
 }

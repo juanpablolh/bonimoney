@@ -8,6 +8,7 @@ export interface Project {
     description?: string;
     currency: string;
     icon: string;
+    color?: string;
     slug: string;
     owner_id: string;
     view_mode: 'public' | 'private';
@@ -32,6 +33,7 @@ interface CreateProjectData {
     description?: string;
     currency?: string;
     icon?: string;
+    color?: string;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -70,7 +72,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 throw error;
             }
 
-            const userProjects = projectsData || [];
+            // Filter out archived projects
+            const userProjects = (projectsData || []).filter(project => !project.archived);
             setProjects(userProjects);
 
             // Set current project from localStorage or first project
@@ -135,6 +138,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     role: 'owner',
                     status: 'accepted',
                     joined_at: new Date().toISOString(),
+                    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario', // Added name
                 });
 
             if (memberError) throw memberError;

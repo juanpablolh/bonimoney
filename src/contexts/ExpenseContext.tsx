@@ -71,6 +71,7 @@ export interface AddExpenseData {
     payment_reference?: string;
     metadata?: any;
     settled_to?: string;
+    date?: string;
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
@@ -118,6 +119,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         splitMethod: SplitMethod,
         splitDetails: SplitDetail[]
     ): { member_id: string; amount_owed: number }[] => {
+        if (!splitDetails || splitDetails.length === 0) return [];
+
         switch (splitMethod) {
             case 'equal': {
                 const amountPerPerson = totalAmount / splitDetails.length;
@@ -175,7 +178,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     payment_reference: data.payment_reference,
                     metadata: data.metadata,
                     settled_to: data.settled_to,
-                    date: new Date().toISOString(),
+                    date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
                     created_by: user.id,
                 })
                 .select()

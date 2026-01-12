@@ -1,731 +1,299 @@
-import { useState, useEffect, useRef } from 'react';
-import { 
-  TextInput, 
-  Select, 
-  SelectItem, 
-  Dropdown,
-  Button, 
-  Tile, 
-  RadioButtonGroup, 
-  RadioButton, 
-  Checkbox
-} from '@carbon/react';
-import { ChevronDown, ChevronRight, TrashCan, Edit } from '@carbon/icons-react';
-import { Member, Expense, Currency, ExpenseIcon } from '../types';
-import { formatCurrency, formatDate, getCurrencyPlaceholder, formatAmountInput, getDecimalSeparator, capitalizeName } from '../utils/calculations';
-import { EXPENSE_ICONS, EXPENSE_ICON_OPTIONS, getExpenseIcon } from '../utils/expenseIcons';
+import { useState } from 'react';
+import {
+  Receipt,
+  Trash,
+  PencilSimple,
+  CalendarBlank,
+  User,
+  MagnifyingGlass
+} from '@phosphor-icons/react';
+import { Member, Expense } from '../types';
+import { formatCurrency, formatDate } from '../utils/calculations';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { getExpenseColor } from '../utils/expenseIcons';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ExpensesSectionProps {
   members: Member[];
   expenses: Expense[];
-  onAddExpense: (expense: Omit<Expense, 'id' | 'date'>) => void;
-  onEditExpense: (id: string, expense: Omit<Expense, 'id' | 'date'>) => void;
+  onAddExpense: (expense: any) => void;
+  onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
-  onReset?: () => void;
   onNavigateToMembers?: () => void;
 }
 
 export default function ExpensesSection({
   members,
   expenses,
-  onAddExpense,
-  onEditExpense,
+  onEditExpense: _onEditExpense,
   onDeleteExpense,
   onNavigateToMembers,
 }: ExpensesSectionProps) {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('CLP');
-  const [paidBy, setPaidBy] = useState('');
-  const [splitType, setSplitType] = useState<'all' | 'selected'>('all');
-  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-  const [isCalloutDismissed, setIsCalloutDismissed] = useState(false);
-  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
-  const [isExpensesListExpanded, setIsExpensesListExpanded] = useState(true);
-  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
-  const [expenseIcon, setExpenseIcon] = useState<ExpenseIcon | undefined>(undefined);
-  const dropdownWrapperRef = useRef<HTMLDivElement>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
-  // Update the dropdown button padding to make room for icon and set placeholder
-  useEffect(() => {
-    const updateDropdown = () => {
-      if (dropdownWrapperRef.current) {
-        const button = dropdownWrapperRef.current.querySelector('.cds--list-box__field') as HTMLElement;
-        if (button) {
-          if (expenseIcon) {
-            button.style.paddingLeft = '40px';
-            button.style.position = 'relative';
-          } else {
-            button.style.paddingLeft = '';
-            // Set placeholder text when no icon is selected
-            const label = button.querySelector('.cds--list-box__label') as HTMLElement;
-            if (label) {
-              if (!label.textContent || label.textContent.trim() === '') {
-                label.textContent = 'Seleccionar';
-                label.style.color = 'var(--cds-text-placeholder, #8d8d8d)';
-              }
-            } else {
-              // If no label element exists, set it on the button itself
-              if (!button.textContent || button.textContent.trim() === '') {
-                button.setAttribute('data-placeholder', 'Seleccionar');
-              }
-            }
-            button.setAttribute('title', 'Seleccionar');
-          }
-        }
-      }
-    };
+  const sortedExpenses = [...expenses].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB.getTime() - dateA.getTime();
+  });
 
-    // Run immediately
-    updateDropdown();
+  const filteredExpenses = sortedExpenses.filter(e =>
+    e.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    // Also run after a short delay to catch any async updates
-    const timeout = setTimeout(updateDropdown, 100);
-
-    return () => clearTimeout(timeout);
-  }, [expenseIcon]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!description.trim() || !amount || !paidBy) return;
-
-    // Convert formatted amount to number
-    // For currencies with comma as decimal (BRL, ARS, EUR): remove all dots (thousands), keep comma
-    // For currencies with dot as decimal (CLP, USD, GBP): last dot with 2 or fewer digits after is decimal, others are thousands
-    let normalizedAmount = '';
-    const decimalSeparator = getDecimalSeparator(currency);
-    
-    if (decimalSeparator === ',') {
-      // Remove all dots (thousands separators), keep comma as decimal
-      normalizedAmount = amount.replace(/\./g, '').replace(',', '.');
-    } else {
-      // For currencies with dot as decimal separator
-      // Strategy: If last dot has more than 2 digits after it, it's a thousands separator
-      // If it has 2 or fewer digits, it's a decimal separator
-      const lastDotIndex = amount.lastIndexOf('.');
-      if (lastDotIndex !== -1) {
-        const afterLastDot = amount.substring(lastDotIndex + 1);
-        const digitsAfterDot = afterLastDot.replace(/[^\d]/g, '').length;
-        
-        if (digitsAfterDot > 2) {
-          // Last dot is thousands separator, no decimal part
-          normalizedAmount = amount.replace(/\./g, '');
-        } else if (digitsAfterDot > 0) {
-          // Last dot is decimal separator (1-2 digits after it)
-          const integerPart = amount.substring(0, lastDotIndex).replace(/\./g, '');
-          const decimalPart = afterLastDot.replace(/[^\d]/g, '');
-          normalizedAmount = integerPart + '.' + decimalPart;
-        } else {
-          // No digits after dot, treat as thousands separator
-          normalizedAmount = amount.replace(/\./g, '');
-        }
-      } else {
-        // No decimal part, just remove all dots
-        normalizedAmount = amount.replace(/\./g, '');
-      }
-    }
-    
-    const amountNum = parseFloat(normalizedAmount);
-    if (isNaN(amountNum) || amountNum <= 0) return;
-    
-    // Validate maximum value (99 million)
-    if (amountNum > 99000000) {
-      alert('El monto máximo permitido es 99.000.000');
-      return;
-    }
-
-    const splitBetween =
-      splitType === 'all'
-        ? members.map((m) => m.id)
-        : Array.from(selectedMembers);
-
-    if (splitBetween.length === 0) return;
-
-    if (editingExpenseId) {
-      // Edit existing expense
-      onEditExpense(editingExpenseId, {
-        description: description.trim(),
-        amount: amountNum,
-        currency,
-        paidBy,
-        splitBetween,
-        icon: expenseIcon || undefined,
-      });
-      setEditingExpenseId(null);
-    } else {
-      // Add new expense
-      onAddExpense({
-        description: description.trim(),
-        amount: amountNum,
-        currency,
-        paidBy,
-        splitBetween,
-        icon: expenseIcon || undefined,
-      });
-    }
-
-    // Reset form
-    setDescription('');
-    setAmount('');
-    setCurrency('CLP');
-    setPaidBy('');
-    setSplitType('all');
-    setSelectedMembers(new Set());
-    setExpenseIcon(undefined);
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
-
-  const handleEdit = (expense: Expense) => {
-    setEditingExpenseId(expense.id);
-    setDescription(expense.description);
-    setAmount(expense.amount.toString());
-    setCurrency(expense.currency);
-    setPaidBy(expense.paidBy);
-    setExpenseIcon(expense.icon || undefined);
-    
-    // Check if split is for all members or selected
-    const allMemberIds = members.map((m) => m.id);
-    const isAllMembers = expense.splitBetween.length === allMemberIds.length &&
-      expense.splitBetween.every((id) => allMemberIds.includes(id));
-    
-    if (isAllMembers) {
-      setSplitType('all');
-      setSelectedMembers(new Set());
-    } else {
-      setSplitType('selected');
-      setSelectedMembers(new Set(expense.splitBetween));
-    }
-
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingExpenseId(null);
-    setDescription('');
-    setAmount('');
-    setCurrency('CLP');
-    setPaidBy('');
-    setSplitType('all');
-    setSelectedMembers(new Set());
-    setExpenseIcon(undefined);
-  };
-
-  const toggleMember = (memberId: string) => {
-    const newSelected = new Set(selectedMembers);
-    if (newSelected.has(memberId)) {
-      newSelected.delete(memberId);
-    } else {
-      newSelected.add(memberId);
-    }
-    setSelectedMembers(newSelected);
-  };
-
-  const toggleDetails = (expenseId: string) => {
-    const newExpanded = new Set(expandedDetails);
-    if (newExpanded.has(expenseId)) {
-      newExpanded.delete(expenseId);
-    } else {
-      newExpanded.add(expenseId);
-    }
-    setExpandedDetails(newExpanded);
-  };
-
-  const showCallout = members.length === 0 && !isCalloutDismissed;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-      {/* Callout Notification */}
-      {showCallout && (
-        <Tile style={{ 
-          backgroundColor: 'var(--cds-notification-info-background, #e5f6ff)',
-          borderLeft: '3px solid var(--cds-support-info, #0043ce)',
-          padding: '1rem',
-          borderRadius: '4px'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.75rem', flex: 1 }}>
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--cds-support-info, #0043ce)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  marginTop: '2px'
-                }}>
-                  <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>i</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: 600, 
-                    marginBottom: '0.25rem',
-                    color: 'var(--cds-text-primary, #161616)'
-                  }}>
-                    Agrega un integrante primero
-                  </div>
-                  <div style={{ 
-                    fontSize: '0.875rem', 
-                    color: 'var(--cds-text-secondary, #525252)'
-                  }}>
-                    Antes de ingresar un gasto, necesitas agregar al menos un integrante al grupo.
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsCalloutDismissed(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '0.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--cds-text-secondary, #525252)',
-                    flexShrink: 0
-                  }}
-                  aria-label="Cerrar"
-                >
-                  <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>×</span>
-                </button>
-              </div>
-            </div>
-            {onNavigateToMembers && (
-              <div style={{ marginLeft: '32px' }}>
-                <Button
-                  kind="ghost"
-                  size="sm"
-                  onClick={onNavigateToMembers}
-                  style={{
-                    color: 'var(--cds-link-primary, #0043ce)'
-                  }}
-                >
-                  Agregar integrante
-                </Button>
-              </div>
-            )}
-          </div>
-        </Tile>
-      )}
-
-      {/* Add/Edit Expense Form */}
-      <Tile style={{ marginTop: '24px' }}>
-        <h3 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(141, 141, 141, 0.20)',
-          padding: '0.75rem 1rem',
-          marginLeft: '-1rem',
-          marginRight: '-1rem',
-          marginTop: '-1rem',
-          borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-        }}>
-          {editingExpenseId ? 'Editar Gasto' : 'Agregar Gasto'}
-        </h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <TextInput
-            id="expense-description"
-            labelText="Descripción"
-            placeholder="Ej: Cena en restaurante"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-
-          {/* Icon Selector */}
-          <div ref={dropdownWrapperRef} style={{ position: 'relative' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Tipo de Gasto
-            </label>
-            <Dropdown
-              id="expense-icon"
-              label=""
-              titleText=""
-              items={EXPENSE_ICON_OPTIONS.map((iconName) => ({
-                id: iconName,
-                value: iconName,
-                label: EXPENSE_ICONS[iconName].label,
-                icon: iconName
-              }))}
-              selectedItem={expenseIcon ? {
-                id: expenseIcon,
-                value: expenseIcon,
-                label: EXPENSE_ICONS[expenseIcon].label,
-                icon: expenseIcon
-              } : null}
-              itemToString={(item) => item ? item.label : 'Seleccionar'}
-              itemToElement={(item) => {
-                if (!item) return null;
-                const IconComponent = EXPENSE_ICONS[item.icon as ExpenseIcon].component;
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <IconComponent size={16} />
-                    <span>{item.label}</span>
-                  </div>
-                );
-              }}
-              onChange={(e) => {
-                if (e.selectedItem) {
-                  setExpenseIcon(e.selectedItem.value as ExpenseIcon);
-                }
-              }}
-            />
-            <style>{`
-              #expense-icon .cds--list-box__field {
-                padding-left: ${expenseIcon ? '40px' : '12px'} !important;
-              }
-              #expense-icon .cds--list-box__field[data-placeholder] .cds--list-box__label:empty::before,
-              #expense-icon .cds--list-box__field[data-placeholder]:not(:has(.cds--list-box__label))::before {
-                content: attr(data-placeholder);
-                color: var(--cds-text-placeholder, #8d8d8d);
-              }
-            `}</style>
-            {expenseIcon && (() => {
-              const IconComponent = EXPENSE_ICONS[expenseIcon].component;
-              return (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(calc(-50% + 12px))',
-                    pointerEvents: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    zIndex: 1,
-                    color: 'var(--cds-button-primary, #0f62fe)'
-                  }}
-                >
-                  <IconComponent size={16} />
-                </div>
-              );
-            })()}
-          </div>
-
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '1rem'
-          }}>
-            <Select
-              id="expense-currency"
-              labelText="Moneda"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
-              required
-            >
-              <SelectItem value="CLP" text="Peso Chileno (CLP)" />
-              <SelectItem value="USD" text="Dólar (USD)" />
-              <SelectItem value="BRL" text="Real Brasileño (BRL)" />
-              <SelectItem value="ARS" text="Peso Argentino (ARS)" />
-              <SelectItem value="EUR" text="Euro (EUR)" />
-              <SelectItem value="GBP" text="Libra Esterlina (GBP)" />
-              <SelectItem value="PEN" text="Sol Peruano (PEN)" />
-            </Select>
-
-            <TextInput
-              id="expense-amount"
-              labelText="Monto"
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => {
-                const formatted = formatAmountInput(e.target.value, currency);
-                setAmount(formatted);
-              }}
-              placeholder={getCurrencyPlaceholder(currency)}
-              required
-            />
-
-            <Select
-              id="expense-paid-by"
-              labelText="Pagado por"
-              value={paidBy}
-              onChange={(e) => setPaidBy(e.target.value)}
-              required
-            >
-              <SelectItem value="" text="Seleccionar..." />
-              {members.map((member) => (
-                <SelectItem key={member.id} value={member.id} text={member.name} />
-              ))}
-            </Select>
-          </div>
-
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* 1. SEARCH & HEADER */}
+      <section className="space-y-4 px-2">
+        <div className="flex justify-between items-end">
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Dividir entre
-            </label>
-            <RadioButtonGroup
-              name="splitType"
-              valueSelected={splitType}
-              onChange={(value) => {
-                setSplitType(value as 'all' | 'selected');
-                if (value === 'all') {
-                  setSelectedMembers(new Set());
-                }
-              }}
-              legendText=""
-            >
-              <RadioButton labelText="Todos los integrantes" value="all" id="split-all" />
-              <RadioButton labelText="Seleccionar integrantes" value="selected" id="split-selected" />
-            </RadioButtonGroup>
-
-            {splitType === 'selected' && (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: '0.5rem',
-                padding: '1rem',
-                backgroundColor: 'var(--cds-layer-01)',
-                borderRadius: '4px',
-                marginTop: '1rem'
-              }}>
-                {members.map((member) => (
-                  <Checkbox
-                    key={member.id}
-                    id={`member-${member.id}`}
-                    labelText={member.name}
-                    checked={selectedMembers.has(member.id)}
-                    onChange={() => toggleMember(member.id)}
-                  />
-                ))}
-              </div>
-            )}
+            <h3 className="mb-1" style={{
+              color: 'var(--general-foreground, #020617)',
+              fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+              fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+              letterSpacing: '0.00438rem'
+            }}>Historial</h3>
+            <h2 style={{
+              color: 'var(--stone-900, #1C1917)',
+              fontFamily: 'var(--font-definitions-font-family-headings, "Abhaya Libre Medium")',
+              fontSize: '1.5rem',
+              fontStyle: 'normal',
+              fontWeight: 500,
+              lineHeight: 'var(--heading-3-line-height, 1.8rem)',
+              letterSpacing: 'var(--heading-3-letter-spacing, -0.0625rem)'
+            }}>Gastos</h2>
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
-            {editingExpenseId && (
-              <Button
-                type="button"
-                kind="secondary"
-                onClick={handleCancelEdit}
-              >
-                Cancelar
-              </Button>
-            )}
-            <Button
-              type="submit"
-              disabled={splitType === 'selected' && selectedMembers.size === 0}
-              style={{ flex: 1, width: '100%' }}
-            >
-              {editingExpenseId ? 'Guardar Cambios' : 'Agregar Gasto'}
-            </Button>
+        <div className="relative group">
+          <MagnifyingGlass size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-stone-900 transition-colors" />
+          <Input
+            placeholder="Buscar por descripción..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-14 pl-12 bg-stone-50 border-stone-100 rounded-2xl font-bold text-stone-900 focus-visible:ring-stone-200 placeholder:text-stone-300"
+          />
+        </div>
+      </section>
+
+      {/* 2. EXPENSES TIMELINE */}
+      <section className="space-y-3">
+        {filteredExpenses.length === 0 ? (
+          <div className="py-24 text-center space-y-4 bg-white rounded-[1rem] border border-stone-100 shadow-sm">
+            <div className="w-20 h-20 bg-stone-50 rounded-[1rem] flex items-center justify-center mx-auto shadow-inner">
+              <Receipt size={32} className="text-stone-200" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-stone-400 font-black text-sm uppercase tracking-widest">No hay registros</p>
+              <p className="text-stone-300 text-xs font-medium italic">¿Quizás quieres agregar uno nuevo?</p>
+            </div>
           </div>
-        </form>
-      </Tile>
-
-      {/* Expenses List */}
-      <Tile style={{ marginTop: '24px' }}>
-        <h3 
-          onClick={() => setIsExpensesListExpanded(!isExpensesListExpanded)}
-          style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 500, 
-            marginBottom: '1rem',
-            backgroundColor: 'rgba(141, 141, 141, 0.20)',
-            padding: '0.75rem 1rem',
-            marginLeft: '-1rem',
-            marginRight: '-1rem',
-            marginTop: '-1rem',
-            borderLeft: '3px solid var(--cds-button-primary, #0f62fe)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            userSelect: 'none'
-          }}
-        >
-          <span>Lista de Gastos</span>
-          {isExpensesListExpanded ? (
-            <ChevronDown size={20} style={{ flexShrink: 0 }} />
-          ) : (
-            <ChevronRight size={20} style={{ flexShrink: 0 }} />
-          )}
-        </h3>
-        {isExpensesListExpanded && (
-          <>
-            {expenses.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--cds-text-secondary)', padding: '2rem' }}>
-            No hay gastos registrados. Agrega el primero arriba.
-          </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {expenses
-              .slice()
-              .sort((a, b) => {
-                const dateA = a.date instanceof Date ? a.date : new Date(a.date);
-                const dateB = b.date instanceof Date ? b.date : new Date(b.date);
-                return dateB.getTime() - dateA.getTime();
-              })
-              .map((expense) => {
-                const paidByMember = members.find((m) => m.id === expense.paidBy);
-                const splitMembers = expense.splitBetween
-                  .map((id) => members.find((m) => m.id === id)?.name)
-                  .filter(Boolean);
-                const perPerson = expense.amount / expense.splitBetween.length;
-                const isExpanded = expandedDetails.has(expense.id);
+          filteredExpenses.map((expense) => {
+            const isExpanded = expandedId === expense.id;
+            const paidBy = members.find(m => m.id === expense.paidBy);
 
-                return (
-                  <div
-                    key={expense.id}
-                    style={{
-                      padding: '1rem',
-                      backgroundColor: 'var(--cds-layer-01)',
-                      borderRadius: '4px',
-                      border: '1px solid var(--cds-border-subtle-01)',
-                      borderBottom: '1px solid var(--cds-border-subtle-02)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
-                    }}
-                  >
-                    {/* Primera fila: Descripción y Monto - Información principal */}
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'flex-start', 
-                      gap: '8px',
-                      width: '100%'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                        {getExpenseIcon(expense.icon, 24) && (
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--cds-layer-02)',
-                            flexShrink: 0,
-                            color: 'var(--cds-button-primary, #0f62fe)'
-                          }}>
-                            {getExpenseIcon(expense.icon, 24)}
-                          </div>
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ 
-                            fontWeight: 500, 
-                            fontSize: '1rem',
-                            wordBreak: 'break-word'
-                          }}>
-                            {expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()}
-                          </div>
+            return (
+              <div
+                key={expense.id}
+                className={cn(
+                  "bg-white rounded-[1rem] transition-all duration-300 overflow-hidden",
+                  isExpanded ? "shadow-2xl shadow-stone-200 scale-[1.02] z-10" : "shadow-sm"
+                )}
+              >
+                {/* Main Card */}
+                <div
+                  onClick={() => toggleExpand(expense.id)}
+                  className="p-4 flex items-center justify-between cursor-pointer active:bg-stone-50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    {(() => {
+                      const colors = getExpenseColor(expense.id);
+                      return (
+                        <div className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center transition-colors group",
+                          colors.bg,
+                          colors.text
+                        )}>
+                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <Receipt size={24} />}
                         </div>
-                      </div>
-                      <div style={{ 
-                        fontSize: '1.125rem', 
+                      );
+                    })()}
+                    <div>
+                      <p className="mb-1" style={{
+                        color: 'var(--stone-900, #1C1917)',
+                        fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                        fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                        fontStyle: 'normal',
                         fontWeight: 500,
-                        flexShrink: 0,
-                        textAlign: 'right'
+                        lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                        letterSpacing: '0.00438rem'
                       }}>
-                        {formatCurrency(expense.amount, expense.currency)}
-                      </div>
+                        {expense.description.charAt(0).toUpperCase() + expense.description.slice(1)}
+                      </p>
                     </div>
+                  </div>
 
-                    {/* Segunda fila: Información secundaria y acciones */}
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      gap: '8px',
-                      width: '100%',
-                      flexWrap: 'wrap'
+                  <div className="text-right space-y-1">
+                    <p style={{
+                      color: 'var(--general-foreground, #020617)',
+                      fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                      fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                      fontStyle: 'normal',
+                      fontWeight: 600,
+                      lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                      letterSpacing: '0.00438rem'
                     }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem',
-                        flex: 1,
-                        minWidth: 0
-                      }}>
-                        <div style={{ 
-                          fontSize: '0.875rem', 
-                          color: 'var(--cds-text-secondary)'
-                        }}>
-                          Pagado por: <span style={{ fontWeight: 500 }}>{paidByMember?.name ? capitalizeName(paidByMember.name) : 'Desconocido'}</span>
+                      {formatCurrency(expense.amount, expense.currency)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div className="px-5 pb-5 pt-2 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="h-px bg-stone-50 w-full" />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-stone-400 tracking-tight flex items-center gap-1.5">
+                          <User size={12} weight="bold" /> Pagado por
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6">
+                            <AvatarFallback className="text-[10px] font-black bg-stone-100">
+                              {(paidBy?.name || '?').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-sm font-semibold text-stone-700">{paidBy?.name || 'Desconocido'}</p>
                         </div>
                       </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem',
-                        flexShrink: 0
-                      }}>
-                        <Button
-                          kind="ghost"
-                          size="sm"
-                          hasIconOnly
-                          iconDescription="Editar gasto"
-                          onClick={() => handleEdit(expense)}
-                          renderIcon={Edit}
-                        />
-                        <Button
-                          kind="danger--tertiary"
-                          size="sm"
-                          hasIconOnly
-                          iconDescription="Eliminar gasto"
-                          onClick={() => onDeleteExpense(expense.id)}
-                          renderIcon={TrashCan}
-                        />
+
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-stone-400 tracking-tight flex items-center gap-1.5">
+                          <CalendarBlank size={12} weight="bold" /> Fecha
+                        </p>
+                        <p className="text-sm font-semibold text-stone-700">{formatDate(expense.date)}</p>
                       </div>
                     </div>
 
-                    {/* Botón de detalles */}
-                    <div style={{ width: '100%' }}>
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-stone-400 tracking-tight">Dividido entre</p>
+                      <div className="flex flex-wrap gap-2">
+                        {expense.splitBetween.map(id => {
+                          const m = members.find(mbr => mbr.id === id);
+                          return (
+                            <div key={id} className="bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100 flex items-center gap-2">
+                              <Avatar className="w-5 h-5">
+                                <AvatarFallback className="text-[8px] font-black bg-white">
+                                  {(m?.name || '?').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-[11px] font-bold text-stone-600">{(m?.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (m?.name || 'Alguien').split(' ')[0].slice(1)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
                       <Button
-                        kind="ghost"
-                        size="sm"
-                        onClick={() => toggleDetails(expense.id)}
-                        style={{ padding: 0 }}
+                        variant="outline"
+                        className="flex-1 h-12 rounded-2xl text-stone-600 hover:text-stone-900 transition-all font-black text-xs uppercase tracking-widest flex gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          _onEditExpense(expense);
+                        }}
                       >
-                        {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
-                        <ChevronDown 
-                          size={16} 
-                          style={{ 
-                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.2s',
-                            marginLeft: '0.25rem'
-                          }} 
-                        />
+                        <PencilSimple size={14} weight="bold" /> Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-12 h-12 rounded-2xl border-stone-100 text-stone-400 hover:text-orange-600 hover:border-orange-100 hover:bg-orange-50 transition-all p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpenseToDelete(expense);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash size={18} weight="bold" />
                       </Button>
                     </div>
-
-                    {/* Tercera fila: Detalles expandidos - Usa todo el ancho */}
-                    {isExpanded && (
-                      <div style={{ 
-                        width: '100%',
-                        paddingTop: '0.75rem', 
-                        borderTop: '1px solid var(--cds-border-subtle-01)',
-                        fontSize: '0.875rem',
-                        color: 'var(--cds-text-secondary)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem'
-                      }}>
-                        <div>
-                          Dividido entre: <span style={{ fontWeight: 500 }}>{splitMembers.join(', ')}</span>
-                        </div>
-                        <div>
-                          {formatCurrency(perPerson, expense.currency)} por persona
-                        </div>
-                        <div>
-                          {formatDate(expense.date)}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-          </div>
-            )}
-          </>
+                )}
+              </div>
+            );
+          })
         )}
-      </Tile>
+      </section>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-serif font-normal text-stone-900 text-left">Eliminar gasto</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left">
+              ¿Estás seguro que quieres eliminar <span className="text-stone-900 font-bold">"{expenseToDelete?.description}"</span>? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="h-12 px-6 rounded-2xl font-bold bg-stone-50 border-stone-100 hover:bg-stone-100 w-full sm:w-auto text-stone-900"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (expenseToDelete) {
+                  onDeleteExpense(expenseToDelete.id);
+                  setDeleteDialogOpen(false);
+                }
+              }}
+              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 3. ADD BUTTON (Helpful hint) */}
+      {members.length === 0 && (
+        <div className="bg-stone-900 rounded-[1rem] p-8 text-center space-y-4">
+          <h4 className="text-white font-black text-lg">¿Empezamos?</h4>
+          <p className="text-stone-400 text-sm font-medium">Primero agrega algunos amigos para poder anotar gastos.</p>
+          <Button
+            onClick={onNavigateToMembers}
+            className="w-full h-14 rounded-2xl bg-white text-stone-900 font-black"
+          >
+            Ir a Miembros
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

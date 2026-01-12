@@ -1,509 +1,535 @@
-import { useState } from 'react';
-import { Tile, Button, IconButton, Tag } from '@carbon/react';
-import { Add } from '@carbon/icons-react';
+import { useState, useEffect } from 'react';
+import {
+  ArrowRight,
+  TrendDown,
+  Clock,
+  ArrowsLeftRight,
+  UserPlus,
+  MagnifyingGlass,
+  X,
+  Sparkle,
+  Receipt,
+  FileText,
+  Trash
+} from '@phosphor-icons/react';
 import { Member, Expense, Balance, Transaction, Currency } from '../types';
-import { formatCurrency, getCurrencySymbol, capitalizeName } from '../utils/calculations';
-import { getExpenseIcon } from '../utils/expenseIcons';
-import { getMemberAvatarColor } from '../utils/avatarColors';
+import { Project } from '../contexts/ProjectContext';
+import { capitalizeName } from '../utils/calculations';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { getExpenseColor } from '../utils/expenseIcons';
 
 interface DashboardProps {
   members: Member[];
   expenses: Expense[];
   balancesByCurrency: Map<Currency, Balance[]>;
   transactionsByCurrency: Transaction[];
+  currentProject: Project | null;
   onNavigateToMembers: () => void;
   onNavigateToExpenses: () => void;
   onSettleUp: (fromId: string, toId: string, amount: number) => void;
   onReset: () => void;
+  onAddMember: (name: string) => Promise<void>;
 }
 
-// Helper function to map hex color to Carbon Tag type
-function getTagTypeFromColor(bgColor: string): 'red' | 'magenta' | 'purple' | 'blue' | 'cyan' | 'teal' | 'green' | 'gray' | 'cool-gray' | 'warm-gray' {
-  const colorMap: Record<string, 'red' | 'magenta' | 'purple' | 'blue' | 'cyan' | 'teal' | 'green' | 'gray' | 'cool-gray' | 'warm-gray'> = {
-    '#002d9c': 'blue',
-    '#da1e28': 'red',
-    '#198038': 'green',
-    '#8d3f9b': 'purple',
-    '#0072c3': 'cyan',
-    '#007d79': 'teal',
-    '#a2191f': 'magenta',
-    '#004144': 'teal',
-    '#0043ce': 'blue',
-    '#00539a': 'blue',
-    '#6f2c3d': 'red',
-    '#0e6027': 'green',
-    '#5b21d0': 'purple',
-    '#005d5d': 'teal',
+export default function Dashboard({
+  members,
+  expenses,
+  balancesByCurrency,
+  transactionsByCurrency,
+  currentProject,
+  onNavigateToMembers,
+  onNavigateToExpenses,
+  onSettleUp: _onSettleUp,
+  onReset,
+  onAddMember
+}: DashboardProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newMemberName, setNewMemberName] = useState('');
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  const handleAddMember = async () => {
+    if (!newMemberName.trim()) {
+      onNavigateToMembers();
+      return;
+    }
+
+    try {
+      await onAddMember(newMemberName.trim());
+      setNewMemberName('');
+    } catch (error) {
+      console.error('Error adding member:', error);
+    }
   };
-  
-  // Normalize color (remove spaces, convert to lowercase)
-  const normalizedColor = bgColor.toLowerCase().trim();
-  return colorMap[normalizedColor] || 'gray';
-}
 
-export default function Dashboard({ members, expenses, balancesByCurrency, transactionsByCurrency, onNavigateToMembers, onNavigateToExpenses: _onNavigateToExpenses, onSettleUp: _onSettleUp, onReset }: DashboardProps) {
-  const [showAllExpenses, setShowAllExpenses] = useState(false);
-  
+  // Check for desktop breakpoint
+  useEffect(() => {
+    const checkDesktop = () => {
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+    };
+
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   // Calculate total expenses by currency
-  const expensesByCurrency = new Map<Currency, number>();
+  const totalByCurrency = new Map<Currency, number>();
   expenses.forEach((expense) => {
-    const current = expensesByCurrency.get(expense.currency) || 0;
-    expensesByCurrency.set(expense.currency, current + expense.amount);
+    const current = totalByCurrency.get(expense.currency) || 0;
+    totalByCurrency.set(expense.currency, current + expense.amount);
   });
-  
-  const currencies = Array.from(expensesByCurrency.entries());
-  
-  const sortedExpenses = expenses
-    .slice()
-    .sort((a, b) => {
-      const dateA = a.date instanceof Date ? a.date : new Date(a.date);
-      const dateB = b.date instanceof Date ? b.date : new Date(b.date);
-      return dateB.getTime() - dateA.getTime();
-    });
-  
-  const displayedExpenses = showAllExpenses ? sortedExpenses : sortedExpenses.slice(0, 3);
+
+  const currencies = Array.from(totalByCurrency.entries());
+
+  const sortedExpenses = [...expenses].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  const filteredExpenses = sortedExpenses.filter(e =>
+    e.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Premium OKLCH Color Palette matching GlobalDashboard (15 variants)
+  const getProjectBgColor = () => {
+    const palette = [
+      'oklch(0.25 0.08 145)', // 0. Emerald
+      'oklch(0.23 0.08 175)', // 1. Deep Teal
+      'oklch(0.22 0.09 200)', // 2. Sky
+      'oklch(0.20 0.10 225)', // 3. Sapphire
+      'oklch(0.20 0.10 250)', // 4. Indigo
+      'oklch(0.20 0.10 265)', // 5. Deep Violet
+      'oklch(0.22 0.11 290)', // 6. Purple
+      'oklch(0.25 0.12 310)', // 7. Orchid
+      'oklch(0.22 0.12 330)', // 8. Magenta
+      'oklch(0.22 0.10 350)', // 9. Rose
+      'oklch(0.25 0.12 15)',  // 10. Crimson
+      'oklch(0.28 0.10 35)',  // 11. Red Orange
+      'oklch(0.28 0.09 55)',  // 12. Burnt Orange
+      'oklch(0.28 0.08 80)',  // 13. Amber
+      'oklch(0.26 0.07 110)', // 14. Olive
+    ];
+
+    if (currentProject?.color) {
+      switch (currentProject.color) {
+        case 'project-emerald': return palette[0];
+        case 'project-sky': return palette[2];
+        case 'project-indigo': return palette[4];
+        case 'project-rose': return palette[9];
+        case 'project-amber': return palette[13];
+      }
+    }
+
+    // Stable fallback based on ID hash if no color is set
+    if (currentProject?.id) {
+      const id = currentProject.id;
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return palette[Math.abs(hash) % palette.length];
+    }
+
+    return palette[0];
+  };
+
+  // Darker version for buttons (950 equivalent)
+  const getProjectButtonBgColor = () => {
+    // Generated darker variants (approx L-0.08, C-0.02)
+    const palette = [
+      'oklch(0.18 0.06 145)', // 0. Emerald
+      'oklch(0.16 0.06 175)', // 1. Deep Teal
+      'oklch(0.15 0.07 200)', // 2. Sky
+      'oklch(0.14 0.08 225)', // 3. Sapphire
+      'oklch(0.14 0.08 250)', // 4. Indigo
+      'oklch(0.14 0.08 265)', // 5. Deep Violet
+      'oklch(0.15 0.09 290)', // 6. Purple
+      'oklch(0.18 0.10 310)', // 7. Orchid
+      'oklch(0.16 0.10 330)', // 8. Magenta
+      'oklch(0.16 0.08 350)', // 9. Rose
+      'oklch(0.18 0.10 15)',  // 10. Crimson
+      'oklch(0.20 0.08 35)',  // 11. Red Orange
+      'oklch(0.20 0.07 55)',  // 12. Burnt Orange
+      'oklch(0.20 0.06 80)',  // 13. Amber
+      'oklch(0.19 0.05 110)', // 14. Olive
+    ];
+
+    if (currentProject?.color) {
+      switch (currentProject.color) {
+        case 'project-emerald': return palette[0];
+        case 'project-sky': return palette[2];
+        case 'project-indigo': return palette[4];
+        case 'project-rose': return palette[9];
+        case 'project-amber': return palette[13];
+      }
+    }
+
+    if (currentProject?.id) {
+      const id = currentProject.id;
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return palette[Math.abs(hash) % palette.length];
+    }
+
+    return palette[0];
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Summary Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr',
-        gap: '1rem'
-      }}>
-        {/* Total del Grupo */}
-        <Tile style={{ display: 'flex', flexDirection: 'column', minHeight: '160px', position: 'relative', overflow: 'visible' }}>
-          <IconButton
-            kind="secondary"
-            size="sm"
-            label="Agregar integrante"
-            onClick={onNavigateToMembers}
-            style={{ 
-              position: 'absolute',
-              top: '-0.75rem',
-              right: '-0.75rem',
-              flexShrink: 0,
-              margin: 0,
-              zIndex: 1,
-              width: '48px',
-              height: '48px',
-              minWidth: '48px',
-              minHeight: '48px'
-            }}
-          >
-            <Add size={20} />
-          </IconButton>
-          <div style={{ 
-            fontSize: '0.875rem', 
-            color: 'var(--cds-text-secondary)',
-            marginBottom: '0.5rem',
-            minHeight: '32px'
-          }}>
-            Integrantes
+    <div className="flex-1 min-h-0 flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 pb-0 lg:pb-0 w-full min-w-0 lg:h-full">
+
+      {/* ===== LEFT COLUMN: PROJECT CARD + GASTO TOTAL ===== */}
+      <div className="lg:col-span-4 space-y-4 flex flex-col min-w-0 min-h-0 h-auto lg:h-full flex-shrink-0">
+        {/* Project Card (Dynamic Color) */}
+        <div
+          className="rounded-xl p-4 text-white transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px]"
+          style={{ backgroundColor: getProjectBgColor() }}
+        >
+          {/* Header Row: Icon + Title + Users Button */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-4xl">{currentProject?.icon}</span>
+              <h2 className="font-serif text-2xl tracking-tight leading-none text-white mt-1">
+                {(currentProject?.name || '').charAt(0).toUpperCase() + (currentProject?.name || '').slice(1).toLowerCase()}
+              </h2>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onNavigateToMembers(); }}
+              className="text-white/90 font-medium text-sm flex items-center gap-2 hover:text-white transition-colors"
+            >
+              Detalles <ArrowRight size={18} weight="bold" />
+            </button>
           </div>
-          <div style={{ marginTop: 'auto', width: '100%' }}>
-            {members.length === 0 ? (
-              <div style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>Sin integrantes</div>
+
+          {/* Input Section */}
+          <div className="mt-8 relative">
+            <Input
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddMember();
+                }
+              }}
+              placeholder="Nuevo integrante"
+              className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base"
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddMember();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
+              style={{ backgroundColor: getProjectButtonBgColor() }}
+            >
+              <UserPlus size={16} weight="bold" />
+              <span className="text-xs font-semibold">Integrante</span>
+            </button>
+          </div>
+
+          {/* Footer Row: Count + Avatars */}
+          <div className="flex items-end justify-between mt-6">
+            <p className="text-white/90 pb-1">
+              <span className="font-serif text-3xl tracking-tight">{members.length}</span>
+              <span className="ml-2 text-sm font-medium">Integrantes</span>
+            </p>
+            <div className="flex -space-x-3">
+              {members.slice(0, 4).map((member) => (
+                <Avatar key={member.id} className="w-10 h-10 border-2 border-white/10 ring-2 ring-black/5">
+                  <AvatarImage src={member.avatar_url} />
+                  <AvatarFallback className="bg-white text-stone-900 text-xs font-bold uppercase">
+                    {(member.name || '?').charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+          </div>
+        </div>
+
+
+        {/* Gasto Total Card (White) */}
+        <div className="bg-gradient-to-b from-white to-stone-50/50 rounded-2xl p-4 border border-stone-100 shadow-sm flex-1 flex flex-col justify-between">
+          {/* Top Row: Icon + Detalles */}
+          <div className="flex items-start justify-between mb-8">
+            <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center text-stone-400">
+              <FileText size={24} weight="regular" />
+            </div>
+            <button
+              onClick={onNavigateToExpenses}
+              className="text-base font-medium text-stone-900 flex items-center gap-2 hover:text-stone-600 transition-colors"
+            >
+              Detalles <ArrowRight size={18} weight="bold" />
+            </button>
+          </div>
+
+          {/* Bottom Row: Label + Amount */}
+          <div className="flex items-end justify-between">
+            <p className="text-lg text-stone-500 font-medium">Gasto total</p>
+            <div className="text-right">
+              {currencies.length > 0 ? (
+                currencies.map(([curr, amount]) => (
+                  <h3 key={curr} className="font-serif tracking-tighter text-stone-900" style={{ fontSize: '32px' }}>
+                    $ {amount.toLocaleString('es-CL')} <span className="text-lg font-sans text-stone-400 ml-1">{curr}</span>
+                  </h3>
+                ))
+              ) : (
+                <h3 className="font-serif text-4xl tracking-tighter text-stone-300">$ 0</h3>
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ===== MIDDLE COLUMN: ACTIVIDAD RECIENTE ===== */}
+      <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden flex flex-col h-full">
+          {/* Header */}
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-[12px] border-b border-stone-100">
+            <div className="flex items-center gap-2 text-stone-950 h-fit">
+              <Clock size={20} weight="regular" />
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Actividad reciente</p>
+            </div>
+            <button
+              onClick={onNavigateToExpenses}
+              className="text-base font-medium text-stone-900 flex items-center gap-2 hover:text-stone-600 transition-colors"
+            >
+              Detalles <ArrowRight size={18} weight="bold" />
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="px-4 pb-4 pt-4">
+            <div className="relative">
+              <MagnifyingGlass
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"
+                size={18}
+              />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar gastos..."
+                className="pl-11 h-12 bg-stone-50 border-stone-100 rounded-lg"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-900"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Expense List */}
+          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-2 no-scrollbar pb-4 pr-1 scroll-smooth">
+            {filteredExpenses.length === 0 ? (
+              <div className="p-12 text-center flex flex-col items-center gap-3">
+                <div className="w-14 h-14 bg-stone-50 rounded-full flex items-center justify-center text-stone-300">
+                  <Receipt size={28} />
+                </div>
+                <p className="text-stone-400 text-sm">No hay gastos aún</p>
+              </div>
             ) : (
-              <>
-                {members.length > 1 && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', fontWeight: 500, marginBottom: '0.5rem' }}>
-                    {members.length}
-                  </div>
-                )}
-                <div style={{ 
-                  position: 'relative',
-                  marginLeft: '-1rem',
-                  marginRight: '-1rem',
-                  paddingLeft: '1rem'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    flexWrap: 'nowrap', 
-                    gap: '0.5rem',
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
-                    scrollbarWidth: 'thin',
-                    WebkitOverflowScrolling: 'touch',
-                    paddingBottom: '0.25rem',
-                    marginBottom: '-0.25rem',
-                    width: '100%'
-                  }}>
-                    {members.map((member) => {
-                      const memberAvatarColors = getMemberAvatarColor(member);
-                      const capitalizedName = capitalizeName(member.name);
-                      return (
-                        <Tag key={member.id} type={getTagTypeFromColor(memberAvatarColors.bg)} size="sm" style={{ flexShrink: 0 }}>
-                          {capitalizedName}
-                        </Tag>
-                      );
-                    })}
-                  </div>
-                  {/* Fade gradient overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    bottom: '0.25rem',
-                    width: '2.5rem',
-                    pointerEvents: 'none',
-                    background: 'linear-gradient(to left, var(--cds-layer-01, #f4f4f4) 70%, transparent 100%)'
-                  }} />
-                </div>
-              </>
-            )}
-          </div>
-        </Tile>
-        
-        {/* Total de Gastos */}
-        <Tile style={{ display: 'flex', flexDirection: 'column', minHeight: '160px' }}>
-          <div style={{ 
-            fontSize: '0.875rem', 
-            color: 'var(--cds-text-secondary)',
-            marginBottom: '0.5rem',
-            minHeight: '32px'
-          }}>
-            Total de Gastos
-          </div>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {currencies.length === 1 ? (
-              // Single currency: show abbreviation above value
-              <>
-                <div style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', fontWeight: 500 }}>
-                  {currencies[0][0]}
-                </div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 500 }}>
-                  {formatCurrency(currencies[0][1], currencies[0][0])}
-                </div>
-              </>
-            ) : (
-              // Multiple currencies: show symbol with adjusted font size, stacked
-              currencies.map(([currency, amount]) => {
-                const localeMap: Record<Currency, string> = {
-                  CLP: 'es-CL',
-                  USD: 'en-US',
-                  BRL: 'pt-BR',
-                  ARS: 'es-AR',
-                  EUR: 'es-ES',
-                  GBP: 'en-GB',
-                  PEN: 'es-PE',
-                };
-                const formattedAmount = new Intl.NumberFormat(localeMap[currency], {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 2,
-                }).format(amount);
-                
+              (isDesktop ? filteredExpenses : filteredExpenses.slice(0, 6)).map((expense) => {
+                const paidBy = members.find(m => m.id === expense.paidBy);
                 return (
-                  <div key={currency} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 500 }}>
-                      {getCurrencySymbol(currency)}{formattedAmount}
+                  <div key={expense.id} className="px-4 py-0 flex items-start gap-4 hover:bg-stone-50/50 transition-colors">
+                    {/* Icon Circle */}
+                    {(() => {
+                      const colors = getExpenseColor(expense.id);
+                      return (
+                        <div className={cn(
+                          "w-11 h-11 aspect-square self-start rounded-full flex items-center justify-center flex-shrink-0 text-xs",
+                          colors.bg,
+                          colors.text
+                        )}>
+                          {expense.icon ? <span className="text-xl leading-none block">{expense.icon}</span> : <Receipt className="flex-shrink-0" style={{ height: '22px' }} />}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-stone-900 text-base leading-tight truncate">
+                        {expense.description ? (expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()) : 'Sin descripción'}
+                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm text-stone-400">
+                          Por {(paidBy?.name || 'Alguien').split(' ')[0]}
+                        </p>
+                        <p style={{
+                          color: 'var(--general-foreground, #020617)',
+                          fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                          fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                          letterSpacing: '0.00438rem'
+                        }}>
+                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1" style={{
+                            color: 'var(--stone-500, #78716C)',
+                            fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                            fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                            fontStyle: 'normal',
+                            fontWeight: 500,
+                            lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                            letterSpacing: '0.00438rem'
+                          }}>{expense.currency}</span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
               })
             )}
           </div>
-        </Tile>
-      </div>
 
-      {/* Recent Expenses */}
-      <Tile>
-        <h3 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(141, 141, 141, 0.20)',
-          padding: '0.75rem 1rem',
-          marginLeft: '-1rem',
-          marginRight: '-1rem',
-          marginTop: '-1rem',
-          borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-        }}>Gastos Recientes</h3>
-        {expenses.length === 0 ? (
-          <p style={{ color: 'var(--cds-text-secondary)' }}>No hay gastos registrados.</p>
-        ) : (
-          <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {displayedExpenses.map((expense) => {
-                const paidBy = members.find((m) => m.id === expense.paidBy);
-                const expenseIcon = getExpenseIcon(expense.icon, 24);
-                const paidByAvatarColors = paidBy ? getMemberAvatarColor(paidBy) : null;
-                const capitalizedPaidByName = paidBy?.name ? capitalizeName(paidBy.name) : null;
-                
-                return (
-                  <div key={expense.id} style={{ 
-                    padding: '1rem 0', 
-                    backgroundColor: 'var(--cds-layer-01)',
-                    borderRadius: '4px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                        {expenseIcon && (
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--cds-layer-02)',
-                            flexShrink: 0,
-                            color: 'var(--cds-button-primary, #0f62fe)'
-                          }}>
-                            {expenseIcon}
-                          </div>
-                        )}
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 500 }}>{expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()}</div>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            Pagado por{' '}
-                            {capitalizedPaidByName && paidByAvatarColors ? (
-                              <Tag type={getTagTypeFromColor(paidByAvatarColors.bg)} size="sm">
-                                {capitalizedPaidByName}
-                              </Tag>
-                            ) : (
-                              'Desconocido'
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: 500, flexShrink: 0 }}>
-                        {formatCurrency(expense.amount, expense.currency)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Footer */}
+          <div className="p-5 pt-3">
+            <span className="text-sm text-stone-500">{expenses.length} Gastos en total</span>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ===== RIGHT COLUMN: SINGLE CARD WITH DEUDAS + ESTADO + FOOTER ===== */}
+      <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm flex flex-col h-full overflow-hidden">
+          {/* Header matching Actividad reciente */}
+          <div className="flex items-center justify-between p-4 border-b border-stone-100">
+            <div className="flex items-center gap-2 text-stone-950">
+              <ArrowsLeftRight size={20} weight="regular" />
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Deudas y cobros</p>
             </div>
-            {expenses.length > 3 && (
-              <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
-                <Button
-                  kind="ghost"
-                  size="sm"
-                  onClick={() => setShowAllExpenses(!showAllExpenses)}
-                >
-                  {showAllExpenses ? 'Mostrar menos' : `Ver todos los gastos (${expenses.length})`}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </Tile>
-
-      {/* Quick Balances */}
-      <Tile>
-        <h3 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(141, 141, 141, 0.20)',
-          padding: '0.75rem 1rem',
-          marginLeft: '-1rem',
-          marginRight: '-1rem',
-          marginTop: '-1rem',
-          borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-        }}>Balances Rápidos</h3>
-        {balancesByCurrency.size === 0 ? (
-          <p style={{ color: 'var(--cds-text-secondary)' }}>No hay integrantes registrados.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {Array.from(balancesByCurrency.entries()).map(([currency, currencyBalances]) => (
-              <div key={currency} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  color: 'var(--cds-text-secondary)',
-                  marginBottom: '0.25rem',
-                  textTransform: 'uppercase'
-                }}>
-                  {currency}
-                </div>
-                {currencyBalances.map((balance) => {
-                  const member = members.find(m => m.id === balance.memberId);
-                  const memberAvatarColors = getMemberAvatarColor(
-                    member || { name: balance.memberName }
-                  );
-                  
-                  let pillText = '';
-                  let pillStyle: React.CSSProperties = {};
-                  
-                  if (balance.balance < -0.01) {
-                    pillText = `Debe: ${formatCurrency(Math.abs(balance.balance), currency)}`;
-                    pillStyle = {
-                      backgroundColor: 'var(--cds-support-error-inverse)',
-                      color: 'var(--cds-text-on-color)',
-                      border: '1px solid var(--cds-border-subtle-01)'
-                    };
-                  } else if (balance.balance > 0.01) {
-                    pillText = `Le deben: ${formatCurrency(balance.balance, currency)}`;
-                    pillStyle = {
-                      backgroundColor: 'var(--cds-layer-01)',
-                      color: 'var(--cds-text-primary)',
-                      border: '1px solid var(--cds-border-subtle-01)'
-                    };
-                  } else {
-                    pillText = `Debe: ${formatCurrency(0, currency)}`;
-                    pillStyle = {
-                      backgroundColor: 'var(--cds-layer-02)',
-                      color: 'var(--cds-text-secondary)',
-                      border: '1px solid var(--cds-border-subtle-01)'
-                    };
-                  }
-
-                  const capitalizedName = capitalizeName(balance.memberName);
-
-                  return (
-                    <div
-                      key={`${currency}-${balance.memberId}`}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '0.7rem 0',
-                        backgroundColor: 'var(--cds-layer-01)',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <Tag type={getTagTypeFromColor(memberAvatarColors.bg)} size="sm">
-                          {capitalizedName}
-                        </Tag>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
-                          Pagó: {formatCurrency(balance.totalPaid, currency)}
-                        </div>
-                      </div>
-                      <div>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          ...pillStyle
-                        }}>
-                          {pillText}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
           </div>
-        )}
-      </Tile>
 
-      {/* Optimized Transactions */}
-      <Tile>
-        <h3 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 500, 
-          marginBottom: '1rem',
-          backgroundColor: 'rgba(141, 141, 141, 0.20)',
-          padding: '0.75rem 1rem',
-          marginLeft: '-1rem',
-          marginRight: '-1rem',
-          marginTop: '-1rem',
-          borderLeft: '3px solid var(--cds-button-primary, #0f62fe)'
-        }}>Quién le debe a quién</h3>
-        {transactionsByCurrency.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--cds-text-secondary)', padding: '2rem' }}>
-            ¡Excelente! Todos los balances están saldados.
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {Array.from(new Set(transactionsByCurrency.map(t => t.currency))).map((currency) => {
-              const currencyTransactions = transactionsByCurrency.filter(t => t.currency === currency);
-              return (
-                <div key={currency} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: 600, 
-                    color: 'var(--cds-text-secondary)',
-                    marginBottom: '0.25rem',
-                    textTransform: 'uppercase'
-                  }}>
-                    {currency}
+          <div className="flex-1 overflow-y-auto space-y-6 min-h-0 p-4">
+
+            {/* Deudas y cobros List */}
+            <div>
+
+              {transactionsByCurrency.length === 0 ? (
+                <div className="bg-emerald-50 rounded-2xl p-6 text-center flex items-center justify-center gap-3">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500">
+                    <Sparkle size={20} weight="fill" />
                   </div>
-                  {currencyTransactions.map((transaction, index) => {
-                    const fromMember = members.find(m => m.id === transaction.from);
-                    const toMember = members.find(m => m.id === transaction.to);
-                    const fromAvatarColors = getMemberAvatarColor(
-                      fromMember || { name: transaction.fromName }
-                    );
-                    const toAvatarColors = getMemberAvatarColor(
-                      toMember || { name: transaction.toName }
-                    );
-                    
-                    return (
-                    <div
-                      key={`${currency}-${index}`}
-                      style={{
-                        padding: '0.6125rem 0',
-                        backgroundColor: 'var(--cds-layer-01)',
-                        borderRadius: '4px',
-                        border: '1px solid var(--cds-border-subtle-01)',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '1rem',
-                        flexWrap: 'nowrap'
-                      }}
-                    >
-                      {/* Transaction Flow */}
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.75rem',
-                        flexWrap: 'nowrap',
-                        flex: 1,
-                        minWidth: 0
-                      }}>
-                        <Tag type={getTagTypeFromColor(fromAvatarColors.bg)} size="sm">
-                          {capitalizeName(transaction.fromName)}
-                        </Tag>
-                        <span style={{ color: 'var(--cds-text-secondary)', fontSize: '1.25rem', flexShrink: 0 }}>→</span>
-                        <Tag type={getTagTypeFromColor(toAvatarColors.bg)} size="sm">
-                          {capitalizeName(transaction.toName)}
-                        </Tag>
-                      </div>
-                      
-                      {/* Amount */}
-                      <div style={{ 
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        flexShrink: 0
-                      }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--cds-text-secondary)', marginBottom: '0.25rem' }}>
-                          Monto
-                        </div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--cds-text-primary)' }}>
-                          {formatCurrency(transaction.amount, transaction.currency)}
-                        </div>
-                      </div>
-                    </div>
-                    );
-                  })}
+                  <p className="text-emerald-700 font-medium text-sm">Todo saldado</p>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </Tile>
+              ) : (
+                <div className="space-y-2">
+                  {transactionsByCurrency.map((t, idx) => (
+                    <div key={idx} className="bg-stone-50 rounded-2xl p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-8 h-8 border border-white">
+                            <AvatarFallback className="bg-stone-200 text-[10px] font-semibold">{(t.fromName || '?').charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
+                            {capitalizeName((t.fromName || '').split(' ')[0])}
+                          </span>
+                        </div>
+                        <ArrowRight size={12} className="text-stone-300" />
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-8 h-8 border border-white">
+                            <AvatarFallback className="bg-stone-200 text-[10px] font-semibold">{(t.toName || '?').charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
+                            {capitalizeName((t.toName || '').split(' ')[0])}
+                          </span>
+                        </div>
+                      </div>
+                      <p style={{
+                        color: 'var(--general-foreground, #020617)',
+                        fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                        fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                        letterSpacing: '0.00438rem'
+                      }}>
+                        $ {t.amount.toLocaleString('es-CL')} <span style={{
+                          color: 'var(--stone-500, #78716C)',
+                          fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                          fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                          fontStyle: 'normal',
+                          fontWeight: 500,
+                          lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                          letterSpacing: '0.00438rem'
+                        }}>{t.currency}</span>
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-      {/* Reset Button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }} className="reset-button-container">
-        <Button
-          kind="secondary"
-          onClick={onReset}
-          className="reset-button-mobile"
-        >
-          Eliminar Datos
-        </Button>
-      </div>
+            {/* Estado individual Section */}
+            <div>
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem] text-stone-950 flex items-center gap-2 mb-4">
+                <ArrowsLeftRight size={18} /> Estado individual
+              </p>
+              <div className="space-y-2">
+                {Array.from(balancesByCurrency.entries()).map(([currency, currencyBalances]) => (
+                  currencyBalances.map((b, bIdx) => {
+                    const isPositive = b.balance > 0.01;
+                    const isNegative = b.balance < -0.01;
+                    return (
+                      <div
+                        key={`${currency}-${bIdx}`}
+                        className={cn(
+                          "px-4 py-3 rounded-lg text-sm flex items-center justify-between",
+                          isPositive ? "bg-stone-100" :
+                            isNegative ? "bg-rose-50" :
+                              "bg-stone-50"
+                        )}
+                      >
+                        <span className={cn(
+                          "font-medium",
+                          isNegative ? "text-rose-600" : "text-stone-700"
+                        )}>
+                          {capitalizeName(b.memberName) || 'Alguien'}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {isNegative && <TrendDown size={16} weight="bold" className="text-rose-500" />}
+                          <span className={cn(
+                            "font-bold",
+                            isNegative ? "text-rose-600" : "text-stone-900"
+                          )}>
+                            {currency} {Math.abs(b.balance).toLocaleString('es-CL')}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ))}
+              </div>
+            </div>
+
+
+          </div>
+          {/* Datos del grupo footer */}
+          <div className="hidden md:flex justify-end p-4 pt-4 border-t border-stone-100">
+            <button
+              onClick={onReset}
+              className="flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-600 transition-colors"
+            >
+              Datos del grupo <Trash size={16} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+
     </div>
   );
 }

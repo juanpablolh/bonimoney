@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { TextInput, Button, InlineNotification } from '@carbon/react';
-import { Email, ArrowRight } from '@carbon/icons-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '../../contexts/AuthContext';
+import { EnvelopeSimple, ArrowRight, CheckCircle, WarningCircle } from '@phosphor-icons/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MagicLinkAuth() {
     const [email, setEmail] = useState('');
@@ -26,97 +28,101 @@ export default function MagicLinkAuth() {
         }
     };
 
-    if (sent) {
-        return (
-            <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2rem' }}>
-                <InlineNotification
-                    kind="success"
-                    title="¡Revisa tu email!"
-                    subtitle={`Hemos enviado un link mágico a ${email}. Haz clic en el link para iniciar sesión.`}
-                    lowContrast
-                    hideCloseButton
-                />
-                <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--cds-text-secondary)' }}>
-                    No ves el email? Revisa tu carpeta de spam o{' '}
-                    <button
-                        onClick={() => setSent(false)}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--cds-link-primary)',
-                            cursor: 'pointer',
-                            textDecoration: 'underline',
-                        }}
-                    >
-                        intenta de nuevo
-                    </button>
-                    .
-                </p>
-            </div>
-        );
-    }
-
     return (
-        <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2rem' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Email size={48} style={{ color: 'var(--cds-icon-primary)', marginBottom: '1rem' }} />
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                    Iniciar Sesión
-                </h2>
-                <p style={{ color: 'var(--cds-text-secondary)', fontSize: '0.875rem' }}>
-                    Te enviaremos un link mágico a tu email.
-                    <br />
-                    Sin contraseñas, sin complicaciones.
-                </p>
-            </div>
+        <div className="w-full max-w-sm mx-auto p-2">
+            <AnimatePresence mode="wait">
+                {sent ? (
+                    <motion.div
+                        key="sent"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center space-y-6 py-8"
+                    >
+                        <div className="flex justify-center">
+                            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
+                                <CheckCircle size={40} weight="fill" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black text-stone-900 tracking-tight">¡Revisa tu email!</h2>
+                            <p className="text-stone-500 text-sm font-medium leading-relaxed">
+                                Hemos enviado un link mágico a <span className="font-bold text-stone-900">{email}</span>. Haz clic para entrar.
+                            </p>
+                        </div>
+                        <p className="text-xs text-stone-400 font-medium">
+                            ¿No llegó? Revisa tu carpeta de spam o{' '}
+                            <button
+                                onClick={() => setSent(false)}
+                                className="text-primary font-bold hover:underline"
+                            >
+                                intenta de nuevo
+                            </button>
+                        </p>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="form"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-8 py-4"
+                    >
+                        <div className="text-center space-y-3">
+                            <div className="flex justify-center">
+                                <div className="w-14 h-14 bg-stone-100 text-stone-900 rounded-2xl flex items-center justify-center rotate-3 transform">
+                                    <EnvelopeSimple size={30} weight="bold" />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <h2 className="text-2xl font-black text-stone-900 tracking-tighter">Acceso Directo</h2>
+                                <p className="text-stone-500 text-sm font-medium">Sin contraseñas. Solo tu email.</p>
+                            </div>
+                        </div>
 
-            <form onSubmit={handleSubmit}>
-                <TextInput
-                    id="email"
-                    type="email"
-                    labelText="Email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                    style={{ marginBottom: '1rem' }}
-                />
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest ml-1">Tu Correo Electrónico</label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="ejemplo@correo.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    className="h-14 bg-stone-50 border-stone-100 rounded-2xl text-base font-bold placeholder:text-stone-300 focus-visible:ring-stone-200"
+                                />
+                            </div>
 
-                {error && (
-                    <InlineNotification
-                        kind="error"
-                        title="Error"
-                        subtitle={error}
-                        lowContrast
-                        hideCloseButton
-                        style={{ marginBottom: '1rem' }}
-                    />
+                            {error && (
+                                <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-start gap-3 text-orange-800 animate-in fade-in slide-in-from-top-1 duration-300">
+                                    <WarningCircle size={20} weight="bold" className="shrink-0 mt-0.5" />
+                                    <p className="text-xs font-bold leading-tight">{error}</p>
+                                </div>
+                            )}
+
+                            <Button
+                                type="submit"
+                                disabled={loading || !email}
+                                className="w-full h-14 rounded-2xl text-base font-black shadow-xl shadow-stone-200 transition-all active:scale-95 flex gap-2"
+                            >
+                                {loading ? 'Enviando...' : (
+                                    <>
+                                        Continuar
+                                        <ArrowRight size={18} weight="bold" />
+                                    </>
+                                )}
+                            </Button>
+                        </form>
+
+                        <p className="text-[10px] text-stone-400 text-center font-medium leading-normal px-4">
+                            Al continuar, aceptas nuestros{' '}
+                            <a href="#" className="text-stone-900 hover:underline font-bold">Términos</a>
+                            {' '}y{' '}
+                            <a href="#" className="text-stone-900 hover:underline font-bold">Privacidad</a>.
+                        </p>
+                    </motion.div>
                 )}
-
-                <Button
-                    type="submit"
-                    kind="primary"
-                    size="lg"
-                    disabled={loading || !email}
-                    renderIcon={ArrowRight}
-                    style={{ width: '100%' }}
-                >
-                    {loading ? 'Enviando...' : 'Enviar link mágico'}
-                </Button>
-            </form>
-
-            <p style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--cds-text-secondary)', textAlign: 'center' }}>
-                Al continuar, aceptas nuestros{' '}
-                <a href="/terms-of-service.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
-                    Términos de Servicio
-                </a>
-                {' '}y{' '}
-                <a href="/privacy-policy.html" target="_blank" style={{ color: 'var(--cds-link-primary)' }}>
-                    Política de Privacidad
-                </a>
-                .
-            </p>
+            </AnimatePresence>
         </div>
     );
 }

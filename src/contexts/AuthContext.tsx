@@ -6,7 +6,7 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
-    signInWithEmail: (email: string) => Promise<{ error: AuthError | null }>;
+    signInWithEmail: (email: string, name?: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -40,20 +40,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Listen for auth changes
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
+
+            // Hack: Update name if just logged in via HomeLogin
+            if (session?.user && _event === 'SIGNED_IN') {
+                const tempName = localStorage.getItem('temp_login_name');
+                if (tempName) {
+                    const currentName = session.user.user_metadata.full_name;
+                    if (!currentName || currentName !== tempName) {
+                        try {
+                            const { data, error } = await supabase.auth.updateUser({
+                                data: { full_name: tempName }
+                            });
+                            if (!error && data.user) {
+                                setUser(data.user); // Update local state immediately
+                            }
+                        } catch (e) {
+                            console.error("Failed to update user metadata", e);
+                        }
+                    }
+                    localStorage.removeItem('temp_login_name');
+                }
+            }
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
-    const signInWithEmail = async (email: string) => {
+    const signInWithEmail = async (email: string, name?: string) => {
         const { error } = await supabase.auth.signInWithOtp({
             email,
             options: {
                 emailRedirectTo: window.location.origin,
+                data: name ? { full_name: name } : undefined,
             },
         });
         return { error };

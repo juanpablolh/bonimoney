@@ -1,10 +1,8 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { InlineLoading } from '@carbon/react';
+import { Navigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-    children: ReactNode;
+    children: React.ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
@@ -12,19 +10,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     if (loading) {
         return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh'
-            }}>
-                <InlineLoading description="Cargando..." />
+            <div className="min-h-screen flex items-center justify-center bg-stone-50">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-4 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
+                    <p className="text-xs font-black uppercase tracking-widest text-stone-400">Cargando...</p>
+                </div>
             </div>
         );
     }
 
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     return <>{children}</>;
