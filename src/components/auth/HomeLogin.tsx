@@ -10,7 +10,7 @@ export default function HomeLogin() {
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { signInWithEmail } = useAuth();
+    const { signInWithEmail, signInWithPassword } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -131,6 +131,23 @@ export default function HomeLogin() {
                                         <p className="text-sm font-medium">{error}</p>
                                     </div>
                                 )}
+
+                                <div className="text-center pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            setError(null);
+                                            const { error } = await signInWithPassword('demo@bonimoney.com', 'password123');
+                                            if (error) setError("Error en el acceso demo: " + error.message);
+                                            setLoading(false);
+                                        }}
+                                        disabled={loading}
+                                        className="text-stone-500 hover:text-stone-900 font-medium text-sm underline underline-offset-4"
+                                    >
+                                        ¿No recibes el email? Usa el Acceso Demo
+                                    </button>
+                                </div>
 
                                 <div className="text-center">
                                     <p className="text-xs text-[#A8A29E] font-medium">

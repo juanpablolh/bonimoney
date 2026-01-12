@@ -7,6 +7,7 @@ interface AuthContextType {
     session: Session | null;
     loading: boolean;
     signInWithEmail: (email: string, name?: string) => Promise<{ error: AuthError | null }>;
+    signInWithPassword: (email: string, password: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -81,6 +82,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return { error };
     };
 
+    const signInWithPassword = async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+        return { error };
+    };
+
     const signOut = async () => {
         await supabase.auth.signOut();
     };
@@ -90,6 +99,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         session,
         loading,
         signInWithEmail,
+        signInWithPassword,
         signOut,
     };
 
