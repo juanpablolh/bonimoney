@@ -119,7 +119,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col bg-stone-50 overflow-hidden md:rounded-3xl shadow-2xl ring-1 ring-black/5" style={{ minHeight: '500px' }}>
+            <div className="flex flex-col bg-stone-50 overflow-hidden md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative" style={{ minHeight: '500px' }}>
                 {/* Header */}
                 <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
                     <header className="px-8 py-8 flex items-center justify-between">
@@ -136,7 +136,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                 Dale un nombre a tu nuevo grupo para empezar a dividir gastos de forma inteligente.
                             </p>
 
-                            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-2">
+                            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-6">
                                 <div className="flex flex-wrap gap-2">
                                     {EMOJIS.map(e => (
                                         <button
@@ -154,37 +154,28 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                             {e}
                                         </button>
                                     ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPicker(true)}
-                                        className="w-14 h-14 rounded-xl flex items-center justify-center text-stone-600 bg-[#F5F5F4] hover:bg-[#E7E5E4] transition-all"
-                                        style={{ backgroundColor: 'var(--color-stone-100)' }}
-                                    >
-                                        <Plus size={24} weight="bold" />
-                                    </button>
+                                    {/* Custom Emoji or Plus Button */}
+                                    {!EMOJIS.includes(icon) ? (
+                                        <button
+                                            key="custom-emoji"
+                                            type="button"
+                                            onClick={() => setShowPicker(true)}
+                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-[#44403C] shadow-lg scale-105 transition-all"
+                                        >
+                                            {icon}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            key="plus-button"
+                                            type="button"
+                                            onClick={() => setShowPicker(true)}
+                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-stone-600 bg-[#F5F5F4] hover:bg-[#E7E5E4] transition-all"
+                                            style={{ backgroundColor: 'var(--color-stone-100)' }}
+                                        >
+                                            <Plus size={24} weight="bold" />
+                                        </button>
+                                    )}
                                 </div>
-
-                                {showPicker && (
-                                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200">
-                                        <div className="absolute inset-0" onClick={() => setShowPicker(false)}></div>
-                                        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
-                                            <style>{`
-                                        .epr-category-nav { display: none !important; }
-                                    `}</style>
-                                            <EmojiPicker
-                                                onEmojiClick={(emojiData) => {
-                                                    setIcon(emojiData.emoji);
-                                                    setShowPicker(false);
-                                                }}
-                                                lazyLoadEmojis={true}
-                                                skinTonesDisabled={true}
-                                                searchPlaceholder="Buscar emoji..."
-                                                width={350}
-                                                height={450}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div className="flex flex-col gap-2 mb-6">
                                     <label className="text-xs font-bold uppercase tracking-widest text-stone-400">Nombre del proyecto</label>
@@ -287,6 +278,29 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                         </>
                     )}
                 </div>
+
+                {/* Emoji Picker Overlay */}
+                {showPicker && (
+                    <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200 rounded-[inherit]">
+                        <div className="absolute inset-0" onClick={() => setShowPicker(false)}></div>
+                        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
+                            <style>{`
+                                .epr-category-nav { display: none !important; }
+                            `}</style>
+                            <EmojiPicker
+                                onEmojiClick={(emojiData) => {
+                                    setIcon(emojiData.emoji);
+                                    setShowPicker(false);
+                                }}
+                                lazyLoadEmojis={true}
+                                skinTonesDisabled={true}
+                                searchPlaceholder="Buscar emoji..."
+                                width={350}
+                                height={450}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </ResponsiveModal>
     );
