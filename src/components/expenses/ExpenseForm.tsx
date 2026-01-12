@@ -93,7 +93,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto bg-stone-50 relative">
-                <div className="px-6 py-6 space-y-6 pb-24">
+                <div className="px-6 py-6 space-y-6">
                     {/* AMOUNT */}
                     <section className="space-y-3">
                         <label className="block text-sm font-semibold text-stone-900">¿Cuánto fue?</label>
@@ -268,30 +268,30 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         )}
                     </AnimatePresence>
                 </div>
-
-                {/* Sticky Footer */}
-                <footer className="sticky bottom-0 left-0 right-0 p-6 bg-stone-50/95 backdrop-blur-sm border-t border-stone-200">
-                    <Button
-                        onClick={() => onSave({
-                            amount: parseFloat(amount),
-                            description,
-                            paid_by: paidBy,
-                            split_details: splitWith.map(id => ({ member_id: id })),
-                            notes,
-                            date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-                        })}
-                        disabled={!progress.amountFilled}
-                        className={cn(
-                            "w-full h-14 rounded-xl text-base font-semibold transition-colors",
-                            progress.amountFilled
-                                ? "bg-stone-900 text-white hover:bg-stone-800"
-                                : "bg-stone-200 text-stone-400 cursor-not-allowed"
-                        )}
-                    >
-                        Guardar gasto
-                    </Button>
-                </footer>
             </div>
+
+            {/* Fixed Footer - Outside scroll area */}
+            <footer className="shrink-0 p-6 bg-stone-50 border-t border-stone-200" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+                <Button
+                    onClick={() => onSave({
+                        amount: parseFloat(amount),
+                        description,
+                        paid_by: paidBy,
+                        split_details: splitWith.map(id => ({ member_id: id })),
+                        notes,
+                        date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+                    })}
+                    disabled={!progress.amountFilled}
+                    className={cn(
+                        "w-full h-14 rounded-xl text-base font-semibold transition-colors",
+                        progress.amountFilled
+                            ? "bg-stone-900 text-white hover:bg-stone-800"
+                            : "bg-stone-200 text-stone-400 cursor-not-allowed"
+                    )}
+                >
+                    Guardar gasto
+                </Button>
+            </footer>
         </div>
     );
 };

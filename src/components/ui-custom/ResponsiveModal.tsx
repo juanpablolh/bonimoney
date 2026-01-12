@@ -9,7 +9,14 @@ import {
     DialogTrigger,
     DialogDescription,
 } from "@/components/ui/dialog"
-import { Sheet } from 'react-modal-sheet'
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+    DrawerDescription,
+} from "@/components/ui/drawer"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 interface ResponsiveModalProps {
@@ -69,40 +76,40 @@ export function ResponsiveModal({
     }
 
     return (
-        <Sheet
-            isOpen={open || false}
-            onClose={() => onOpenChange?.(false)}
-            snapPoints={[0, 0.5, 0.9, 1]}
-            initialSnap={2}
-            disableDrag={false}
-        >
-            <Sheet.Container style={{
-                borderTopLeftRadius: '24px',
-                borderTopRightRadius: '24px',
-                backgroundColor: hideHeader ? 'transparent' : undefined,
-                overflow: 'hidden'
-            }}>
-                {!hideHeader && <Sheet.Header />}
-                <Sheet.Content style={{
-                    paddingBottom: 'env(safe-area-inset-bottom)',
-                    backgroundColor: hideHeader ? 'transparent' : undefined
-                }}>
-                    {hideHeader ? (
-                        <div className="h-full flex flex-col overflow-hidden rounded-t-3xl">
+        <Drawer open={open} onOpenChange={onOpenChange}>
+            {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
+            <DrawerContent
+                className={cn(hideHeader && "p-0 border-none")}
+            >
+                {hideHeader ? (
+                    <>
+                        <VisuallyHidden>
+                            <DrawerTitle>{title}</DrawerTitle>
+                            <DrawerDescription>{description || title}</DrawerDescription>
+                        </VisuallyHidden>
+                        <div className="flex flex-col h-full mt-4">
                             {children}
                         </div>
-                    ) : (
-                        <div className="px-4 pb-8 flex flex-col h-full bg-background">
-                            <h2 className="text-lg font-semibold mb-2">{title}</h2>
-                            {description && <p className="text-sm text-muted-foreground mb-4">{description}</p>}
-                            <div className="flex-1 overflow-y-auto">
-                                {children}
-                            </div>
+                    </>
+                ) : (
+                    <div className="flex flex-col h-full max-h-[90dvh]">
+                        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+                        <DrawerHeader className="text-left">
+                            <DrawerTitle>{title}</DrawerTitle>
+                            {description ? (
+                                <DrawerDescription>{description}</DrawerDescription>
+                            ) : (
+                                <VisuallyHidden>
+                                    <DrawerDescription>{title}</DrawerDescription>
+                                </VisuallyHidden>
+                            )}
+                        </DrawerHeader>
+                        <div className="px-0 pb-0 flex-1 overflow-hidden h-full">
+                            {children}
                         </div>
-                    )}
-                </Sheet.Content>
-            </Sheet.Container>
-            <Sheet.Backdrop onTap={() => onOpenChange?.(false)} />
-        </Sheet>
+                    </div>
+                )}
+            </DrawerContent>
+        </Drawer>
     )
 }
