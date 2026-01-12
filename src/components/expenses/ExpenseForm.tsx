@@ -50,6 +50,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
 
     const amountRef = useRef<HTMLInputElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-focus amount on mount
     useEffect(() => {
@@ -64,6 +65,18 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         splitSelected: splitWith.length > 0
     };
 
+    // Auto-scroll when amount is filled and newer sections appear
+    useEffect(() => {
+        if (progress.amountFilled && scrollRef.current) {
+            setTimeout(() => {
+                scrollRef.current?.scrollTo({
+                    top: scrollRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+    }, [progress.amountFilled]);
+
     const toggleMember = (id: string) => {
         setSplitWith(prev =>
             prev.includes(id)
@@ -75,7 +88,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5">
+        <div className="flex flex-col h-full bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5">
             {/* Header Wrapper to avoid corner slivers */}
             <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
                 <header className="px-6 py-5 flex items-center justify-between">
@@ -92,7 +105,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-stone-50">
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-stone-50 pb-20"
+            >
                 {/* AMOUNT */}
                 <section className="space-y-3">
                     <label className="block text-sm font-semibold text-stone-900">¿Cuánto fue?</label>

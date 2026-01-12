@@ -78,21 +78,21 @@ export function ResponsiveModal({
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-            <DrawerContent hideHandle={hideHeader} className={cn(hideHeader && "p-0 overflow-clip border-none")}>
+            <DrawerContent hideHandle={hideHeader} className={cn("flex flex-col h-[96dvh]", hideHeader && "border-none")}>
                 {!hideHeader && <div className="bg-muted mx-auto mt-4 h-1 w-[100px] shrink-0 rounded-full" />}
                 {hideHeader ? (
-                    <>
+                    <div className="flex flex-col flex-1 min-h-0">
                         <VisuallyHidden>
                             <DrawerTitle>{title}</DrawerTitle>
                             <DrawerDescription>{description || title}</DrawerDescription>
                         </VisuallyHidden>
-                        <div className="p-0">
+                        <div className="flex-1 overflow-hidden flex flex-col">
                             {children}
                         </div>
-                    </>
+                    </div>
                 ) : (
-                    <>
-                        <DrawerHeader className="text-left">
+                    <div className="flex flex-col flex-1 min-h-0">
+                        <DrawerHeader className="text-left shrink-0">
                             <DrawerTitle>{title}</DrawerTitle>
                             {description ? (
                                 <DrawerDescription>{description}</DrawerDescription>
@@ -102,10 +102,10 @@ export function ResponsiveModal({
                                 </VisuallyHidden>
                             )}
                         </DrawerHeader>
-                        <div className="px-4 pb-8">
+                        <div className="px-4 pb-8 flex-1 overflow-y-auto">
                             {children}
                         </div>
-                    </>
+                    </div>
                 )}
             </DrawerContent>
         </Drawer>
