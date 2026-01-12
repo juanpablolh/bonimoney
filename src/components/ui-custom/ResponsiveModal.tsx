@@ -100,11 +100,13 @@ export function ResponsiveModal({
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
                 hideHandle={hideHeader}
-                className={cn("flex flex-col bg-background", hideHeader && "border-none")}
-                style={viewportHeight ? { height: `${viewportHeight}px`, maxHeight: '100dvh' } : { height: '85dvh' }}
+                className={cn("flex flex-col bg-background outline-none", hideHeader && "border-none")}
             >
                 {!hideHeader && <div className="bg-muted mx-auto mt-4 h-1 w-[100px] shrink-0 rounded-full" />}
-                <div className="flex flex-col flex-1 min-h-0 relative h-full">
+                <div
+                    className="flex flex-col flex-1 min-h-0"
+                    style={viewportHeight ? { height: `${viewportHeight}px` } : { height: 'auto', maxHeight: '92dvh' }}
+                >
                     {hideHeader ? (
                         <VisuallyHidden>
                             <DrawerTitle>{title}</DrawerTitle>
@@ -122,7 +124,7 @@ export function ResponsiveModal({
                             )}
                         </DrawerHeader>
                     )}
-                    <div className="flex-1 flex flex-col min-h-0 h-full">
+                    <div className="flex-1 flex flex-col min-h-0">
                         {children}
                     </div>
                 </div>
