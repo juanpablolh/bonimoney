@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ResponsiveModal } from '../ui-custom/ResponsiveModal';
+import React, { useState, useEffect, useContext } from 'react';
+import { ResponsiveModal, KeyboardHeightContext } from '../ui-custom/ResponsiveModal';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
@@ -18,6 +18,7 @@ const EMOJIS = ['🏠', '✈️', '🛒', '🎉', '💡'];
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
     const { createProject } = useProject();
     const { user } = useAuth();
+    const keyboardHeight = useContext(KeyboardHeightContext);
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [icon, setIcon] = useState('🏠');
@@ -129,7 +130,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                     </header>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8 bg-stone-50 relative">
+                <div
+                    className="flex-1 overflow-y-auto px-6 py-8 space-y-8 bg-stone-50 relative transition-[padding] duration-200"
+                    style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 32}px` : undefined }}
+                >
                     {step === 1 ? (
                         <>
                             <p className="text-stone-500 font-medium text-lg leading-relaxed">

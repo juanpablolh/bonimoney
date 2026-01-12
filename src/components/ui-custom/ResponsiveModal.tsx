@@ -1,5 +1,6 @@
 import * as React from "react"
 import { useMediaQuery } from "../../hooks/use-media-query"
+import { useKeyboardHeight } from "../../hooks/use-keyboard-height"
 import { cn } from "@/lib/utils"
 import {
     Dialog,
@@ -18,6 +19,9 @@ import {
     DrawerDescription,
 } from "@/components/ui/drawer"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+
+// Context to share keyboard height with children
+export const KeyboardHeightContext = React.createContext<number>(0)
 
 interface ResponsiveModalProps {
     children: React.ReactNode
@@ -41,6 +45,7 @@ export function ResponsiveModal({
     showCloseButton = true,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
+    const keyboardHeight = useKeyboardHeight()
 
     if (isDesktop) {
         return (
@@ -76,39 +81,42 @@ export function ResponsiveModal({
     }
 
     return (
-        <Drawer open={open} onOpenChange={onOpenChange}>
+        <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
                 className={cn(hideHeader && "p-0 border-none")}
+                style={{ maxHeight: '85vh' }}
             >
-                {hideHeader ? (
-                    <>
-                        <VisuallyHidden>
-                            <DrawerTitle>{title}</DrawerTitle>
-                            <DrawerDescription>{description || title}</DrawerDescription>
-                        </VisuallyHidden>
-                        <div className="flex flex-col h-full mt-4">
-                            {children}
+                <KeyboardHeightContext.Provider value={keyboardHeight}>
+                    {hideHeader ? (
+                        <>
+                            <VisuallyHidden>
+                                <DrawerTitle>{title}</DrawerTitle>
+                                <DrawerDescription>{description || title}</DrawerDescription>
+                            </VisuallyHidden>
+                            <div className="flex flex-col h-full mt-4">
+                                {children}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex flex-col h-full">
+                            <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+                            <DrawerHeader className="text-left">
+                                <DrawerTitle>{title}</DrawerTitle>
+                                {description ? (
+                                    <DrawerDescription>{description}</DrawerDescription>
+                                ) : (
+                                    <VisuallyHidden>
+                                        <DrawerDescription>{title}</DrawerDescription>
+                                    </VisuallyHidden>
+                                )}
+                            </DrawerHeader>
+                            <div className="px-0 pb-0 flex-1 overflow-hidden h-full">
+                                {children}
+                            </div>
                         </div>
-                    </>
-                ) : (
-                    <div className="flex flex-col h-full max-h-[90dvh]">
-                        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-                        <DrawerHeader className="text-left">
-                            <DrawerTitle>{title}</DrawerTitle>
-                            {description ? (
-                                <DrawerDescription>{description}</DrawerDescription>
-                            ) : (
-                                <VisuallyHidden>
-                                    <DrawerDescription>{title}</DrawerDescription>
-                                </VisuallyHidden>
-                            )}
-                        </DrawerHeader>
-                        <div className="px-0 pb-0 flex-1 overflow-hidden h-full">
-                            {children}
-                        </div>
-                    </div>
-                )}
+                    )}
+                </KeyboardHeightContext.Provider>
             </DrawerContent>
         </Drawer>
     )
