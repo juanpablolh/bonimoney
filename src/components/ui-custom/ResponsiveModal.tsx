@@ -72,19 +72,27 @@ export function ResponsiveModal({
         <Sheet
             isOpen={open || false}
             onClose={() => onOpenChange?.(false)}
-            snapPoints={[0.9, 0.5, 0]}
-            initialSnap={0}
+            snapPoints={[0, 0.5, 0.9, 1]}
+            initialSnap={2}
             disableDrag={false}
         >
-            <Sheet.Container style={{ borderTopLeftRadius: '24px', borderTopRightRadius: '24px' }}>
-                <Sheet.Header disableDrag={hideHeader} />
-                <Sheet.Content style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <Sheet.Container style={{
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px',
+                backgroundColor: hideHeader ? 'transparent' : undefined,
+                overflow: 'hidden'
+            }}>
+                {!hideHeader && <Sheet.Header />}
+                <Sheet.Content style={{
+                    paddingBottom: 'env(safe-area-inset-bottom)',
+                    backgroundColor: hideHeader ? 'transparent' : undefined
+                }}>
                     {hideHeader ? (
-                        <div className="h-full flex flex-col">
+                        <div className="h-full flex flex-col overflow-hidden rounded-t-3xl">
                             {children}
                         </div>
                     ) : (
-                        <div className="px-4 pb-8 flex flex-col h-full">
+                        <div className="px-4 pb-8 flex flex-col h-full bg-background">
                             <h2 className="text-lg font-semibold mb-2">{title}</h2>
                             {description && <p className="text-sm text-muted-foreground mb-4">{description}</p>}
                             <div className="flex-1 overflow-y-auto">
