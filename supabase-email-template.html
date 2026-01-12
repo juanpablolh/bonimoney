@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link de acceso - Bonimoney</title>
+    <style>
+        /* Reset styles for email clients */
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            background-color: #EDEFEB;
+            /* Sans: DM Sans (como pediste) */
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Custom styles based on Original Figma design */
+        .main-wrapper {
+            width: 100%;
+            background-color: #EDEFEB;
+        }
+
+        .content-table {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: #EDEFEB;
+        }
+
+        .header-image {
+            width: 100%;
+            display: block;
+            border: 0;
+        }
+
+        .body-content {
+            padding: 48px 85px;
+        }
+
+        /* Serif: Abhaya Libre (como pediste) */
+        .greeting {
+            font-family: 'Abhaya Libre', 'Georgia', serif;
+            font-size: 16px;
+            color: #000000;
+            margin-bottom: 24px;
+            font-weight: normal;
+        }
+
+        .text {
+            font-size: 14px;
+            color: #737373;
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .verification-title {
+            font-family: 'Abhaya Libre', 'Georgia', serif;
+            font-size: 18px;
+            color: #000000;
+            margin: 24px 0 16px 0;
+            font-weight: 400;
+        }
+
+        /* Premium Link Style */
+        .confirmation-link {
+            color: #4A7C10;
+            text-decoration: underline;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        /* Fallback for the branding font */
+        .branding-text {
+            font-family: 'Abhaya Libre', 'Georgia', serif;
+            color: #EDEFEB;
+        }
+
+        @media screen and (max-width: 600px) {
+            .body-content {
+                padding: 32px 20px !important;
+            }
+
+            .header-td {
+                padding-left: 20px !important;
+                height: 120px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" class="main-wrapper">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" class="content-table">
+                    <!-- Header with integrated branding (manteniendo color #163300) -->
+                    <tr>
+                        <td class="header-td"
+                            style="background-color: #163300; height: 180px; padding-left: 85px; vertical-align: middle;">
+                            <div
+                                style="font-family: 'Abhaya Libre', 'Georgia', serif; font-size: 38px; color: #EDEFEB; letter-spacing: -0.96px; font-weight: 400;">
+                                Bonimoney
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Body Content -->
+                    <tr>
+                        <td class="body-content" align="left">
+                            <div class="greeting">Hola {{ .Data.full_name }}</div>
+
+                            <h2 class="verification-title">Tu link de acceso</h2>
+
+                            <div class="text">
+                                Haz clic en el siguiente enlace para iniciar sesión en Bonimoney:
+                            </div>
+
+                            <div style="margin: 24px 0;">
+                                <a href="{{ .ConfirmationURL }}" class="confirmation-link">Ingresar a Bonimoney</a>
+                            </div>
+
+                            <div class="text" style="margin-top: 24px;">
+                                Si no solicitaste este acceso, por favor ignora este mensaje.
+                            </div>
+
+                            <div class="text" style="margin-top: 32px;">
+                                Saludos,<br>
+                                <strong style="color: #000000; font-weight: 500;">Equipo Bonimoney</strong>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

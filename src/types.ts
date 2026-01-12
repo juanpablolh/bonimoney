@@ -5,7 +5,7 @@ export interface Member {
   avatarColor?: { bg: string; text: string };
 }
 
-export type Currency = 'CLP' | 'USD' | 'BRL' | 'ARS' | 'EUR' | 'GBP' | 'PEN';
+export type Currency = 'CLP' | 'USD' | 'BRL' | 'ARS' | 'EUR' | 'GBP' | 'PEN' | 'UYU';
 
 export type ExpenseIcon =
   | 'Restaurant'

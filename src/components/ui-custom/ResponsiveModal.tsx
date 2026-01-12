@@ -51,7 +51,7 @@ export function ResponsiveModal({
         return (
             <Dialog open={open} onOpenChange={onOpenChange}>
                 {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-                <DialogContent showCloseButton={showCloseButton} className={cn("sm:max-w-[425px]", hideHeader && "p-0 border-none bg-transparent shadow-none ring-0 gap-0 overflow-visible")}>
+                <DialogContent showCloseButton={showCloseButton} className={cn("sm:max-w-[425px]", hideHeader && "p-0 gap-0")}>
                     {hideHeader ? (
                         <>
                             <VisuallyHidden>
@@ -84,6 +84,7 @@ export function ResponsiveModal({
         <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
+                hideHandle={hideHeader}
                 className={cn("max-h-[85svh]", hideHeader && "p-0 border-none")}
             >
                 <KeyboardHeightContext.Provider value={keyboardHeight}>
@@ -97,8 +98,7 @@ export function ResponsiveModal({
                         </>
                     ) : (
                         <div className="flex flex-col h-full">
-                            <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-                            <DrawerHeader className="text-left">
+                            <DrawerHeader className="text-left pt-6">
                                 <DrawerTitle>{title}</DrawerTitle>
                                 {description ? (
                                     <DrawerDescription>{description}</DrawerDescription>

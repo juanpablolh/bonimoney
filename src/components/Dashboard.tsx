@@ -20,6 +20,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { getExpenseColor } from '../utils/expenseIcons';
 import { getMemberAvatarColor } from '../utils/avatarColors';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button as UIButton } from '@/components/ui/button';
 
 interface DashboardProps {
   members: Member[];
@@ -30,7 +39,7 @@ interface DashboardProps {
   onNavigateToMembers: () => void;
   onNavigateToExpenses: () => void;
   onSettleUp: (fromId: string, toId: string, amount: number) => void;
-  onReset: () => void;
+  onDeleteProject: () => void;
   onAddMember: (name: string) => Promise<void>;
 }
 
@@ -43,12 +52,13 @@ export default function Dashboard({
   onNavigateToMembers,
   onNavigateToExpenses,
   onSettleUp: _onSettleUp,
-  onReset,
+  onDeleteProject,
   onAddMember
 }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleAddMember = async () => {
     if (!newMemberName.trim()) {
@@ -98,30 +108,40 @@ export default function Dashboard({
   // Premium OKLCH Color Palette matching GlobalDashboard (15 variants)
   const getProjectBgColor = () => {
     const palette = [
-      'oklch(0.25 0.08 145)', // 0. Emerald
-      'oklch(0.23 0.08 175)', // 1. Deep Teal
-      'oklch(0.22 0.09 200)', // 2. Sky
-      'oklch(0.20 0.10 225)', // 3. Sapphire
-      'oklch(0.20 0.10 250)', // 4. Indigo
-      'oklch(0.20 0.10 265)', // 5. Deep Violet
-      'oklch(0.22 0.11 290)', // 6. Purple
-      'oklch(0.25 0.12 310)', // 7. Orchid
-      'oklch(0.22 0.12 330)', // 8. Magenta
-      'oklch(0.22 0.10 350)', // 9. Rose
-      'oklch(0.25 0.12 15)',  // 10. Crimson
-      'oklch(0.28 0.10 35)',  // 11. Red Orange
-      'oklch(0.28 0.09 55)',  // 12. Burnt Orange
-      'oklch(0.28 0.08 80)',  // 13. Amber
-      'oklch(0.26 0.07 110)', // 14. Olive
+      'oklch(0.32 0.08 145)', // 0. Emerald
+      'oklch(0.30 0.08 175)', // 1. Deep Teal
+      'oklch(0.29 0.09 200)', // 2. Sky
+      'oklch(0.27 0.10 225)', // 3. Sapphire
+      'oklch(0.27 0.10 250)', // 4. Indigo
+      'oklch(0.27 0.10 265)', // 5. Deep Violet
+      'oklch(0.29 0.11 290)', // 6. Purple
+      'oklch(0.32 0.12 310)', // 7. Orchid
+      'oklch(0.29 0.12 330)', // 8. Magenta
+      'oklch(0.29 0.10 350)', // 9. Rose
+      'oklch(0.32 0.12 15)',  // 10. Crimson
+      'oklch(0.34 0.10 35)',  // 11. Red Orange
+      'oklch(0.34 0.09 55)',  // 12. Burnt Orange
+      'oklch(0.34 0.08 80)',  // 13. Amber
+      'oklch(0.32 0.07 110)', // 14. Olive
     ];
 
     if (currentProject?.color) {
       switch (currentProject.color) {
         case 'project-emerald': return palette[0];
+        case 'project-teal': return palette[1];
         case 'project-sky': return palette[2];
+        case 'project-sapphire': return palette[3];
         case 'project-indigo': return palette[4];
+        case 'project-violet': return palette[5];
+        case 'project-purple': return palette[6];
+        case 'project-orchid': return palette[7];
+        case 'project-magenta': return palette[8];
         case 'project-rose': return palette[9];
+        case 'project-crimson': return palette[10];
+        case 'project-orange': return palette[11];
+        case 'project-burntorange': return palette[12];
         case 'project-amber': return palette[13];
+        case 'project-olive': return palette[14];
       }
     }
 
@@ -142,30 +162,40 @@ export default function Dashboard({
   const getProjectButtonBgColor = () => {
     // Generated darker variants (approx L-0.08, C-0.02)
     const palette = [
-      'oklch(0.18 0.06 145)', // 0. Emerald
-      'oklch(0.16 0.06 175)', // 1. Deep Teal
-      'oklch(0.15 0.07 200)', // 2. Sky
-      'oklch(0.14 0.08 225)', // 3. Sapphire
-      'oklch(0.14 0.08 250)', // 4. Indigo
-      'oklch(0.14 0.08 265)', // 5. Deep Violet
-      'oklch(0.15 0.09 290)', // 6. Purple
-      'oklch(0.18 0.10 310)', // 7. Orchid
-      'oklch(0.16 0.10 330)', // 8. Magenta
-      'oklch(0.16 0.08 350)', // 9. Rose
-      'oklch(0.18 0.10 15)',  // 10. Crimson
-      'oklch(0.20 0.08 35)',  // 11. Red Orange
-      'oklch(0.20 0.07 55)',  // 12. Burnt Orange
-      'oklch(0.20 0.06 80)',  // 13. Amber
-      'oklch(0.19 0.05 110)', // 14. Olive
+      'oklch(0.22 0.06 145)', // 0. Emerald
+      'oklch(0.20 0.06 175)', // 1. Deep Teal
+      'oklch(0.19 0.07 200)', // 2. Sky
+      'oklch(0.17 0.08 225)', // 3. Sapphire
+      'oklch(0.17 0.08 250)', // 4. Indigo
+      'oklch(0.17 0.08 265)', // 5. Deep Violet
+      'oklch(0.19 0.09 290)', // 6. Purple
+      'oklch(0.22 0.10 310)', // 7. Orchid
+      'oklch(0.19 0.10 330)', // 8. Magenta
+      'oklch(0.19 0.08 350)', // 9. Rose
+      'oklch(0.22 0.10 15)',  // 10. Crimson
+      'oklch(0.24 0.08 35)',  // 11. Red Orange
+      'oklch(0.24 0.07 55)',  // 12. Burnt Orange
+      'oklch(0.24 0.06 80)',  // 13. Amber
+      'oklch(0.22 0.05 110)', // 14. Olive
     ];
 
     if (currentProject?.color) {
       switch (currentProject.color) {
         case 'project-emerald': return palette[0];
+        case 'project-teal': return palette[1];
         case 'project-sky': return palette[2];
+        case 'project-sapphire': return palette[3];
         case 'project-indigo': return palette[4];
+        case 'project-violet': return palette[5];
+        case 'project-purple': return palette[6];
+        case 'project-orchid': return palette[7];
+        case 'project-magenta': return palette[8];
         case 'project-rose': return palette[9];
+        case 'project-crimson': return palette[10];
+        case 'project-orange': return palette[11];
+        case 'project-burntorange': return palette[12];
         case 'project-amber': return palette[13];
+        case 'project-olive': return palette[14];
       }
     }
 
@@ -243,8 +273,11 @@ export default function Dashboard({
                 e.stopPropagation();
                 handleAddMember();
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
-              style={{ backgroundColor: getProjectButtonBgColor() }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
+              style={{
+                backgroundColor: getProjectButtonBgColor(),
+                borderRadius: '0.5rem'
+              }}
             >
               <UserPlus size={16} weight="bold" />
               <span className="text-xs font-semibold">Integrante</span>
@@ -542,14 +575,47 @@ export default function Dashboard({
           {/* Datos del grupo footer */}
           <div className="hidden md:flex justify-end p-4 pt-4 border-t border-stone-100">
             <button
-              onClick={onReset}
+              onClick={() => setDeleteDialogOpen(true)}
               className="flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-600 transition-colors"
             >
-              Datos del grupo <Trash size={16} />
+              Cerrar grupo <Trash size={16} />
             </button>
           </div>
         </div>
       </section>
+
+      {/* DELETE PROJECT DIALOG */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Cerrar grupo</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
+              ¿Estás seguro que quieres cerrar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
+            <UIButton
+              variant="outline"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancelar
+            </UIButton>
+            <UIButton
+              variant="destructive"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
+              onClick={() => {
+                onDeleteProject();
+                setDeleteDialogOpen(false);
+              }}
+            >
+              Cerrar grupo
+            </UIButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
     </div>

@@ -10,7 +10,7 @@ export default function HomeLogin() {
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { signInWithEmail, signInWithPassword } = useAuth();
+    const { signInWithEmail } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,7 +36,10 @@ export default function HomeLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F5F5F4] flex items-center justify-center p-4">
+        <div
+            className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('https://getlemoni.app/_next/image?url=%2Flemoni-bg.webp&w=3840&q=85')" }}
+        >
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -58,7 +61,7 @@ export default function HomeLogin() {
                                 key="sent"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="text-center space-y-6"
+                                className="text-center space-y-6 pb-2"
                             >
                                 <div className="flex justify-center">
                                     <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
@@ -78,7 +81,7 @@ export default function HomeLogin() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 onSubmit={handleSubmit}
-                                className="space-y-6"
+                                className="space-y-6 pb-2"
                             >
                                 <div className="space-y-4">
                                     <div className="flex flex-col gap-2">
@@ -87,12 +90,12 @@ export default function HomeLogin() {
                                         </label>
                                         <Input
                                             type="text"
-                                            placeholder="Ej. Juan Pérez"
+                                            placeholder="Ej. Juan López"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             required
                                             disabled={loading}
-                                            className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-300 px-6 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
+                                            className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-400 px-6 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
                                         />
                                     </div>
 
@@ -103,12 +106,12 @@ export default function HomeLogin() {
                                         <div className="relative">
                                             <Input
                                                 type="email"
-                                                placeholder="nombre@ejemplo.com"
+                                                placeholder="juan@ejemplo.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 required
                                                 disabled={loading}
-                                                className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-300 pl-6 pr-24 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
+                                                className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-400 pl-6 pr-24 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
                                             />
                                             <button
                                                 type="submit"
@@ -132,22 +135,6 @@ export default function HomeLogin() {
                                     </div>
                                 )}
 
-                                <div className="text-center pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            setLoading(true);
-                                            setError(null);
-                                            const { error } = await signInWithPassword('demo@bonimoney.com', 'password123');
-                                            if (error) setError("Error en el acceso demo: " + error.message);
-                                            setLoading(false);
-                                        }}
-                                        disabled={loading}
-                                        className="text-stone-500 hover:text-stone-900 font-medium text-sm underline underline-offset-4"
-                                    >
-                                        ¿No recibes el email? Usa el Acceso Demo
-                                    </button>
-                                </div>
 
                                 <div className="text-center">
                                     <p className="text-xs text-[#A8A29E] font-medium">

@@ -26,7 +26,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     icon,
     memberCount,
     members,
-    colorClass = 'bg-[oklch(0.25_0.08_145)]',
+    colorClass = 'bg-[oklch(0.32_0.08_145)]',
     isLastStackedCard = false,
 }) => {
 

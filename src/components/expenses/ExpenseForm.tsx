@@ -77,10 +77,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col h-[80svh] bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5">
+        <div className="flex flex-col h-[80svh] bg-stone-50 md:h-full md:max-h-[85svh] rounded-t-3xl overflow-hidden">
             {/* Header Wrapper to avoid corner slivers */}
-            <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
-                <header className="px-6 py-5 flex items-center justify-between">
+            <div className="bg-[#44403C] shrink-0 rounded-t-3xl overflow-hidden pt-4">
+                {/* Drawer Handle */}
+                <div className="mx-auto h-1 w-[100px] rounded-full bg-white/20 mb-4" />
+                <header className="px-6 pb-5 flex items-center justify-between">
                     <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
                         Nuevo gasto
                     </h2>

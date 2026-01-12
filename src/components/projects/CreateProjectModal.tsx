@@ -3,7 +3,8 @@ import { ResponsiveModal, KeyboardHeightContext } from '../ui-custom/ResponsiveM
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
-import { Plus, Trash, X } from '@phosphor-icons/react';
+import { Plus, Trash, X, CaretDown, Check } from '@phosphor-icons/react';
+import { cn } from '@/lib/utils';
 import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +14,7 @@ interface CreateProjectModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-const EMOJIS = ['🏠', '✈️', '🛒', '🎉', '💡'];
+const EMOJIS = ['🏠', '✈️', '🛒', '🎉'];
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
     const { createProject } = useProject();
@@ -22,9 +23,22 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [icon, setIcon] = useState('🏠');
+    const [currency, setCurrency] = useState('CLP');
     const [loading, setLoading] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
+    const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
     const [members, setMembers] = useState<string[]>(['']);
+
+    const CURRENCIES = [
+        { code: 'CLP', name: 'Peso chileno', flag: '🇨🇱' },
+        { code: 'USD', name: 'Dólar estadounidense', flag: '🇺🇸' },
+        { code: 'BRL', name: 'Real brasileño', flag: '🇧🇷' },
+        { code: 'ARS', name: 'Peso argentino', flag: '🇦🇷' },
+        { code: 'PEN', name: 'Sol peruano', flag: '🇵🇪' },
+        { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+        { code: 'GBP', name: 'Libra esterlina', flag: '🇬🇧' },
+        { code: 'UYU', name: 'Peso uruguayo', flag: '🇺🇾' }
+    ];
 
     // Reset state when modal closes
     useEffect(() => {
@@ -34,7 +48,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 setName('');
                 setMembers(['']);
                 setIcon('🏠');
+                setCurrency('CLP');
                 setShowPicker(false);
+                setShowCurrencyPicker(false);
                 setLoading(false);
             }, 300); // Wait for animation
             return () => clearTimeout(timer);
@@ -51,14 +67,19 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
 
         setLoading(true);
         try {
-            const colors = ['project-emerald', 'project-rose', 'project-amber', 'project-sky', 'project-indigo'];
+            const colors = [
+                'project-emerald', 'project-teal', 'project-sky', 'project-sapphire',
+                'project-indigo', 'project-violet', 'project-purple', 'project-orchid',
+                'project-magenta', 'project-rose', 'project-crimson', 'project-orange',
+                'project-burntorange', 'project-amber', 'project-olive'
+            ];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
             // 1. Create Project
             const newProject = await createProject({
                 name,
                 icon,
-                currency: 'CLP', // Default
+                currency,
                 color: randomColor
             });
 
@@ -112,6 +133,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
         setMembers(newMembers);
     };
 
+    const selectedCurrencyInfo = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+
     return (
         <ResponsiveModal
             open={open}
@@ -120,10 +143,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col h-[80svh] bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
+            <div className="flex flex-col h-[85svh] max-h-[85svh] bg-stone-50 md:h-full rounded-t-3xl overflow-hidden">
                 {/* Header with X button - same style as ExpenseForm */}
-                <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
-                    <header className="px-6 py-5 flex items-center justify-between">
+                <div className="bg-[#44403C] shrink-0 rounded-t-3xl overflow-hidden pt-4">
+                    {/* Drawer Handle */}
+                    <div className="mx-auto h-1 w-[100px] rounded-full bg-white/20 mb-4" />
+                    <header className="px-6 pb-5 flex items-center justify-between">
                         <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
                             {step === 1 ? "Nuevo grupo" : "Integrantes"}
                         </h2>
@@ -193,6 +218,27 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                         onChange={(e) => setName(e.target.value)}
                                         className="h-14 bg-stone-50 border-stone-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-stone-300 placeholder:text-stone-400 px-4"
                                     />
+                                </div>
+
+                                {/* Currency Selection Trigger */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-semibold text-stone-900">Moneda predeterminada</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrencyPicker(true)}
+                                        className="w-full h-14 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl px-4 flex items-center justify-between transition-colors text-left"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-2xl shrink-0">
+                                                {selectedCurrencyInfo.flag}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-stone-900 leading-tight">{selectedCurrencyInfo.name}</p>
+                                                <p className="text-xs text-stone-500 font-medium uppercase tracking-wider">{selectedCurrencyInfo.code}</p>
+                                            </div>
+                                        </div>
+                                        <CaretDown size={20} className="text-stone-400" />
+                                    </button>
                                 </div>
                             </>
                         ) : (
@@ -295,6 +341,63 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                 width={350}
                                 height={450}
                             />
+                        </div>
+                    </div>
+                )}
+
+                {/* Currency Picker Overlay */}
+                {showCurrencyPicker && (
+                    <div className="absolute inset-0 z-[70] flex flex-col bg-stone-50 animate-in slide-in-from-bottom duration-300 md:rounded-3xl">
+                        <header className="bg-[#44403C] md:rounded-t-3xl shrink-0 pt-4 overflow-hidden">
+                            {/* Drawer Handle */}
+                            <div className="mx-auto h-1 w-[100px] rounded-full bg-white/20 mb-4 md:hidden" />
+                            <div className="px-6 pb-5 flex items-center justify-between">
+                                <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
+                                    Elige qué divisa añadir
+                                </h2>
+                                <button
+                                    onClick={() => setShowCurrencyPicker(false)}
+                                    className="p-1 min-w-12 hover:bg-white/10 rounded-full transition-colors text-[#FAFAF9] flex flex-col justify-center items-center"
+                                >
+                                    <X size={24} weight="regular" />
+                                </button>
+                            </div>
+                        </header>
+                        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider">Divisas disponibles</p>
+
+                            <div className="bg-white rounded-[1.5rem] p-2 space-y-0.5 border border-stone-100 mb-8">
+                                {CURRENCIES.map((c) => (
+                                    <button
+                                        key={c.code}
+                                        type="button"
+                                        onClick={() => {
+                                            setCurrency(c.code);
+                                            setShowCurrencyPicker(false);
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center gap-4 p-2 transition-all text-left rounded-[1rem]",
+                                            currency === c.code ? "bg-stone-700 text-white" : "hover:bg-stone-50"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shrink-0 text-3xl transition-colors",
+                                            currency === c.code ? "bg-white/20" : "bg-stone-200"
+                                        )}>
+                                            {c.flag}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={cn("text-base font-semibold truncate", currency === c.code ? "text-white" : "text-stone-900")}>
+                                                {c.name}
+                                            </p>
+                                            <p className={cn("text-xs font-medium uppercase tracking-wider", currency === c.code ? "text-stone-300" : "text-stone-400")}>
+                                                {c.code}
+                                            </p>
+                                        </div>
+                                        {currency === c.code && <Check size={20} weight="bold" />}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}

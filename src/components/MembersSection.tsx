@@ -57,30 +57,40 @@ export default function MembersSection({
   // Helper functions for colors (same as Dashboard)
   const getProjectBgColor = () => {
     const palette = [
-      'oklch(0.25 0.08 145)', // 0. Emerald
-      'oklch(0.23 0.08 175)', // 1. Deep Teal
-      'oklch(0.22 0.09 200)', // 2. Sky
-      'oklch(0.20 0.10 225)', // 3. Sapphire
-      'oklch(0.20 0.10 250)', // 4. Indigo
-      'oklch(0.20 0.10 265)', // 5. Deep Violet
-      'oklch(0.22 0.11 290)', // 6. Purple
-      'oklch(0.25 0.12 310)', // 7. Orchid
-      'oklch(0.22 0.12 330)', // 8. Magenta
-      'oklch(0.22 0.10 350)', // 9. Rose
-      'oklch(0.25 0.12 15)',  // 10. Crimson
-      'oklch(0.28 0.10 35)',  // 11. Red Orange
-      'oklch(0.28 0.09 55)',  // 12. Burnt Orange
-      'oklch(0.28 0.08 80)',  // 13. Amber
-      'oklch(0.26 0.07 110)', // 14. Olive
+      'oklch(0.32 0.08 145)', // 0. Emerald
+      'oklch(0.30 0.08 175)', // 1. Deep Teal
+      'oklch(0.29 0.09 200)', // 2. Sky
+      'oklch(0.27 0.10 225)', // 3. Sapphire
+      'oklch(0.27 0.10 250)', // 4. Indigo
+      'oklch(0.27 0.10 265)', // 5. Deep Violet
+      'oklch(0.29 0.11 290)', // 6. Purple
+      'oklch(0.32 0.12 310)', // 7. Orchid
+      'oklch(0.29 0.12 330)', // 8. Magenta
+      'oklch(0.29 0.10 350)', // 9. Rose
+      'oklch(0.32 0.12 15)',  // 10. Crimson
+      'oklch(0.34 0.10 35)',  // 11. Red Orange
+      'oklch(0.34 0.09 55)',  // 12. Burnt Orange
+      'oklch(0.34 0.08 80)',  // 13. Amber
+      'oklch(0.32 0.07 110)', // 14. Olive
     ];
 
     if (currentProject?.color) {
       switch (currentProject.color) {
         case 'project-emerald': return palette[0];
+        case 'project-teal': return palette[1];
         case 'project-sky': return palette[2];
+        case 'project-sapphire': return palette[3];
         case 'project-indigo': return palette[4];
+        case 'project-violet': return palette[5];
+        case 'project-purple': return palette[6];
+        case 'project-orchid': return palette[7];
+        case 'project-magenta': return palette[8];
         case 'project-rose': return palette[9];
+        case 'project-crimson': return palette[10];
+        case 'project-orange': return palette[11];
+        case 'project-burntorange': return palette[12];
         case 'project-amber': return palette[13];
+        case 'project-olive': return palette[14];
       }
     }
 
@@ -97,30 +107,40 @@ export default function MembersSection({
 
   const getProjectButtonBgColor = () => {
     const palette = [
-      'oklch(0.18 0.06 145)', // 0. Emerald
-      'oklch(0.16 0.06 175)', // 1. Deep Teal
-      'oklch(0.15 0.07 200)', // 2. Sky
-      'oklch(0.14 0.08 225)', // 3. Sapphire
-      'oklch(0.14 0.08 250)', // 4. Indigo
-      'oklch(0.14 0.08 265)', // 5. Deep Violet
-      'oklch(0.15 0.09 290)', // 6. Purple
-      'oklch(0.18 0.10 310)', // 7. Orchid
-      'oklch(0.16 0.10 330)', // 8. Magenta
-      'oklch(0.16 0.08 350)', // 9. Rose
-      'oklch(0.18 0.10 15)',  // 10. Crimson
-      'oklch(0.20 0.08 35)',  // 11. Red Orange
-      'oklch(0.20 0.07 55)',  // 12. Burnt Orange
-      'oklch(0.20 0.06 80)',  // 13. Amber
-      'oklch(0.19 0.05 110)', // 14. Olive
+      'oklch(0.22 0.06 145)', // 0. Emerald
+      'oklch(0.20 0.06 175)', // 1. Deep Teal
+      'oklch(0.19 0.07 200)', // 2. Sky
+      'oklch(0.17 0.08 225)', // 3. Sapphire
+      'oklch(0.17 0.08 250)', // 4. Indigo
+      'oklch(0.17 0.08 265)', // 5. Deep Violet
+      'oklch(0.19 0.09 290)', // 6. Purple
+      'oklch(0.22 0.10 310)', // 7. Orchid
+      'oklch(0.19 0.10 330)', // 8. Magenta
+      'oklch(0.19 0.08 350)', // 9. Rose
+      'oklch(0.22 0.10 15)',  // 10. Crimson
+      'oklch(0.24 0.08 35)',  // 11. Red Orange
+      'oklch(0.24 0.07 55)',  // 12. Burnt Orange
+      'oklch(0.24 0.06 80)',  // 13. Amber
+      'oklch(0.22 0.05 110)', // 14. Olive
     ];
 
     if (currentProject?.color) {
       switch (currentProject.color) {
         case 'project-emerald': return palette[0];
+        case 'project-teal': return palette[1];
         case 'project-sky': return palette[2];
+        case 'project-sapphire': return palette[3];
         case 'project-indigo': return palette[4];
+        case 'project-violet': return palette[5];
+        case 'project-purple': return palette[6];
+        case 'project-orchid': return palette[7];
+        case 'project-magenta': return palette[8];
         case 'project-rose': return palette[9];
+        case 'project-crimson': return palette[10];
+        case 'project-orange': return palette[11];
+        case 'project-burntorange': return palette[12];
         case 'project-amber': return palette[13];
+        case 'project-olive': return palette[14];
       }
     }
 
@@ -190,8 +210,11 @@ export default function MembersSection({
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
-                style={{ backgroundColor: getProjectButtonBgColor() }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
+                style={{
+                  backgroundColor: getProjectButtonBgColor(),
+                  borderRadius: '0.5rem'
+                }}
               >
                 <UserPlus size={16} weight="bold" className="text-white" />
                 <span className="text-sm font-semibold text-white">Agregar</span>
@@ -336,37 +359,39 @@ export default function MembersSection({
           onClick={() => setDeleteDialogOpen(true)}
           className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors px-4 py-2"
         >
-          <span className="font-medium text-sm">Eliminar grupo</span>
+          <span className="font-medium text-sm">Cerrar grupo</span>
           <Trash size={16} />
         </button>
       </section>
 
       {/* DELETE PROJECT DIALOG */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-2xl font-serif font-bold text-stone-900 text-left">Eliminar grupo</DialogTitle>
-            <DialogDescription className="text-stone-500 font-medium text-left">
-              ¿Estás seguro que quieres eliminar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Cerrar grupo</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
+              ¿Estás seguro que quieres cerrar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
             <Button
               variant="outline"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
               onClick={() => setDeleteDialogOpen(false)}
-              className="h-12 px-6 rounded-2xl font-bold bg-stone-50 border-stone-100 hover:bg-stone-100 w-full sm:w-auto text-stone-900"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
               onClick={() => {
                 onDeleteProject();
                 setDeleteDialogOpen(false);
               }}
-              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
             >
-              Eliminar
+              Cerrar grupo
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -374,30 +399,32 @@ export default function MembersSection({
 
       {/* DELETE MEMBER DIALOG */}
       <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
-        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-2xl font-serif font-bold text-stone-900 text-left">Eliminar integrante</DialogTitle>
-            <DialogDescription className="text-stone-500 font-medium text-left">
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Eliminar integrante</DialogTitle>
+            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
               ¿Estás seguro que quieres eliminar a <span className="text-stone-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>? Si tiene gastos o deudas pendientes, no podrás eliminarlo hasta resolverlas.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
             <Button
               variant="outline"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
               onClick={() => setDeleteMemberDialogOpen(false)}
-              className="h-12 px-6 rounded-2xl font-bold bg-stone-50 border-stone-100 hover:bg-stone-100 w-full sm:w-auto text-stone-900"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
               onClick={() => {
                 if (memberToDelete) {
                   onDeleteMember(memberToDelete.id);
                   setDeleteMemberDialogOpen(false);
                 }
               }}
-              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
             >
               Eliminar
             </Button>

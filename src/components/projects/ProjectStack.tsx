@@ -30,30 +30,40 @@ interface ProjectStackProps {
 // Map project color to OKLCH color
 const getColorClass = (projectColor?: string, projectId?: string, fallbackIndex: number = 0): string => {
     const palette = [
-        'bg-[oklch(0.25_0.08_145)]', // 0. Emerald
-        'bg-[oklch(0.23_0.08_175)]', // 1. Deep Teal
-        'bg-[oklch(0.22_0.09_200)]', // 2. Sky
-        'bg-[oklch(0.20_0.10_225)]', // 3. Sapphire
-        'bg-[oklch(0.20_0.10_250)]', // 4. Indigo
-        'bg-[oklch(0.20_0.10_265)]', // 5. Deep Violet
-        'bg-[oklch(0.22_0.11_290)]', // 6. Purple
-        'bg-[oklch(0.25_0.12_310)]', // 7. Orchid
-        'bg-[oklch(0.22_0.12_330)]', // 8. Magenta
-        'bg-[oklch(0.22_0.10_350)]', // 9. Rose
-        'bg-[oklch(0.25_0.12_15)]',  // 10. Crimson
-        'bg-[oklch(0.28_0.10_35)]',  // 11. Red Orange
-        'bg-[oklch(0.28_0.09_55)]',  // 12. Burnt Orange
-        'bg-[oklch(0.28_0.08_80)]',  // 13. Amber
-        'bg-[oklch(0.26_0.07_110)]', // 14. Olive
+        'bg-[oklch(0.32_0.08_145)]', // 0. Emerald
+        'bg-[oklch(0.30_0.08_175)]', // 1. Deep Teal
+        'bg-[oklch(0.29_0.09_200)]', // 2. Sky
+        'bg-[oklch(0.27_0.10_225)]', // 3. Sapphire
+        'bg-[oklch(0.27_0.10_250)]', // 4. Indigo
+        'bg-[oklch(0.27_0.10_265)]', // 5. Deep Violet
+        'bg-[oklch(0.29_0.11_290)]', // 6. Purple
+        'bg-[oklch(0.32_0.12_310)]', // 7. Orchid
+        'bg-[oklch(0.29_0.12_330)]', // 8. Magenta
+        'bg-[oklch(0.29_0.10_350)]', // 9. Rose
+        'bg-[oklch(0.32_0.12_15)]',  // 10. Crimson
+        'bg-[oklch(0.34_0.10_35)]',  // 11. Red Orange
+        'bg-[oklch(0.34_0.09_55)]',  // 12. Burnt Orange
+        'bg-[oklch(0.34_0.08_80)]',  // 13. Amber
+        'bg-[oklch(0.32_0.07_110)]', // 14. Olive
     ];
 
     if (projectColor) {
         switch (projectColor) {
             case 'project-emerald': return palette[0];
+            case 'project-teal': return palette[1];
             case 'project-sky': return palette[2];
+            case 'project-sapphire': return palette[3];
             case 'project-indigo': return palette[4];
+            case 'project-violet': return palette[5];
+            case 'project-purple': return palette[6];
+            case 'project-orchid': return palette[7];
+            case 'project-magenta': return palette[8];
             case 'project-rose': return palette[9];
+            case 'project-crimson': return palette[10];
+            case 'project-orange': return palette[11];
+            case 'project-burntorange': return palette[12];
             case 'project-amber': return palette[13];
+            case 'project-olive': return palette[14];
         }
     }
 

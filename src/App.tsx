@@ -99,17 +99,6 @@ function ProjectView() {
     }
   };
 
-  const handleResetData = async () => {
-    if (confirm('¿Estás seguro de que quieres borrar todos los gastos de este proyecto?')) {
-      try {
-        for (const expense of contextExpenses) {
-          await deleteExpense(expense.id);
-        }
-      } catch (error) {
-        console.error('Error resetting expenses:', error);
-      }
-    }
-  };
 
   // Adapters for compatibility
   const members = adaptMembers(contextMembers);
@@ -190,7 +179,12 @@ function ProjectView() {
             onNavigateToMembers={() => setActiveTab('members')}
             onNavigateToExpenses={() => setActiveTab('expenses')}
             onSettleUp={handleSettleUp}
-            onReset={handleResetData}
+            onDeleteProject={async () => {
+              if (currentProject) {
+                await deleteProject(currentProject.id);
+                navigate('/');
+              }
+            }}
             onAddMember={async (name) => {
               if (currentProject) {
                 await addMember({ name });

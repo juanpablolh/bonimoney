@@ -68,7 +68,7 @@ export const calculateBalancesByCurrency = (
   const balancesByCurrency = new Map<Currency, Map<string, Balance>>();
 
   // Initialize balances for each currency
-  const currencies: Currency[] = ['CLP', 'USD', 'BRL', 'ARS', 'EUR', 'GBP', 'PEN'];
+  const currencies: Currency[] = ['CLP', 'USD', 'BRL', 'ARS', 'EUR', 'GBP', 'PEN', 'UYU'];
   currencies.forEach((currency) => {
     const balances: Map<string, Balance> = new Map();
     members.forEach((member) => {
@@ -252,6 +252,7 @@ export const formatCurrency = (amount: number, currency: Currency = 'CLP'): stri
     EUR: 'es-ES',
     GBP: 'en-GB',
     PEN: 'es-PE',
+    UYU: 'es-UY',
   };
 
   return new Intl.NumberFormat(localeMap[currency], {
@@ -272,6 +273,7 @@ export const getCurrencySymbol = (currency: Currency): string => {
     EUR: 'es-ES',
     GBP: 'en-GB',
     PEN: 'es-PE',
+    UYU: 'es-UY',
   };
 
   const formatter = new Intl.NumberFormat(localeMap[currency], {
@@ -309,6 +311,7 @@ export const getDecimalSeparator = (currency: Currency): string => {
     EUR: ',',
     GBP: '.',
     PEN: '.',
+    UYU: ',',
   };
   return decimalSeparator[currency];
 };
