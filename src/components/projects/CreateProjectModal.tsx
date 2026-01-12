@@ -3,7 +3,7 @@ import { ResponsiveModal, KeyboardHeightContext } from '../ui-custom/ResponsiveM
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
-import { Plus, Trash } from '@phosphor-icons/react';
+import { Plus, Trash, X, ArrowLeft } from '@phosphor-icons/react';
 import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -120,27 +120,42 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col h-full bg-stone-50 overflow-hidden rounded-t-3xl md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
-                {/* Header */}
-                <div className="bg-[#44403C] rounded-t-3xl shrink-0">
-                    <header className="px-8 py-8 flex items-center justify-between">
-                        <h2 className="font-serif text-[32px] font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
-                            {step === 1 ? "Crea tu primer grupo" : "Quiénes participan"}
+            <div className="flex flex-col h-full bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
+                {/* Header with X button - same style as ExpenseForm */}
+                <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
+                    <header className="px-6 py-5 flex items-center justify-between">
+                        {step === 2 ? (
+                            <button
+                                onClick={() => setStep(1)}
+                                className="p-1 min-w-12 hover:bg-white/10 rounded-full transition-colors text-[#FAFAF9] flex flex-col justify-center items-center"
+                            >
+                                <ArrowLeft size={24} weight="regular" />
+                            </button>
+                        ) : (
+                            <div className="w-12" />
+                        )}
+                        <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
+                            {step === 1 ? "Nuevo grupo" : "Integrantes"}
                         </h2>
+                        <button
+                            onClick={() => onOpenChange(false)}
+                            className="p-1 min-w-12 hover:bg-white/10 rounded-full transition-colors text-[#FAFAF9] flex flex-col justify-center items-center"
+                        >
+                            <X size={24} weight="regular" />
+                        </button>
                     </header>
                 </div>
 
-                <div
-                    className="flex-1 overflow-y-auto px-6 py-8 space-y-8 bg-stone-50 relative transition-[padding] duration-200"
-                    style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 32}px` : undefined }}
-                >
-                    {step === 1 ? (
-                        <>
-                            <p className="text-stone-500 font-medium text-lg leading-relaxed">
-                                Dale un nombre a tu nuevo grupo para empezar a dividir gastos de forma inteligente.
-                            </p>
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto bg-stone-50 relative">
+                    <div className="px-6 py-6 space-y-6">
+                        {step === 1 ? (
+                            <>
+                                <p className="text-stone-500 font-medium text-base leading-relaxed">
+                                    Dale un nombre a tu nuevo grupo para empezar a dividir gastos.
+                                </p>
 
-                            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-6">
+                                {/* Emoji Selection */}
                                 <div className="flex flex-wrap gap-2">
                                     {EMOJIS.map(e => (
                                         <button
@@ -158,7 +173,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                             {e}
                                         </button>
                                     ))}
-                                    {/* Custom Emoji or Plus Button */}
                                     {!EMOJIS.includes(icon) ? (
                                         <button
                                             key="custom-emoji"
@@ -174,71 +188,49 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                             type="button"
                                             onClick={() => setShowPicker(true)}
                                             className="w-14 h-14 rounded-xl flex items-center justify-center text-stone-600 bg-[#F5F5F4] hover:bg-[#E7E5E4] transition-all"
-                                            style={{ backgroundColor: 'var(--color-stone-100)' }}
                                         >
                                             <Plus size={24} weight="bold" />
                                         </button>
                                     )}
                                 </div>
 
-                                <div className="flex flex-col gap-2 mb-6">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-stone-400">Nombre del proyecto</label>
+                                {/* Project Name Input */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-semibold text-stone-900">Nombre del grupo</label>
                                     <Input
                                         placeholder="Ej. Viaje a la playa, Casa"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="h-14 bg-white border border-stone-200 rounded-xl text-lg font-medium placeholder:text-stone-400 px-4 focus-visible:ring-stone-900"
-                                        style={{ letterSpacing: '-0.3px' }}
+                                        className="h-14 bg-stone-50 border-stone-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-stone-300 placeholder:text-stone-400 px-4"
                                     />
                                 </div>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-stone-500 font-medium text-base leading-relaxed">
+                                    Agrega a las personas con las que compartirás gastos.
+                                </p>
 
-                                <div className="flex gap-3 pt-6">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => onOpenChange(false)}
-                                        className="flex-1 h-14 rounded-2xl text-base font-bold bg-white border-stone-200 hover:bg-stone-50 text-stone-900"
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={!name.trim()}
-                                        className="flex-1 h-14 rounded-2xl text-base font-bold bg-stone-800 hover:bg-stone-900 text-white shadow-xl"
-                                        style={{ letterSpacing: '-0.2px' }}
-                                    >
-                                        Continuar
-                                    </Button>
-                                </div>
-                            </form>
-                        </>
-                    ) : (
-                        // STEP 2: Members
-                        <>
-                            <p className="text-stone-500 font-medium text-lg leading-relaxed">
-                                Agrega a las personas con las que compartirás gastos. Puedes agregar más después.
-                            </p>
-
-                            <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="space-y-4">
-                                <div className="space-y-3">
-                                    {/* Owner (You) */}
-                                    <div className="flex items-center gap-3 p-2 rounded-xl bg-stone-100/50 border border-transparent">
-                                        <div className="w-10 h-10 rounded-full bg-stone-300 flex items-center justify-center text-stone-600 font-bold">
-                                            {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="font-semibold text-stone-900">Tú ({user?.user_metadata?.full_name || 'Usuario'})</p>
-                                            <p className="text-xs text-stone-500">Administrador</p>
-                                        </div>
+                                {/* Owner (You) */}
+                                <div className="flex items-center gap-3 p-3 rounded-xl bg-stone-100/50">
+                                    <div className="w-10 h-10 rounded-full bg-stone-300 flex items-center justify-center text-stone-600 font-bold">
+                                        {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
                                     </div>
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-stone-900">Tú ({user?.user_metadata?.full_name || 'Usuario'})</p>
+                                        <p className="text-xs text-stone-500">Administrador</p>
+                                    </div>
+                                </div>
 
+                                {/* Members List */}
+                                <div className="space-y-3">
                                     {members.map((member, index) => (
                                         <div key={index} className="flex gap-2">
                                             <Input
                                                 placeholder={`Nombre integrante ${index + 1}`}
                                                 value={member}
                                                 onChange={(e) => updateMemberName(index, e.target.value)}
-                                                className="h-14 bg-white border border-stone-200 rounded-xl text-lg font-medium placeholder:text-stone-400 px-4 focus-visible:ring-stone-900 flex-1"
+                                                className="h-14 bg-stone-50 border-stone-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-stone-300 placeholder:text-stone-400 px-4 flex-1"
                                             />
                                             <button
                                                 type="button"
@@ -256,32 +248,31 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                         className="flex items-center gap-2 text-stone-500 font-medium hover:text-stone-800 transition-colors px-2 py-2"
                                     >
                                         <Plus size={20} weight="bold" />
-                                        <span style={{ letterSpacing: '-0.2px' }}>Agregar otro integrante</span>
+                                        <span>Agregar otro integrante</span>
                                     </button>
                                 </div>
-
-                                <div className="flex gap-3 pt-6">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setStep(1)}
-                                        className="flex-1 h-14 rounded-2xl text-base font-semibold bg-white border-stone-200 hover:bg-stone-50 text-stone-900"
-                                    >
-                                        Atrás
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="flex-1 h-14 rounded-2xl text-base font-bold bg-stone-800 hover:bg-stone-900 text-white shadow-xl"
-                                        style={{ letterSpacing: '-0.2px' }}
-                                    >
-                                        {loading ? 'Creando...' : 'Crear grupo'}
-                                    </Button>
-                                </div>
-                            </form>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
+
+                {/* Fixed Footer - Outside scroll area, adjusts for keyboard */}
+                <footer
+                    className="shrink-0 p-6 bg-stone-50 border-t border-stone-200 transition-[padding] duration-200"
+                    style={{
+                        paddingBottom: keyboardHeight > 0
+                            ? `${keyboardHeight + 16}px`
+                            : 'max(1.5rem, env(safe-area-inset-bottom))'
+                    }}
+                >
+                    <Button
+                        onClick={step === 1 ? handleNext : handleCreate}
+                        disabled={step === 1 ? !name.trim() : loading}
+                        className="w-full h-14 rounded-xl text-base font-semibold bg-stone-900 text-white hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {step === 1 ? 'Continuar' : (loading ? 'Creando...' : 'Crear grupo')}
+                    </Button>
+                </footer>
 
                 {/* Emoji Picker Overlay */}
                 {showPicker && (
