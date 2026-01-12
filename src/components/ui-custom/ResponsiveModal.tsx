@@ -41,6 +41,26 @@ export function ResponsiveModal({
     showCloseButton = true,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
+    const [viewportHeight, setViewportHeight] = React.useState<number | null>(null)
+
+    React.useEffect(() => {
+        if (isDesktop || !open) return
+
+        const updateViewport = () => {
+            if (window.visualViewport) {
+                setViewportHeight(window.visualViewport.height)
+            }
+        }
+
+        window.visualViewport?.addEventListener("resize", updateViewport)
+        window.visualViewport?.addEventListener("scroll", updateViewport)
+        updateViewport()
+
+        return () => {
+            window.visualViewport?.removeEventListener("resize", updateViewport)
+            window.visualViewport?.removeEventListener("scroll", updateViewport)
+        }
+    }, [isDesktop, open])
 
     if (isDesktop) {
         return (
@@ -78,20 +98,19 @@ export function ResponsiveModal({
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-            <DrawerContent hideHandle={hideHeader} className={cn("flex flex-col h-[96dvh]", hideHeader && "border-none")}>
+            <DrawerContent
+                hideHandle={hideHeader}
+                className={cn("flex flex-col bg-background", hideHeader && "border-none")}
+                style={viewportHeight ? { height: `${viewportHeight}px`, maxHeight: '100dvh' } : { height: '85dvh' }}
+            >
                 {!hideHeader && <div className="bg-muted mx-auto mt-4 h-1 w-[100px] shrink-0 rounded-full" />}
-                {hideHeader ? (
-                    <div className="flex flex-col flex-1 min-h-0">
+                <div className="flex flex-col flex-1 min-h-0 relative h-full">
+                    {hideHeader ? (
                         <VisuallyHidden>
                             <DrawerTitle>{title}</DrawerTitle>
                             <DrawerDescription>{description || title}</DrawerDescription>
                         </VisuallyHidden>
-                        <div className="flex-1 overflow-hidden flex flex-col">
-                            {children}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col flex-1 min-h-0">
+                    ) : (
                         <DrawerHeader className="text-left shrink-0">
                             <DrawerTitle>{title}</DrawerTitle>
                             {description ? (
@@ -102,11 +121,11 @@ export function ResponsiveModal({
                                 </VisuallyHidden>
                             )}
                         </DrawerHeader>
-                        <div className="px-4 pb-8 flex-1 overflow-y-auto">
-                            {children}
-                        </div>
+                    )}
+                    <div className="flex-1 flex flex-col min-h-0 h-full">
+                        {children}
                     </div>
-                )}
+                </div>
             </DrawerContent>
         </Drawer>
     )
