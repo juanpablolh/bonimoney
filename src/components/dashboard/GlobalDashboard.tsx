@@ -4,6 +4,7 @@ import { Plus } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { getMemberAvatarColor } from '../../utils/avatarColors';
 
 interface Project {
     id: string;
@@ -44,12 +45,20 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
 
                     {/* Right: Avatar + Plus Button */}
                     <div className="flex items-center gap-4">
-                        <Avatar className="w-12 h-12">
-                            <AvatarImage src="" />
-                            <AvatarFallback className="bg-stone-200 text-stone-700 font-bold">
-                                {userName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
+                        {(() => {
+                            const colors = getMemberAvatarColor({ name: userName });
+                            return (
+                                <Avatar className="w-12 h-12">
+                                    <AvatarImage src="" />
+                                    <AvatarFallback
+                                        className="font-bold"
+                                        style={{ backgroundColor: colors.bg, color: colors.text }}
+                                    >
+                                        {userName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                            );
+                        })()}
 
                         <button
                             onClick={onCreateProject}
@@ -78,7 +87,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
 
                 <div className="space-y-6 rounded-b-[20px] h-fit overflow-visible md:h-auto md:overflow-visible pt-12">
                     <h3 className="font-serif text-2xl text-stone-900 tracking-tight">
-                        Mis grupos
+                        Tus grupos
                     </h3>
 
                     {!projects.length ? (

@@ -1,6 +1,8 @@
 import React from 'react';
 import { CaretRight } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { getMemberAvatarColor } from '../../utils/avatarColors';
 
 interface ProjectCardProps {
     name: string;
@@ -53,25 +55,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 "relative z-10 space-y-4",
                 isLastStackedCard && "hidden md:block"
             )}>
-                {/* Balance Badge - Hidden in Global Dashboard */}
-                {/* <div className={cn(
-                    "inline-flex items-center gap-2 px-4 py-2 rounded-lg backdrop-blur-md self-start transition-all",
-                    isPositive
-                        ? "bg-green-200 text-green-700"
-                        : "bg-red-200 text-red-700"
-                )}>
-                    <span className="text-sm font-medium">
-                        {isPositive ? 'Te deben' : 'Debes'}
-                    </span>
-                    {isPositive ? <ArrowUpRight size={16} weight="bold" /> : <ArrowDownLeft size={16} weight="bold" />}
-                    <div className="flex items-baseline gap-1 font-bold">
-                        <span className="text-xs opacity-80">{currency}</span>
-                        <span className="text-base tracking-tight">
-                            {Math.abs(balance).toLocaleString()}
-                        </span>
-                    </div>
-                </div> */}
-
                 {/* Footer: Member Count & Avatars */}
                 <div className="flex items-end justify-between">
                     <div className="flex items-center gap-3">
@@ -83,21 +66,28 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                         </span>
                     </div>
 
-                    {/* Avatar Stack representation using standard circle style */}
+                    {/* Avatar Stack using Shadcn Avatar components */}
                     <div className="flex -space-x-3">
-                        {[...Array(Math.min(memberCount, 3))].map((_, i) => (
-                            <div
-                                key={i}
-                                className="w-10 h-10 rounded-full bg-white border-2 border-transparent flex items-center justify-center overflow-hidden shadow-sm"
-                                style={{ zIndex: 3 - i }}
-                            >
-                                <img
-                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}-${i}`}
-                                    alt="Avatar"
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                        ))}
+                        {[...Array(Math.min(memberCount, 3))].map((_, i) => {
+                            const fakeMember = { name: `${name}-${i}` };
+                            const colors = getMemberAvatarColor(fakeMember);
+                            const initial = String.fromCharCode(65 + i);
+
+                            return (
+                                <Avatar
+                                    key={i}
+                                    className="w-10 h-10 border-2 border-white shadow-sm"
+                                    style={{ zIndex: 3 - i }}
+                                >
+                                    <AvatarFallback
+                                        className="text-sm font-bold"
+                                        style={{ backgroundColor: colors.bg, color: colors.text }}
+                                    >
+                                        {initial}
+                                    </AvatarFallback>
+                                </Avatar>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

@@ -114,7 +114,7 @@ function App() {
         </>
       ) : (
         // Project Specific View
-        <div className="min-h-screen flex flex-col bg-stone-50/30 lg:h-screen lg:overflow-hidden">
+        <div className="min-h-screen flex flex-col bg-stone-100 lg:h-screen lg:overflow-hidden">
           {/* Header - Figma Design */}
           <header className="bg-white sticky top-0 z-40 border-b border-stone-100 flex-shrink-0">
             <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
@@ -163,7 +163,7 @@ function App() {
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 lg:overflow-hidden flex flex-col">
+          <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 lg:overflow-hidden flex flex-col bg-stone-100">
             {activeTab === 'dashboard' && (
               <Dashboard
                 members={members}

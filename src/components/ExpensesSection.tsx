@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Receipt,
   Trash,
   PencilSimple,
   CalendarBlank,
   User,
-  MagnifyingGlass
+  MagnifyingGlass,
+  X,
+  CurrencyCircleDollar
 } from '@phosphor-icons/react';
 import { Member, Expense } from '../types';
 import { formatCurrency, formatDate } from '../utils/calculations';
@@ -14,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { getExpenseColor } from '../utils/expenseIcons';
+import { getMemberAvatarColor } from '../utils/avatarColors';
 
 import {
   Dialog,
@@ -44,6 +47,7 @@ export default function ExpensesSection({
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+  const expandedRef = useRef<HTMLDivElement>(null);
 
   const sortedExpenses = [...expenses].sort((a, b) => {
     const dateA = new Date(a.date);
@@ -59,21 +63,29 @@ export default function ExpensesSection({
     setExpandedId(expandedId === id ? null : id);
   };
 
+  // Handle click outside to close expanded expense
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (expandedRef.current && !expandedRef.current.contains(event.target as Node)) {
+        setExpandedId(null);
+      }
+    };
+
+    if (expandedId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [expandedId]);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* 1. SEARCH & HEADER */}
       <section className="space-y-4 px-2">
         <div className="flex justify-between items-end">
           <div>
-            <h3 className="mb-1" style={{
-              color: 'var(--general-foreground, #020617)',
-              fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-              fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-              fontStyle: 'normal',
-              fontWeight: 600,
-              lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-              letterSpacing: '0.00438rem'
-            }}>Historial</h3>
             <h2 style={{
               color: 'var(--stone-900, #1C1917)',
               fontFamily: 'var(--font-definitions-font-family-headings, "Abhaya Libre Medium")',
@@ -92,8 +104,17 @@ export default function ExpensesSection({
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-14 pl-12 bg-stone-50 border-stone-100 rounded-2xl font-bold text-stone-900 focus-visible:ring-stone-200 placeholder:text-stone-300"
+            className="h-14 pl-12 bg-stone-50 border-stone-100 rounded-2xl font-semibold text-sm text-stone-900 focus-visible:ring-stone-200 placeholder:text-stone-300"
+            style={{ letterSpacing: '-0.2px' }}
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-900"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </section>
 
@@ -117,6 +138,7 @@ export default function ExpensesSection({
             return (
               <div
                 key={expense.id}
+                ref={isExpanded ? expandedRef : null}
                 className={cn(
                   "bg-white rounded-[1rem] transition-all duration-300 overflow-hidden",
                   isExpanded ? "shadow-2xl shadow-stone-200 scale-[1.02] z-10" : "shadow-sm"
@@ -136,7 +158,7 @@ export default function ExpensesSection({
                           colors.bg,
                           colors.text
                         )}>
-                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <Receipt size={24} />}
+                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <CurrencyCircleDollar size={24} weight="regular" />}
                         </div>
                       );
                     })()}
@@ -172,20 +194,27 @@ export default function ExpensesSection({
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-5 pb-5 pt-2 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="h-px bg-stone-50 w-full" />
-
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="px-4 pb-5 pt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-2 gap-2 border-t border-stone-200 pt-3">
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-stone-400 tracking-tight flex items-center gap-1.5">
                           <User size={12} weight="bold" /> Pagado por
                         </p>
                         <div className="flex items-center gap-2">
-                          <Avatar className="w-6 h-6">
-                            <AvatarFallback className="text-[10px] font-black bg-stone-100">
-                              {(paidBy?.name || '?').charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          {(() => {
+                            const payer = members.find(m => m.id === expense.paidBy);
+                            const colors = payer ? getMemberAvatarColor(payer) : { bg: '#F5F5F4', text: '#44403C' };
+                            return (
+                              <Avatar className="w-6 h-6">
+                                <AvatarFallback
+                                  className="text-[10px] font-black"
+                                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                                >
+                                  {(paidBy?.name || '?').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            );
+                          })()}
                           <p className="text-sm font-semibold text-stone-700">{paidBy?.name || 'Desconocido'}</p>
                         </div>
                       </div>
@@ -198,19 +227,23 @@ export default function ExpensesSection({
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 pt-3 border-t border-stone-200">
                       <p className="text-sm font-medium text-stone-400 tracking-tight">Dividido entre</p>
                       <div className="flex flex-wrap gap-2">
                         {expense.splitBetween.map(id => {
                           const m = members.find(mbr => mbr.id === id);
+                          const colors = m ? getMemberAvatarColor(m) : { bg: '#FFFFFF', text: '#44403C' };
                           return (
                             <div key={id} className="bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100 flex items-center gap-2">
                               <Avatar className="w-5 h-5">
-                                <AvatarFallback className="text-[8px] font-black bg-white">
+                                <AvatarFallback
+                                  className="text-[8px] font-black"
+                                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                                >
                                   {(m?.name || '?').charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-[11px] font-bold text-stone-600">{(m?.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (m?.name || 'Alguien').split(' ')[0].slice(1)}</span>
+                              <span className="text-[12px] font-medium text-stone-600">{(m?.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (m?.name || 'Alguien').split(' ')[0].slice(1)}</span>
                             </div>
                           );
                         })}
@@ -219,8 +252,8 @@ export default function ExpensesSection({
 
                     <div className="flex gap-2 pt-2">
                       <Button
-                        variant="outline"
-                        className="flex-1 h-12 rounded-2xl text-stone-600 hover:text-stone-900 transition-all font-black text-xs uppercase tracking-widest flex gap-2"
+                        variant="secondary"
+                        className="flex-1 h-12 rounded-2xl flex gap-2 font-semibold"
                         onClick={(e) => {
                           e.stopPropagation();
                           _onEditExpense(expense);
@@ -230,14 +263,14 @@ export default function ExpensesSection({
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-12 h-12 rounded-2xl border-stone-100 text-stone-400 hover:text-orange-600 hover:border-orange-100 hover:bg-orange-50 transition-all p-0"
+                        className="w-12 h-12 rounded-2xl border-stone-100 text-stone-400 hover:text-orange-600 hover:border-orange-100 hover:bg-orange-50 transition-all p-0 bg-red-50"
                         onClick={(e) => {
                           e.stopPropagation();
                           setExpenseToDelete(expense);
                           setDeleteDialogOpen(true);
                         }}
                       >
-                        <Trash size={18} weight="bold" />
+                        <Trash size={18} weight="bold" className="text-red-400" />
                       </Button>
                     </div>
                   </div>

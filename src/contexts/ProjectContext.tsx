@@ -72,8 +72,28 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 throw error;
             }
 
-            // Filter out archived projects
-            const userProjects = (projectsData || []).filter(project => !project.archived);
+            // Filter out archived projects and add member count
+            const userProjects = await Promise.all(
+                (projectsData || [])
+                    .filter(project => !project.archived)
+                    .map(async (project) => {
+                        // Get member count for this project
+                        const { count, error: countError } = await supabase
+                            .from('project_members')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('project_id', project.id)
+                            .eq('status', 'accepted');
+
+                        if (countError) {
+                            console.error('Error counting members:', countError);
+                        }
+
+                        return {
+                            ...project,
+                            memberCount: count || 0
+                        };
+                    })
+            );
             setProjects(userProjects);
 
             // Set current project from localStorage or first project

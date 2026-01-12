@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   ArrowRight,
+  ArrowDownRight,
   TrendDown,
   Clock,
   ArrowsLeftRight,
@@ -9,8 +10,8 @@ import {
   X,
   Sparkle,
   Receipt,
-  FileText,
-  Trash
+  Trash,
+  CurrencyCircleDollar
 } from '@phosphor-icons/react';
 import { Member, Expense, Balance, Transaction, Currency } from '../types';
 import { Project } from '../contexts/ProjectContext';
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { getExpenseColor } from '../utils/expenseIcons';
+import { getMemberAvatarColor } from '../utils/avatarColors';
 
 interface DashboardProps {
   members: Member[];
@@ -241,50 +243,27 @@ export default function Dashboard({
               <span className="ml-2 text-sm font-medium">Integrantes</span>
             </p>
             <div className="flex -space-x-3">
-              {members.slice(0, 4).map((member) => (
-                <Avatar key={member.id} className="w-10 h-10 border-2 border-white/10 ring-2 ring-black/5">
-                  <AvatarImage src={member.avatar_url} />
-                  <AvatarFallback className="bg-white text-stone-900 text-xs font-bold uppercase">
-                    {(member.name || '?').charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
+              {members.slice(0, 4).map((member) => {
+                const colors = getMemberAvatarColor(member);
+                return (
+                  <Avatar key={member.id} className="w-10 h-10 border-2 border-white/10 ring-2 ring-black/5">
+                    <AvatarImage src={member.avatar_url} />
+                    <AvatarFallback
+                      className="text-xs font-bold uppercase"
+                      style={{ backgroundColor: colors.bg, color: colors.text }}
+                    >
+                      {(member.name || '?').charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                );
+              })}
             </div>
           </div>
+
         </div>
 
 
-        {/* Gasto Total Card (White) */}
-        <div className="bg-gradient-to-b from-white to-stone-50/50 rounded-2xl p-4 border border-stone-100 shadow-sm flex-1 flex flex-col justify-between">
-          {/* Top Row: Icon + Detalles */}
-          <div className="flex items-start justify-between mb-8">
-            <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center text-stone-400">
-              <FileText size={24} weight="regular" />
-            </div>
-            <button
-              onClick={onNavigateToExpenses}
-              className="text-base font-medium text-stone-900 flex items-center gap-2 hover:text-stone-600 transition-colors"
-            >
-              Detalles <ArrowRight size={18} weight="bold" />
-            </button>
-          </div>
 
-          {/* Bottom Row: Label + Amount */}
-          <div className="flex items-end justify-between">
-            <p className="text-lg text-stone-500 font-medium">Gasto total</p>
-            <div className="text-right">
-              {currencies.length > 0 ? (
-                currencies.map(([curr, amount]) => (
-                  <h3 key={curr} className="font-serif tracking-tighter text-stone-900" style={{ fontSize: '32px' }}>
-                    $ {amount.toLocaleString('es-CL')} <span className="text-lg font-sans text-stone-400 ml-1">{curr}</span>
-                  </h3>
-                ))
-              ) : (
-                <h3 className="font-serif text-4xl tracking-tighter text-stone-300">$ 0</h3>
-              )}
-            </div>
-          </div>
-        </div>
 
       </div>
 
@@ -304,6 +283,27 @@ export default function Dashboard({
             >
               Detalles <ArrowRight size={18} weight="bold" />
             </button>
+          </div>
+
+          {/* Gasto Total Section */}
+          <div className="px-4 pb-4 pt-4 border-b border-stone-100">
+            <div className="flex items-baseline justify-between">
+              <div className="flex items-center gap-2 text-stone-500">
+                <ArrowDownRight size={20} weight="regular" />
+                <p className="text-base font-medium">Gasto total</p>
+              </div>
+              <div className="text-right">
+                {currencies.length > 0 ? (
+                  currencies.map(([curr, amount]) => (
+                    <h3 key={curr} className="font-serif tracking-tighter text-stone-900" style={{ fontSize: '32px' }}>
+                      $ {amount.toLocaleString('es-CL')} <span className="text-lg font-sans text-stone-400 ml-1 tracking-wide">{curr}</span>
+                    </h3>
+                  ))
+                ) : (
+                  <h3 className="font-serif text-4xl tracking-tighter text-stone-300">$ 0</h3>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Search Bar */}
@@ -349,11 +349,15 @@ export default function Dashboard({
                       const colors = getExpenseColor(expense.id);
                       return (
                         <div className={cn(
-                          "w-11 h-11 aspect-square self-start rounded-full flex items-center justify-center flex-shrink-0 text-xs",
+                          "w-11 h-11 aspect-square self-start rounded-full flex items-center justify-center flex-shrink-0",
                           colors.bg,
                           colors.text
                         )}>
-                          {expense.icon ? <span className="text-xl leading-none block">{expense.icon}</span> : <Receipt className="flex-shrink-0" style={{ height: '22px' }} />}
+                          {expense.icon ? (
+                            <span className="text-xl leading-none block">{expense.icon}</span>
+                          ) : (
+                            <CurrencyCircleDollar size={24} weight="regular" />
+                          )}
                         </div>
                       );
                     })()}
@@ -431,18 +435,40 @@ export default function Dashboard({
                     <div key={idx} className="bg-stone-50 rounded-2xl p-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8 border border-white">
-                            <AvatarFallback className="bg-stone-200 text-[10px] font-semibold">{(t.fromName || '?').charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
+                          {(() => {
+                            const fromMember = members.find(m => m.name === t.fromName);
+                            const colors = fromMember ? getMemberAvatarColor(fromMember) : { bg: '#E7E5E4', text: '#44403C' };
+                            return (
+                              <Avatar className="w-8 h-8 border border-white">
+                                <AvatarFallback
+                                  className="text-[10px] font-semibold"
+                                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                                >
+                                  {(t.fromName || '?').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            );
+                          })()}
                           <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
                             {capitalizeName((t.fromName || '').split(' ')[0])}
                           </span>
                         </div>
                         <ArrowRight size={12} className="text-stone-300" />
                         <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8 border border-white">
-                            <AvatarFallback className="bg-stone-200 text-[10px] font-semibold">{(t.toName || '?').charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
+                          {(() => {
+                            const toMember = members.find(m => m.name === t.toName);
+                            const colors = toMember ? getMemberAvatarColor(toMember) : { bg: '#E7E5E4', text: '#44403C' };
+                            return (
+                              <Avatar className="w-8 h-8 border border-white">
+                                <AvatarFallback
+                                  className="text-[10px] font-semibold"
+                                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                                >
+                                  {(t.toName || '?').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            );
+                          })()}
                           <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
                             {capitalizeName((t.toName || '').split(' ')[0])}
                           </span>

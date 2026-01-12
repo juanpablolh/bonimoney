@@ -1,22 +1,22 @@
 /**
- * Carbon Design System tag colors
- * Based on Carbon's tag color palette for accessibility
+ * Pastel avatar colors using Tailwind 200/800 variants
+ * Softer backgrounds with darker, more readable text
  */
 export const CARBON_TAG_COLORS = [
-  { bg: '#002d9c', text: '#ffffff' }, // blue
-  { bg: '#da1e28', text: '#ffffff' }, // red
-  { bg: '#198038', text: '#ffffff' }, // green
-  { bg: '#8d3f9b', text: '#ffffff' }, // purple
-  { bg: '#0072c3', text: '#ffffff' }, // cyan
-  { bg: '#007d79', text: '#ffffff' }, // teal
-  { bg: '#a2191f', text: '#ffffff' }, // magenta
-  { bg: '#004144', text: '#ffffff' }, // dark teal
-  { bg: '#0043ce', text: '#ffffff' }, // blue 60
-  { bg: '#00539a', text: '#ffffff' }, // blue 70
-  { bg: '#6f2c3d', text: '#ffffff' }, // red 80
-  { bg: '#0e6027', text: '#ffffff' }, // green 70
-  { bg: '#5b21d0', text: '#ffffff' }, // purple 60
-  { bg: '#005d5d', text: '#ffffff' }, // teal 70
+  { bg: '#BFDBFE', text: '#1E3A8A' }, // blue-200 / blue-800
+  { bg: '#FECACA', text: '#991B1B' }, // red-200 / red-800
+  { bg: '#BBF7D0', text: '#166534' }, // green-200 / green-800
+  { bg: '#E9D5FF', text: '#6B21A8' }, // purple-200 / purple-800
+  { bg: '#BAE6FD', text: '#075985' }, // sky-200 / sky-800
+  { bg: '#99F6E4', text: '#115E59' }, // teal-200 / teal-800
+  { bg: '#FED7AA', text: '#9A3412' }, // orange-200 / orange-800
+  { bg: '#C7D2FE', text: '#3730A3' }, // indigo-200 / indigo-800
+  { bg: '#FBCFE8', text: '#9F1239' }, // pink-200 / pink-800
+  { bg: '#A7F3D0', text: '#065F46' }, // emerald-200 / emerald-800
+  { bg: '#FEF08A', text: '#854D0E' }, // yellow-200 / yellow-800
+  { bg: '#DDD6FE', text: '#5B21B6' }, // violet-200 / violet-800
+  { bg: '#FBCFE8', text: '#831843' }, // rose-200 / rose-800
+  { bg: '#A5F3FC', text: '#155E75' }, // cyan-200 / cyan-800
 ];
 
 /**

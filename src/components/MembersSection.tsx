@@ -15,6 +15,7 @@ import { capitalizeName } from '../utils/calculations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getMemberAvatarColor } from '../utils/avatarColors';
 import {
   Dialog,
   DialogContent,
@@ -161,7 +162,7 @@ export default function MembersSection({
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* 1. ADD MEMBER HERO CARD (Styled like Dashboard Project Card) */}
       <section
         className="rounded-xl p-4 text-white transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px]"
@@ -174,14 +175,14 @@ export default function MembersSection({
               Agranda el Círculo
             </h3>
             <p className="text-white/80 text-sm font-medium max-w-sm">
-              Agrega a los amigos con los que compartirás gastos en {currentProject?.name}.
+              Suma a quienes compartirán gastos en este grupo.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="relative mt-4">
             <div className="relative w-full">
               <Input
-                placeholder="Nombre del amigo..."
+                placeholder="Nuevo integrante"
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
                 required
@@ -226,12 +227,20 @@ export default function MembersSection({
                   )}
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <Avatar className="w-12 h-12 shadow-sm ring-1 ring-stone-100">
-                      <AvatarImage src={member.avatar_url} />
-                      <AvatarFallback className="bg-stone-50 text-stone-900 font-black text-lg">
-                        {(member.name || '?').charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    {(() => {
+                      const colors = getMemberAvatarColor(member);
+                      return (
+                        <Avatar className="w-12 h-12 shadow-sm ring-1 ring-stone-100">
+                          <AvatarImage src={member.avatar_url} />
+                          <AvatarFallback
+                            className="font-black text-lg"
+                            style={{ backgroundColor: colors.bg, color: colors.text }}
+                          >
+                            {(member.name || '?').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      );
+                    })()}
 
                     {isEditing ? (
                       <Input
@@ -298,7 +307,7 @@ export default function MembersSection({
 
       {/* 3. SHARE LINK CARD (Premium Polish) */}
       {members.length > 0 && (
-        <section className="bg-stone-50 rounded-3xl p-6 border border-stone-100 space-y-4">
+        <section className="bg-stone-50 rounded-3xl p-4 border border-stone-100 space-y-4">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-green-200 rounded-2xl flex items-center justify-center text-stone-400 shrink-0">
               <Info size={24} weight="bold" className="text-green-700" />
@@ -322,12 +331,12 @@ export default function MembersSection({
       )}
 
       {/* 4. DELETE PROJECT SECTION */}
-      <section className="flex justify-end pt-4 pb-8">
+      <section className="flex justify-end pt-4 pb-2">
         <button
           onClick={() => setDeleteDialogOpen(true)}
           className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors px-4 py-2"
         >
-          <span className="font-medium text-sm">Datos del grupo</span>
+          <span className="font-medium text-sm">Eliminar grupo</span>
           <Trash size={16} />
         </button>
       </section>
