@@ -3,7 +3,7 @@ import { ResponsiveModal, KeyboardHeightContext } from '../ui-custom/ResponsiveM
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
-import { Plus, Trash, X, ArrowLeft } from '@phosphor-icons/react';
+import { Plus, Trash, X } from '@phosphor-icons/react';
 import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -124,16 +124,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 {/* Header with X button - same style as ExpenseForm */}
                 <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
                     <header className="px-6 py-5 flex items-center justify-between">
-                        {step === 2 ? (
-                            <button
-                                onClick={() => setStep(1)}
-                                className="p-1 min-w-12 hover:bg-white/10 rounded-full transition-colors text-[#FAFAF9] flex flex-col justify-center items-center"
-                            >
-                                <ArrowLeft size={24} weight="regular" />
-                            </button>
-                        ) : (
-                            <div className="w-12" />
-                        )}
                         <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
                             {step === 1 ? "Nuevo grupo" : "Integrantes"}
                         </h2>
@@ -265,13 +255,25 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                             : 'max(1.5rem, env(safe-area-inset-bottom))'
                     }}
                 >
-                    <Button
-                        onClick={step === 1 ? handleNext : handleCreate}
-                        disabled={step === 1 ? !name.trim() : loading}
-                        className="w-full h-14 rounded-xl text-base font-semibold bg-stone-900 text-white hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {step === 1 ? 'Continuar' : (loading ? 'Creando...' : 'Crear grupo')}
-                    </Button>
+                    <div className="flex gap-3">
+                        {step === 2 && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setStep(1)}
+                                className="flex-1 h-14 rounded-xl text-base font-semibold bg-white border-stone-200 hover:bg-stone-50 text-stone-900"
+                            >
+                                Volver
+                            </Button>
+                        )}
+                        <Button
+                            onClick={step === 1 ? handleNext : handleCreate}
+                            disabled={step === 1 ? !name.trim() : loading}
+                            className="flex-1 h-14 rounded-xl text-base font-semibold bg-stone-900 text-white hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {step === 1 ? 'Continuar' : (loading ? 'Creando...' : 'Crear grupo')}
+                        </Button>
+                    </div>
                 </footer>
 
                 {/* Emoji Picker Overlay */}
