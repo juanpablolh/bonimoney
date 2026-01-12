@@ -93,9 +93,7 @@ export function ResponsiveModal({
                                 <DrawerTitle>{title}</DrawerTitle>
                                 <DrawerDescription>{description || title}</DrawerDescription>
                             </VisuallyHidden>
-                            <div className="flex flex-col h-full mt-4">
-                                {children}
-                            </div>
+                            {children}
                         </>
                     ) : (
                         <div className="flex flex-col h-full">

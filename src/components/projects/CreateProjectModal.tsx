@@ -120,7 +120,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col h-[85svh] max-h-[85svh] bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
+            <div className="flex flex-col h-[80svh] bg-stone-50 md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
                 {/* Header with X button - same style as ExpenseForm */}
                 <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
                     <header className="px-6 py-5 flex items-center justify-between">

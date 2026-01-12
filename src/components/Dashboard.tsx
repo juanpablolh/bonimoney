@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
   ArrowRight,
-  ArrowDownRight,
   TrendDown,
   Clock,
   ArrowsLeftRight,
