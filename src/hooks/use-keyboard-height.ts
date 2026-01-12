@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Hook to detect keyboard height using the Visual Viewport API.
@@ -9,17 +9,25 @@ import { useState, useEffect } from 'react';
  */
 export function useKeyboardHeight() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // Store the initial window height to detect keyboard vs address bar changes
+  const initialHeightRef = useRef<number | null>(null);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
 
+    // Capture initial height on mount (before keyboard opens)
+    if (initialHeightRef.current === null) {
+      initialHeightRef.current = window.innerHeight;
+    }
+
     const handleResize = () => {
-      // The difference between the window height and visual viewport height
-      // equals the keyboard height (plus any browser UI changes)
-      const height = window.innerHeight - visualViewport.height;
-      // Only set if positive (keyboard is up) and significant (> 100px to avoid false positives from address bar)
-      setKeyboardHeight(height > 100 ? height : 0);
+      const initialHeight = initialHeightRef.current || window.innerHeight;
+      // The difference between the initial height and visual viewport height
+      // equals the keyboard height
+      const height = initialHeight - visualViewport.height;
+      // Only set if positive (keyboard is up) and significant (> 150px to avoid false positives from address bar)
+      setKeyboardHeight(height > 150 ? height : 0);
     };
 
     // Initial check
@@ -35,4 +43,22 @@ export function useKeyboardHeight() {
   }, []);
 
   return keyboardHeight;
+}
+
+/**
+ * Hook to get a stable initial viewport height.
+ * Captures the height when the component mounts and keeps it fixed.
+ * This prevents drawers from resizing when keyboard opens/closes.
+ */
+export function useStableViewportHeight() {
+  const [stableHeight, setStableHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Only capture once on mount
+    if (stableHeight === null) {
+      setStableHeight(window.innerHeight);
+    }
+  }, [stableHeight]);
+
+  return stableHeight;
 }
