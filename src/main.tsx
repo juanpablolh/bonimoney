@@ -7,6 +7,7 @@ import { ProjectProvider } from './contexts/ProjectContext.tsx';
 import { MemberProvider } from './contexts/MemberContext.tsx';
 import { ExpenseProvider } from './contexts/ExpenseContext.tsx';
 import './index.css'
+import 'react-modal-sheet/dist/styles.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

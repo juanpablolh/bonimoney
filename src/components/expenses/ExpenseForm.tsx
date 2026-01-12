@@ -50,7 +50,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
 
     const amountRef = useRef<HTMLInputElement>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-focus amount on mount
     useEffect(() => {
@@ -59,42 +58,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         }
     }, []);
 
-    // Handle keyboard focus - scroll input into view
-    useEffect(() => {
-        const handleFocus = (e: FocusEvent) => {
-            const target = e.target;
-            if (target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
-                setTimeout(() => {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                        inline: 'nearest'
-                    });
-                }, 300); // Wait for keyboard animation
-            }
-        };
-
-        document.addEventListener('focusin', handleFocus);
-        return () => document.removeEventListener('focusin', handleFocus);
-    }, []);
-
     const progress = {
         amountFilled: parseFloat(amount) > 0,
         conceptFilled: description.length >= 2,
         splitSelected: splitWith.length > 0
     };
-
-    // Auto-scroll when amount is filled and newer sections appear
-    useEffect(() => {
-        if (progress.amountFilled && scrollRef.current) {
-            setTimeout(() => {
-                scrollRef.current?.scrollTo({
-                    top: scrollRef.current.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, 100);
-        }
-    }, [progress.amountFilled]);
 
     const toggleMember = (id: string) => {
         setSplitWith(prev =>
@@ -124,7 +92,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-stone-50 relative">
+            <div className="flex-1 overflow-y-auto bg-stone-50 relative">
                 <div className="px-6 py-6 space-y-6 pb-24">
                     {/* AMOUNT */}
                     <section className="space-y-3">
