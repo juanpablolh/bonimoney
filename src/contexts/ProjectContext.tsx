@@ -96,18 +96,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             );
             setProjects(userProjects);
 
-            // Set current project from localStorage or first project
-            const savedProjectId = localStorage.getItem('currentProjectId');
-            if (savedProjectId) {
-                const saved = userProjects.find(p => p.id === savedProjectId);
-                if (saved) {
-                    setCurrentProject(saved);
-                } else if (userProjects.length > 0) {
-                    setCurrentProject(userProjects[0]);
-                }
-            } else if (userProjects.length > 0) {
-                setCurrentProject(userProjects[0]);
-            }
+            // Don't auto-select any project - let the URL routing handle it
+            // currentProject will be set by the ProjectView component based on URL params
         } catch (error) {
             console.error('Error loading projects:', error);
         } finally {
@@ -227,8 +217,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             setProjects(prev => prev.filter(p => p.id !== id));
 
             if (currentProject?.id === id) {
-                const remaining = projects.filter(p => p.id !== id);
-                setCurrentProject(remaining.length > 0 ? remaining[0] : null);
+                setCurrentProject(null);
+                localStorage.removeItem('currentProjectId');
             }
         } catch (error) {
             console.error('Error deleting project:', error);
@@ -241,12 +231,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         loadProjects();
     }, [user]);
 
-    // Save current project to localStorage and update last_accessed_at
+    // Update last_accessed_at when currentProject changes
     useEffect(() => {
         if (currentProject && user) {
-            localStorage.setItem('currentProjectId', currentProject.id);
-
-            // Update last_accessed_at in background
+            // Update last_accessed_at in background (no localStorage)
             supabase
                 .from('user_projects')
                 .update({ last_accessed_at: new Date().toISOString() })

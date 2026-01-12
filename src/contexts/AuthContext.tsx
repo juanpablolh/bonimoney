@@ -91,6 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     const signOut = async () => {
+        localStorage.removeItem('currentProjectId');
         await supabase.auth.signOut();
     };
 

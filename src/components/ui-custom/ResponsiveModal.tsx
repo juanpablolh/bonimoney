@@ -78,7 +78,14 @@ export function ResponsiveModal({
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-            <DrawerContent hideHandle={hideHeader} className={cn(hideHeader && "p-0 border-none")}>
+            <DrawerContent
+                hideHandle={hideHeader}
+                className={cn("rounded-t-3xl overflow-hidden", hideHeader && "p-0 border-none")}
+                style={{
+                    maxHeight: '90vh',
+                    paddingBottom: 'env(safe-area-inset-bottom)'
+                }}
+            >
                 {!hideHeader && <div className="bg-muted mx-auto mt-4 h-1 w-[100px] shrink-0 rounded-full" />}
                 {hideHeader ? (
                     <>
@@ -102,7 +109,7 @@ export function ResponsiveModal({
                                 </VisuallyHidden>
                             )}
                         </DrawerHeader>
-                        <div className="px-4 pb-8">
+                        <div className="px-4 pb-8 flex-1 overflow-y-auto">
                             {children}
                         </div>
                     </>

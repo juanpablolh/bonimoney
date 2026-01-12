@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProjectStack } from '../projects/ProjectStack';
 import { Plus } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
+import { supabase } from '../../utils/supabase';
 
 interface Project {
     id: string;
@@ -14,6 +15,12 @@ interface Project {
     balance?: number;
     memberCount?: number;
     color?: string;
+}
+
+interface Member {
+    id: string;
+    name: string;
+    project_id: string;
 }
 
 interface GlobalDashboardProps {
@@ -31,6 +38,34 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     onDeleteProject,
     userName = "Usuario"
 }) => {
+    const [projectMembers, setProjectMembers] = useState<Record<string, Member[]>>({});
+
+    // Fetch members for all projects
+    useEffect(() => {
+        const fetchAllMembers = async () => {
+            if (projects.length === 0) return;
+
+            const membersMap: Record<string, Member[]> = {};
+
+            for (const project of projects) {
+                const { data, error } = await supabase
+                    .from('project_members')
+                    .select('id, name, project_id')
+                    .eq('project_id', project.id)
+                    .eq('status', 'accepted')
+                    .order('created_at', { ascending: true });
+
+                if (!error && data) {
+                    membersMap[project.id] = data;
+                }
+            }
+
+            setProjectMembers(membersMap);
+        };
+
+        fetchAllMembers();
+    }, [projects]);
+
     return (
         <div className="min-h-screen bg-stone-50 selection:bg-stone-200">
             {/* Figma-aligned Header / Breadcrumb */}
@@ -109,6 +144,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                     ) : (
                         <ProjectStack
                             projects={projects}
+                            projectMembers={projectMembers}
                             onProjectClick={onProjectClick}
                             onDeleteProject={onDeleteProject}
                         />

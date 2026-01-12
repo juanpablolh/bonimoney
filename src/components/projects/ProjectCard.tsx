@@ -4,11 +4,18 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
 
+interface Member {
+    id: string;
+    name: string;
+    project_id: string;
+}
+
 interface ProjectCardProps {
     name: string;
     icon: string;
     balance: number;
     memberCount: number;
+    members: Member[];
     currency: string;
     colorClass?: string;
     isLastStackedCard?: boolean;
@@ -18,6 +25,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     name,
     icon,
     memberCount,
+    members,
     colorClass = 'bg-[oklch(0.25_0.08_145)]',
     isLastStackedCard = false,
 }) => {
@@ -68,14 +76,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
                     {/* Avatar Stack using Shadcn Avatar components */}
                     <div className="flex -space-x-3">
-                        {[...Array(Math.min(memberCount, 3))].map((_, i) => {
-                            const fakeMember = { name: `${name}-${i}` };
-                            const colors = getMemberAvatarColor(fakeMember);
-                            const initial = String.fromCharCode(65 + i);
+                        {members.slice(0, Math.min(memberCount, 3)).map((member, i) => {
+                            const colors = getMemberAvatarColor(member);
+                            const initial = member.name.charAt(0).toUpperCase();
 
                             return (
                                 <Avatar
-                                    key={i}
+                                    key={member.id}
                                     className="w-10 h-10 border-2 border-white shadow-sm"
                                     style={{ zIndex: 3 - i }}
                                 >

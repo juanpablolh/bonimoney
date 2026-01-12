@@ -12,8 +12,15 @@ interface Project {
     color?: string;
 }
 
+interface Member {
+    id: string;
+    name: string;
+    project_id: string;
+}
+
 interface ProjectStackProps {
     projects: Project[];
+    projectMembers: Record<string, Member[]>;
     onProjectClick: (id: string) => void;
     onDeleteProject: (id: string) => Promise<void>;
 }
@@ -62,7 +69,7 @@ const getColorClass = (projectColor?: string, projectId?: string, fallbackIndex:
     return palette[fallbackIndex % palette.length];
 };
 
-export const ProjectStack: React.FC<ProjectStackProps> = ({ projects, onProjectClick }) => {
+export const ProjectStack: React.FC<ProjectStackProps> = ({ projects, projectMembers, onProjectClick }) => {
 
     if (projects.length === 0) {
         return null; // Handled by GlobalDashboard empty state
@@ -73,6 +80,7 @@ export const ProjectStack: React.FC<ProjectStackProps> = ({ projects, onProjectC
             {/* Desktop: Grid View | Mobile: Stack View */}
             <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 lg:gap-10 pb-4 md:pb-0 h-fit">
                 {projects.map((project, index) => {
+                    const members = projectMembers[project.id] || [];
                     return (
                         <motion.div
                             key={project.id}
@@ -98,6 +106,7 @@ export const ProjectStack: React.FC<ProjectStackProps> = ({ projects, onProjectC
                                 icon={project.icon}
                                 balance={project.balance || 0}
                                 memberCount={project.memberCount || 0}
+                                members={members}
                                 currency={project.currency}
                                 colorClass={getColorClass(project.color, project.id, index)}
                                 isLastStackedCard={projects.length > 4 && index === projects.length - 1}

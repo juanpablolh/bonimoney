@@ -119,9 +119,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col bg-stone-50 overflow-hidden md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative" style={{ minHeight: '500px' }}>
+            <div className="flex flex-col h-full bg-stone-50 overflow-hidden rounded-t-3xl md:rounded-3xl shadow-2xl ring-1 ring-black/5 relative">
                 {/* Header */}
-                <div className="bg-[#44403C] md:rounded-t-3xl shrink-0">
+                <div className="bg-[#44403C] rounded-t-3xl shrink-0">
                     <header className="px-8 py-8 flex items-center justify-between">
                         <h2 className="font-serif text-[32px] font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
                             {step === 1 ? "Crea tu primer grupo" : "Quiénes participan"}
