@@ -7,6 +7,7 @@ import { Plus, Trash, X, CaretDown, Check } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
+import '@emoji-mart/data/i18n/es.json';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -364,6 +365,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                 skinTonePosition="none"
                                 searchPosition="sticky"
                                 navPosition="bottom"
+                                perLine={8}
+                                emojiSize={32}
+                                emojiButtonSize={40}
                             />
                         </div>
                     </div>
