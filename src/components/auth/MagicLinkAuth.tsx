@@ -44,7 +44,7 @@ export default function MagicLinkAuth() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-black text-neutral-900 tracking-tight">¡Revisa tu email!</h2>
+                            <h2 className="text-2xl font-serif text-neutral-900 tracking-tight">¡Revisa tu email!</h2>
                             <p className="text-neutral-500 text-sm font-medium leading-relaxed">
                                 Hemos enviado un link mágico a <span className="font-bold text-neutral-900">{email}</span>. Haz clic para entrar.
                             </p>
@@ -73,14 +73,14 @@ export default function MagicLinkAuth() {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <h2 className="text-2xl font-black text-neutral-900 tracking-tighter">Acceso Directo</h2>
+                                <h2 className="text-2xl font-serif text-neutral-900 tracking-tight">Acceso Directo</h2>
                                 <p className="text-neutral-500 text-sm font-medium">Sin contraseñas. Solo tu email.</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-neutral-400 tracking-widest ml-1">Tu Correo Electrónico</label>
+                            <div className="space-y-2.5">
+                                <label className="text-sm font-semibold text-neutral-900 ml-1">Tu Correo Electrónico</label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -89,7 +89,7 @@ export default function MagicLinkAuth() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     disabled={loading}
-                                    className="h-14 bg-neutral-50 border-neutral-100 rounded-2xl text-base font-bold placeholder:text-neutral-300 focus-visible:ring-neutral-200"
+                                    className="h-14 bg-white border border-neutral-200 rounded-xl text-base font-normal placeholder:text-neutral-400 px-4 focus-visible:ring-0 focus-visible:border-neutral-300 shadow-sm transition-all"
                                 />
                             </div>
 
@@ -103,7 +103,7 @@ export default function MagicLinkAuth() {
                             <Button
                                 type="submit"
                                 disabled={loading || !email}
-                                className="w-full h-14 rounded-2xl text-base font-black shadow-xl shadow-neutral-200 transition-all active:scale-95 flex gap-2"
+                                className="w-full h-14 rounded-xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all flex gap-2 shadow-sm"
                             >
                                 {loading ? 'Enviando...' : (
                                     <>

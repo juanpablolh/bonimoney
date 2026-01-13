@@ -106,7 +106,7 @@ export function ResponsiveModal({
                 className={cn(
                     isNested && "h-full",
                     hideHeader && "p-0 border-none",
-                    "bg-neutral-50 flex flex-col"
+                    "bg-neutral-50 flex flex-col rounded-t-3xl"
                 )}
                 style={isNested ? undefined : {
                     height: drawerHeight,

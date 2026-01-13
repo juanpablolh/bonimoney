@@ -47,8 +47,8 @@ export default function HomeLogin() {
                 className="w-full max-w-[400px] bg-neutral-50 rounded-3xl shadow-lg overflow-hidden"
             >
                 {/* Header */}
-                <div className="bg-neutral-900 px-8 py-4 flex flex-col items-start justify-center">
-                    <h1 className="font-serif text-[32px] leading-none text-white tracking-tight">
+                <div className="bg-neutral-900 px-5 py-5 flex flex-col items-start justify-center">
+                    <h1 className="font-serif text-3xl leading-none text-white tracking-[-1px]">
                         Bonimoney
                     </h1>
                 </div>
@@ -84,8 +84,8 @@ export default function HomeLogin() {
                                 className="space-y-6 pb-2"
                             >
                                 <div className="space-y-4">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                                    <div className="flex flex-col gap-2.5">
+                                        <label className="text-sm font-semibold text-neutral-900 ml-1">
                                             Tu nombre
                                         </label>
                                         <Input
@@ -95,12 +95,12 @@ export default function HomeLogin() {
                                             onChange={(e) => setName(e.target.value)}
                                             required
                                             disabled={loading}
-                                            className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-neutral-400 px-6 shadow-sm ring-1 ring-neutral-100 focus-visible:ring-neutral-300"
+                                            className="h-12 bg-white border border-neutral-200 rounded-xl text-base font-normal placeholder:text-neutral-400 px-4 focus-visible:ring-0 focus-visible:border-neutral-300 shadow-sm transition-all"
                                         />
                                     </div>
 
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                                    <div className="flex flex-col gap-2.5">
+                                        <label className="text-sm font-semibold text-neutral-900 ml-1">
                                             Tu email
                                         </label>
                                         <div className="relative">
@@ -111,17 +111,17 @@ export default function HomeLogin() {
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 required
                                                 disabled={loading}
-                                                className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-neutral-400 pl-6 pr-24 shadow-sm ring-1 ring-neutral-100 focus-visible:ring-neutral-300"
+                                                className="h-12 bg-white border border-neutral-200 rounded-xl text-base font-normal placeholder:text-neutral-400 pl-4 pr-14 focus-visible:ring-0 focus-visible:border-neutral-300 shadow-sm transition-all"
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={!email || !name || loading}
-                                                className="absolute right-2 top-2 bottom-2 aspect-square bg-neutral-900 rounded-xl text-white flex items-center justify-center hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] bg-neutral-900 rounded-xl text-white flex items-center justify-center hover:bg-black transition-colors disabled:bg-neutral-200 disabled:text-neutral-400 shadow-sm"
                                             >
                                                 {loading ? (
-                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                 ) : (
-                                                    <ArrowRight size={20} weight="bold" />
+                                                    <ArrowRight size={18} weight="bold" />
                                                 )}
                                             </button>
                                         </div>

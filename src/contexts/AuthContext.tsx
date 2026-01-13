@@ -92,7 +92,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const signOut = async () => {
         localStorage.removeItem('currentProjectId');
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error signing out:', error);
+        }
+        // Force clear local state in case onAuthStateChange doesn't fire
+        setUser(null);
+        setSession(null);
     };
 
     const value = {

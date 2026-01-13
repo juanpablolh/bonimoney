@@ -26,14 +26,20 @@ export function useKeyboardHeight() {
     }
 
     const handleResize = () => {
-      const initialHeight = initialHeightRef.current || window.innerHeight;
       const currentVVHeight = visualViewport.height;
+      const initialHeight = initialHeightRef.current || window.innerHeight;
       // The difference between the initial height and visual viewport height
       // equals the keyboard height
       const height = initialHeight - currentVVHeight;
 
       // Threshold of 150px to distinguish keyboard from address bar changes
       const keyboardIsOpen = height > 150;
+
+      // When keyboard closes and viewport grew (Safari address bar changed),
+      // recapture the initial height to fix re-focus bug
+      if (!keyboardIsOpen && currentVVHeight > initialHeight) {
+        initialHeightRef.current = currentVVHeight;
+      }
 
       setVvHeight(currentVVHeight);
       setKeyboardHeight(keyboardIsOpen ? height : 0);
