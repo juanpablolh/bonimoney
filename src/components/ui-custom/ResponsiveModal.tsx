@@ -114,7 +114,8 @@ export function ResponsiveModal({
                 style={isNested ? undefined : {
                     height: drawerHeight,
                     maxHeight: '100dvh',
-                    transition: 'height 0.15s ease-out'
+                    bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : undefined,
+                    transition: 'height 0.15s ease-out, bottom 0.15s ease-out'
                 }}
             >
                 <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight, isKeyboardOpen }}>
