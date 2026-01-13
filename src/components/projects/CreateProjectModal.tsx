@@ -162,7 +162,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar">
+                <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar min-h-[300px]">
                     <div className="px-6 py-6 space-y-6">
                         {step === 1 ? (
                             <>

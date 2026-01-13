@@ -99,6 +99,9 @@ export function ResponsiveModal({
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 className={cn(
                     isNested ? "h-full" : "h-[96svh]",
+                    // Stability fix for iOS Safari: switch to absolute when an input is focused
+                    // to prevent "jumping" fixed elements.
+                    "focus-within:absolute",
                     hideHeader && "p-0 border-none"
                 )}
             >

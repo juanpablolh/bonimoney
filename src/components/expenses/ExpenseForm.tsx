@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -56,9 +55,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
     // Auto-focus amount on mount
     useEffect(() => {
-        if (amountRef.current) {
-            amountRef.current.focus();
-        }
+        const timer = setTimeout(() => {
+            if (amountRef.current) {
+                amountRef.current.focus();
+            }
+        }, 100);
+        return () => clearTimeout(timer);
     }, []);
 
     const progress = {
@@ -97,7 +99,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar">
+            <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar min-h-[250px]">
                 <div className="px-6 py-6 space-y-6">
                     {/* AMOUNT */}
                     <section className="space-y-3">
@@ -145,102 +147,84 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     </section>
 
                     {/* CONCEPT */}
-                    <AnimatePresence>
-                        {progress.amountFilled && (
-                            <motion.section
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-3"
-                            >
-                                <label className="block text-sm font-semibold text-neutral-900">¿Qué compraste?</label>
-                                <Input
-                                    placeholder="Cena para bonis"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="h-14 bg-neutral-50 border-neutral-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-neutral-300 placeholder:text-neutral-400 px-4"
-                                />
-                            </motion.section>
-                        )}
-                    </AnimatePresence>
+                    <section className="space-y-3">
+                        <label className="block text-sm font-semibold text-neutral-900">¿Qué compraste?</label>
+                        <Input
+                            placeholder="Cena para bonis"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="h-14 bg-neutral-50 border-neutral-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-neutral-300 placeholder:text-neutral-400 px-4"
+                        />
+                    </section>
 
                     {/* SPLIT */}
-                    <AnimatePresence>
-                        {progress.amountFilled && (
-                            <motion.section
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-4"
+                    <section className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <label className="text-sm font-semibold text-neutral-900">Dividir con</label>
+                            <button
+                                onClick={() => setSplitWith(members.map(m => m.id))}
+                                className="text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-lg transition-colors"
                             >
-                                <div className="flex justify-between items-center">
-                                    <label className="text-sm font-semibold text-neutral-900">Dividir con</label>
+                                Todos
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            {members.map((member) => {
+                                const isSelected = splitWith.includes(member.id);
+                                return (
                                     <button
-                                        onClick={() => setSplitWith(members.map(m => m.id))}
-                                        className="text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-lg transition-colors"
+                                        key={member.id}
+                                        onClick={() => toggleMember(member.id)}
+                                        className={cn(
+                                            "flex items-center gap-2 px-3 py-2 rounded-lg transition-all shadow-sm",
+                                            isSelected
+                                                ? "border-transparent"
+                                                : "bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300"
+                                        )}
+                                        style={isSelected ? { backgroundColor: getMemberAvatarColor(member).bg, color: getMemberAvatarColor(member).text } : {}}
                                     >
-                                        Todos
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                    {members.map((member) => {
-                                        const isSelected = splitWith.includes(member.id);
-                                        return (
-                                            <button
-                                                key={member.id}
-                                                onClick={() => toggleMember(member.id)}
-                                                className={cn(
-                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all shadow-sm",
-                                                    isSelected
-                                                        ? "border-transparent"
-                                                        : "bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300"
-                                                )}
-                                                style={isSelected ? { backgroundColor: getMemberAvatarColor(member).bg, color: getMemberAvatarColor(member).text } : {}}
+                                        <Avatar className="h-6 w-6 shrink-0">
+                                            <AvatarImage src={member.avatar_url} />
+                                            <AvatarFallback
+                                                className="text-[10px] font-bold"
+                                                style={(() => {
+                                                    const colors = getMemberAvatarColor(member);
+                                                    return {
+                                                        backgroundColor: isSelected ? colors.text : colors.bg,
+                                                        color: isSelected ? colors.bg : colors.text
+                                                    };
+                                                })()}
                                             >
-                                                <Avatar className="h-6 w-6 shrink-0">
-                                                    <AvatarImage src={member.avatar_url} />
-                                                    <AvatarFallback
-                                                        className="text-[10px] font-bold"
-                                                        style={(() => {
-                                                            const colors = getMemberAvatarColor(member);
-                                                            return {
-                                                                backgroundColor: isSelected ? colors.text : colors.bg,
-                                                                color: isSelected ? colors.bg : colors.text
-                                                            };
-                                                        })()}
-                                                    >
-                                                        {(member.name || '?').charAt(0).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <span className="text-sm font-semibold">{((member.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (member.name || 'Alguien').split(' ')[0].slice(1).toLowerCase())}</span>
-                                                {isSelected && <Check size={14} weight="bold" />}
-                                            </button>
-                                        );
-                                    })}
+                                                {(member.name || '?').charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-sm font-semibold">{((member.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (member.name || 'Alguien').split(' ')[0].slice(1).toLowerCase())}</span>
+                                        {isSelected && <Check size={14} weight="bold" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Payer Selector Button */}
+                        <button
+                            type="button"
+                            onClick={() => setIsSelectingPayer(true)}
+                            className="w-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-xl px-4 h-14 flex items-center justify-between transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-1">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Pagado por</p>
+                                    <p className="text-base font-semibold text-neutral-900">
+                                        {currentMember?.name
+                                            ? currentMember.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
+                                            : 'Seleccionar...'}
+                                    </p>
                                 </div>
-
-                                {/* Payer Selector Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => setIsSelectingPayer(true)}
-                                    className="w-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-xl px-4 h-14 flex items-center justify-between transition-colors text-left"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Pagado por</p>
-                                            <p className="text-base font-semibold text-neutral-900">
-                                                {currentMember?.name
-                                                    ? currentMember.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
-                                                    : 'Seleccionar...'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <CaretDown size={20} className="text-neutral-400" />
-                                </button>
-
-
-                            </motion.section>
-                        )}
-                    </AnimatePresence>
+                            </div>
+                            <CaretDown size={20} className="text-neutral-400" />
+                        </button>
+                    </section>
                 </div>
             </div>
 
