@@ -56,7 +56,6 @@ export function ResponsiveModal({
                 <DialogContent
                     showCloseButton={showCloseButton}
                     className={cn("sm:max-w-[425px]", hideHeader && "p-0 gap-0")}
-                    onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                     {hideHeader ? (
                         <>
@@ -96,37 +95,30 @@ export function ResponsiveModal({
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
                 hideHandle={hideHeader || isNested}
-                onOpenAutoFocus={(e) => e.preventDefault()}
                 className={cn(
                     isNested ? "h-full" : "h-[96svh]",
-                    // Stability fix for iOS Safari: switch to absolute when an input is focused
-                    // to prevent "jumping" fixed elements.
-                    "focus-within:absolute",
-                    hideHeader && "p-0 border-none"
+                    hideHeader && "p-0 border-none",
+                    "bg-neutral-50 flex flex-col"
                 )}
             >
                 <KeyboardHeightContext.Provider value={keyboardHeight}>
                     {hideHeader ? (
-                        <>
-                            <VisuallyHidden>
-                                <DrawerTitle>{title}</DrawerTitle>
-                                <DrawerDescription>{description || title}</DrawerDescription>
-                            </VisuallyHidden>
-                            {children}
-                        </>
+                        children
                     ) : (
-                        <div className="flex flex-col h-full">
-                            <DrawerHeader className="text-left pt-6">
-                                <DrawerTitle>{title}</DrawerTitle>
-                                {description ? (
-                                    <DrawerDescription>{description}</DrawerDescription>
-                                ) : (
-                                    <VisuallyHidden>
-                                        <DrawerDescription>{title}</DrawerDescription>
-                                    </VisuallyHidden>
-                                )}
-                            </DrawerHeader>
-                            <div className="px-0 pb-0 flex-1 overflow-y-auto no-scrollbar">
+                        <div className="flex flex-col h-full bg-neutral-50 overflow-hidden rounded-t-3xl">
+                            {!isNested && (
+                                <DrawerHeader className="text-left py-4 shrink-0 border-b border-neutral-100">
+                                    <DrawerTitle className="font-serif text-2xl">{title}</DrawerTitle>
+                                    {description ? (
+                                        <DrawerDescription>{description}</DrawerDescription>
+                                    ) : (
+                                        <VisuallyHidden>
+                                            <DrawerDescription>{title}</DrawerDescription>
+                                        </VisuallyHidden>
+                                    )}
+                                </DrawerHeader>
+                            )}
+                            <div className="flex-1 overflow-y-auto no-scrollbar">
                                 {children}
                             </div>
                         </div>

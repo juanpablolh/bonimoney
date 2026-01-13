@@ -274,12 +274,12 @@ export default function Dashboard({
             </p>
             {currencies.length > 0 ? (
               currencies.map(([curr, amount]) => (
-                <h3 key={curr} className="font-sans font-bold tracking-tight text-white leading-none" style={{ fontSize: '32px' }}>
-                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide uppercase">{curr}</span>
+                <h3 key={curr} className="font-serif tracking-tighter text-white leading-none" style={{ fontSize: '32px' }}>
+                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide">{curr}</span>
                 </h3>
               ))
             ) : (
-              <h3 className="font-sans font-bold text-4xl tracking-tight text-white/40">$ 0</h3>
+              <h3 className="font-serif text-4xl tracking-tighter text-white/40">$ 0</h3>
             )}
           </div>
 

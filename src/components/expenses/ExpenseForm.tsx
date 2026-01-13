@@ -59,7 +59,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             if (amountRef.current) {
                 amountRef.current.focus();
             }
-        }, 100);
+        }, 300);
         return () => clearTimeout(timer);
     }, []);
 
@@ -80,7 +80,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
+        <div className="flex flex-col h-full bg-neutral-50 overflow-hidden">
             {/* Header Wrapper to avoid corner slivers */}
             <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                 {/* Drawer Handle */}
@@ -132,6 +132,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 value={displayAmount}
                                 onChange={handleAmountChange}
                                 onWheel={(e) => e.currentTarget.blur()}
+                                autoFocus
                                 className="border-none bg-transparent h-auto p-0 focus-visible:ring-0 placeholder:text-neutral-200 w-full"
                                 style={{
                                     color: 'var(--neutral-600)',

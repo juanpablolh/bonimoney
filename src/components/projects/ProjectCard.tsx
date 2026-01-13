@@ -66,7 +66,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 {/* Footer: Member Count & Avatars */}
                 <div className="flex items-end justify-between">
                     <div className="flex items-center gap-3">
-                        <span className="text-3xl font-sans font-bold text-white/90 leading-none">
+                        <span className="text-3xl font-serif text-white/90 leading-none">
                             {memberCount}
                         </span>
                         <span className="text-lg font-sans text-white/80 leading-none">
