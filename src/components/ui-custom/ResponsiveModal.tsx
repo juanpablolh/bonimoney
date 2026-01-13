@@ -20,8 +20,11 @@ import {
 } from "@/components/ui/drawer"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
-// Context to share keyboard height with children
-export const KeyboardHeightContext = React.createContext<number>(0)
+// Context to share keyboard and viewport info with children
+export const KeyboardViewportContext = React.createContext<{ keyboardHeight: number; vvHeight: number }>({
+    keyboardHeight: 0,
+    vvHeight: 0
+})
 
 interface ResponsiveModalProps {
     children: React.ReactNode
@@ -47,7 +50,7 @@ export function ResponsiveModal({
     isNested = false,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
-    const keyboardHeight = useKeyboardHeight()
+    const { keyboardHeight, vvHeight } = useKeyboardHeight()
 
     if (isDesktop) {
         return (
@@ -100,8 +103,9 @@ export function ResponsiveModal({
                     hideHeader && "p-0 border-none",
                     "bg-neutral-50 flex flex-col"
                 )}
+                style={vvHeight > 0 && !isDesktop ? { height: `${vvHeight}px`, top: 0 } : {}}
             >
-                <KeyboardHeightContext.Provider value={keyboardHeight}>
+                <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight }}>
                     {hideHeader ? (
                         children
                     ) : (
@@ -123,7 +127,7 @@ export function ResponsiveModal({
                             </div>
                         </div>
                     )}
-                </KeyboardHeightContext.Provider>
+                </KeyboardViewportContext.Provider>
             </DrawerContent>
         </Drawer>
     )

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { KeyboardHeightContext } from '@/components/ui-custom/ResponsiveModal';
 import {
     Check,
     X,
@@ -30,7 +29,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     onClose,
     initialData
 }) => {
-    const keyboardHeight = useContext(KeyboardHeightContext);
     const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
     const [displayAmount, setDisplayAmount] = useState(initialData?.amount ? new Intl.NumberFormat('es-CL').format(initialData.amount) : '');
     const [description, setDescription] = useState(initialData?.description || '');
@@ -229,15 +227,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 </div>
             </div>
 
-            {/* Fixed Footer - Outside scroll area, adjusts for keyboard */}
-            <footer
-                className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200 transition-[padding] duration-200"
-                style={{
-                    paddingBottom: keyboardHeight > 0
-                        ? `${keyboardHeight + 16}px`
-                        : 'max(1.5rem, env(safe-area-inset-bottom))'
-                }}
-            >
+            {/* Fixed Footer - Outside scroll area */}
+            <footer className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200">
                 <Button
                     onClick={() => onSave({
                         amount: parseFloat(amount),

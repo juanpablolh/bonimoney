@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { ResponsiveModal, KeyboardHeightContext } from '../ui-custom/ResponsiveModal';
+import React, { useState, useEffect } from 'react';
+import { ResponsiveModal } from '../ui-custom/ResponsiveModal';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
@@ -19,7 +19,6 @@ const EMOJIS = ['🏠', '✈️', '🛒', '🎉'];
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
     const { createProject } = useProject();
     const { user } = useAuth();
-    const keyboardHeight = useContext(KeyboardHeightContext);
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [icon, setIcon] = useState('🏠');
@@ -295,11 +294,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 {/* Fixed Footer - Outside scroll area, adjusts for keyboard */}
                 <footer
                     className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200 transition-[padding] duration-200"
-                    style={{
-                        paddingBottom: keyboardHeight > 0
-                            ? `${keyboardHeight + 16}px`
-                            : 'max(1.5rem, env(safe-area-inset-bottom))'
-                    }}
                 >
                     <div className="flex gap-3">
                         {step === 2 && (
