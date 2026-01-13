@@ -227,16 +227,16 @@ export default function MembersSection({
       {/* 2. MEMBERS LIST / GRID */}
       <section className="space-y-4">
         <div className="flex justify-between items-center px-4">
-          <h4 className="text-base font-normal tracking-[0.1px] text-stone-400">Integrantes ({members.length})</h4>
+          <h4 className="text-base font-normal tracking-[0.1px] text-neutral-400">Integrantes ({members.length})</h4>
         </div>
 
         <div className="grid gap-4">
           {members.length === 0 ? (
-            <div className="py-20 bg-stone-50 rounded-[2rem] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center space-y-3">
+            <div className="py-20 bg-neutral-50 rounded-[2rem] border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center space-y-3">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <UsersThree size={32} className="text-stone-200" />
+                <UsersThree size={32} className="text-neutral-200" />
               </div>
-              <p className="text-stone-400 font-bold text-sm italic">Todavía no hay nadie aquí...</p>
+              <p className="text-neutral-400 font-bold text-sm italic">Todavía no hay nadie aquí...</p>
             </div>
           ) : (
             members.map((member) => {
@@ -246,14 +246,14 @@ export default function MembersSection({
                   key={member.id}
                   className={cn(
                     "bg-white rounded-xl p-4 border transition-all flex items-center justify-between group shadow-sm",
-                    isEditing ? "border-stone-900 ring-4 ring-stone-900/5 shadow-xl" : "border-stone-100 hover:border-stone-300 hover:shadow-md"
+                    isEditing ? "border-neutral-900 ring-4 ring-neutral-900/5 shadow-xl" : "border-neutral-100 hover:border-neutral-300 hover:shadow-md"
                   )}
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {(() => {
                       const colors = getMemberAvatarColor(member);
                       return (
-                        <Avatar className="w-12 h-12 shadow-sm ring-1 ring-stone-100">
+                        <Avatar className="w-12 h-12 shadow-sm ring-1 ring-neutral-100">
                           <AvatarImage src={member.avatar_url} />
                           <AvatarFallback
                             className="font-black text-lg"
@@ -274,11 +274,11 @@ export default function MembersSection({
                           if (e.key === 'Enter') handleSaveEdit(member.id);
                           if (e.key === 'Escape') handleCancelEdit();
                         }}
-                        className="h-10 border-none bg-stone-50 rounded-xl font-bold text-lg focus-visible:ring-0"
+                        className="h-10 border-none bg-neutral-50 rounded-xl font-bold text-lg focus-visible:ring-0"
                       />
                     ) : (
                       <div>
-                        <p className="text-base font-medium text-stone-900 tracking-tight leading-none group-hover:translate-x-1 transition-transform">
+                        <p className="text-base font-medium text-neutral-900 tracking-tight leading-none group-hover:translate-x-1 transition-transform">
                           {member.name.charAt(0).toUpperCase() + member.name.slice(1)}
                         </p>
                       </div>
@@ -296,7 +296,7 @@ export default function MembersSection({
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="w-10 h-10 rounded-full bg-stone-50 text-stone-400 flex items-center justify-center hover:bg-stone-100 transition-colors"
+                          className="w-10 h-10 rounded-full bg-neutral-50 text-neutral-400 flex items-center justify-center hover:bg-neutral-100 transition-colors"
                         >
                           <X size={20} weight="bold" />
                         </button>
@@ -305,7 +305,7 @@ export default function MembersSection({
                       <>
                         <button
                           onClick={() => handleStartEdit(member)}
-                          className="w-12 h-10 rounded-full bg-transparent text-stone-400 md:text-stone-300 flex items-center justify-center hover:text-stone-900 hover:bg-stone-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                          className="w-12 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-neutral-900 hover:bg-neutral-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
                         >
                           <PencilSimple size={18} weight="bold" />
                         </button>
@@ -314,7 +314,7 @@ export default function MembersSection({
                             setMemberToDelete(member);
                             setDeleteMemberDialogOpen(true);
                           }}
-                          className="w-12 h-10 rounded-full bg-transparent text-stone-400 md:text-stone-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-12"
+                          className="w-12 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-12"
                         >
                           <Trash size={18} weight="bold" />
                         </button>
@@ -330,14 +330,14 @@ export default function MembersSection({
 
       {/* 3. SHARE LINK CARD (Premium Polish) */}
       {members.length > 0 && (
-        <section className="bg-stone-50 rounded-3xl p-4 border border-stone-100 space-y-4">
+        <section className="bg-neutral-50 rounded-3xl p-4 border border-neutral-100 space-y-4">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-green-200 rounded-2xl flex items-center justify-center text-stone-400 shrink-0">
+            <div className="w-12 h-12 bg-green-200 rounded-2xl flex items-center justify-center text-neutral-400 shrink-0">
               <Info size={24} weight="bold" className="text-green-700" />
             </div>
             <div className="space-y-1">
-              <h5 className="font-normal text-stone-900 text-lg">¿Sabías que puedes sincronizar?</h5>
-              <p className="text-xs text-stone-500 font-medium leading-relaxed">
+              <h5 className="font-normal text-neutral-900 text-lg">¿Sabías que puedes sincronizar?</h5>
+              <p className="text-xs text-neutral-500 font-medium leading-relaxed">
                 Inicia sesión para compartir este grupo con otros integrantes y ver los cambios en tiempo real.
               </p>
             </div>
@@ -345,7 +345,7 @@ export default function MembersSection({
           <Button
             variant="outline"
             onClick={onShareGroup}
-            className="w-full h-14 rounded-2xl bg-white border-stone-200 text-stone-900 font-semibold flex gap-2 active:scale-[0.98] transition-all"
+            className="w-full h-14 rounded-2xl bg-white border-neutral-200 text-neutral-900 font-semibold flex gap-2 active:scale-[0.98] transition-all"
           >
             <ShareNetwork size={20} weight="bold" />
             Compartir Proyecto
@@ -368,8 +368,8 @@ export default function MembersSection({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
           <DialogHeader className="space-y-4">
-            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Cerrar grupo</DialogTitle>
-            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
+            <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
+            <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
               ¿Estás seguro que quieres cerrar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
             </DialogDescription>
           </DialogHeader>
@@ -401,9 +401,9 @@ export default function MembersSection({
       <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
         <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
           <DialogHeader className="space-y-4">
-            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Eliminar integrante</DialogTitle>
-            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
-              ¿Estás seguro que quieres eliminar a <span className="text-stone-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>? Si tiene gastos o deudas pendientes, no podrás eliminarlo hasta resolverlas.
+            <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Eliminar integrante</DialogTitle>
+            <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
+              ¿Estás seguro que quieres eliminar a <span className="text-neutral-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>? Si tiene gastos o deudas pendientes, no podrás eliminarlo hasta resolverlas.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">

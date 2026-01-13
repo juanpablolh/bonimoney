@@ -88,6 +88,29 @@ export const calculateBalancesByCurrency = (
     const balances = balancesByCurrency.get(expense.currency);
     if (!balances) return;
 
+    // SETTLEMENT HANDLING: Treat settlements as counter-expenses
+    // Settlements directly adjust balances without affecting totalPaid/totalOwed
+    if ((expense as any).expense_type === 'settlement') {
+      // Who pays: their balance increases (debt reduced)
+      const paidByBalance = balances.get(expense.paidBy);
+      if (paidByBalance) {
+        paidByBalance.balance += expense.amount;
+      }
+
+      // Who receives: their balance decreases (amount owed reduced)
+      if (expense.splits && expense.splits.length > 0) {
+        expense.splits.forEach((split) => {
+          const balance = balances.get(split.memberId);
+          if (balance) {
+            balance.balance -= split.amountOwed;
+          }
+        });
+      }
+
+      return; // Don't process as normal expense
+    }
+
+    // NORMAL EXPENSE HANDLING
     const paidByBalance = balances.get(expense.paidBy);
     if (paidByBalance) {
       paidByBalance.totalPaid += expense.amount;

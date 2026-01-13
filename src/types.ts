@@ -2,7 +2,7 @@ export interface Member {
   id: string;
   name: string;
   avatar_url?: string;
-  avatarColor?: { bg: string; text: string };
+  avatarColor?: { bg: string; main: string; text: string };
 }
 
 export type Currency = 'CLP' | 'USD' | 'BRL' | 'ARS' | 'EUR' | 'GBP' | 'PEN' | 'UYU';

@@ -38,16 +38,16 @@ export default function HomeLogin() {
     return (
         <div
             className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('https://getlemoni.app/_next/image?url=%2Flemoni-bg.webp&w=3840&q=85')" }}
+            style={{ backgroundImage: "url('/lemoni-bg.webp')" }}
         >
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full max-w-[400px] bg-[#FAFAF9] rounded-3xl shadow-lg overflow-hidden"
+                className="w-full max-w-[400px] bg-neutral-50 rounded-3xl shadow-lg overflow-hidden"
             >
                 {/* Header */}
-                <div className="bg-[#44403C] px-8 py-4 flex flex-col items-start justify-center">
+                <div className="bg-neutral-900 px-8 py-4 flex flex-col items-start justify-center">
                     <h1 className="font-serif text-[32px] leading-none text-white tracking-tight">
                         Bonimoney
                     </h1>
@@ -69,9 +69,9 @@ export default function HomeLogin() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-2xl font-serif text-stone-900">¡Revisa tu email!</h3>
-                                    <p className="text-stone-500 text-sm font-medium leading-relaxed">
-                                        Enviamos el enlace mágico a <span className="text-stone-900 font-bold">{email}</span>
+                                    <h3 className="text-2xl font-serif text-neutral-900">¡Revisa tu email!</h3>
+                                    <p className="text-neutral-500 text-sm font-medium leading-relaxed">
+                                        Enviamos el enlace mágico a <span className="text-neutral-900 font-bold">{email}</span>
                                     </p>
                                 </div>
                             </motion.div>
@@ -85,7 +85,7 @@ export default function HomeLogin() {
                             >
                                 <div className="space-y-4">
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-[#A8A29E] ml-1">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">
                                             Tu nombre
                                         </label>
                                         <Input
@@ -95,12 +95,12 @@ export default function HomeLogin() {
                                             onChange={(e) => setName(e.target.value)}
                                             required
                                             disabled={loading}
-                                            className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-400 px-6 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
+                                            className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-neutral-400 px-6 shadow-sm ring-1 ring-neutral-100 focus-visible:ring-neutral-300"
                                         />
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-[#A8A29E] ml-1">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-neutral-400 ml-1">
                                             Tu email
                                         </label>
                                         <div className="relative">
@@ -111,12 +111,12 @@ export default function HomeLogin() {
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 required
                                                 disabled={loading}
-                                                className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-stone-400 pl-6 pr-24 shadow-sm ring-1 ring-stone-100 focus-visible:ring-stone-300"
+                                                className="h-16 bg-white border-none rounded-2xl text-lg font-medium placeholder:text-neutral-400 pl-6 pr-24 shadow-sm ring-1 ring-neutral-100 focus-visible:ring-neutral-300"
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={!email || !name || loading}
-                                                className="absolute right-2 top-2 bottom-2 aspect-square bg-[#1C1917] rounded-xl text-white flex items-center justify-center hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                                className="absolute right-2 top-2 bottom-2 aspect-square bg-neutral-900 rounded-xl text-white flex items-center justify-center hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                                             >
                                                 {loading ? (
                                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -137,8 +137,8 @@ export default function HomeLogin() {
 
 
                                 <div className="text-center">
-                                    <p className="text-xs text-[#A8A29E] font-medium">
-                                        Al continuar aceptas nuestros <a href="#" className="text-stone-900 hover:underline">Términos</a> y <a href="#" className="text-stone-900 hover:underline">Privacidad</a>.
+                                    <p className="text-xs text-neutral-400 font-medium">
+                                        Al continuar aceptas nuestros <a href="#" className="text-neutral-900 hover:underline">Términos</a> y <a href="#" className="text-neutral-900 hover:underline">Privacidad</a>.
                                     </p>
                                 </div>
                             </motion.form>

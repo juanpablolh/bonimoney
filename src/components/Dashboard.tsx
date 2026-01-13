@@ -10,7 +10,7 @@ import {
   Sparkle,
   Receipt,
   Trash,
-  CurrencyCircleDollar
+  HandCoins
 } from '@phosphor-icons/react';
 import { Member, Expense, Balance, Transaction, Currency } from '../types';
 import { Project } from '../contexts/ProjectContext';
@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button as UIButton } from '@/components/ui/button';
+import { SettlementDrawer } from './settlements/SettlementDrawer';
 
 interface DashboardProps {
   members: Member[];
@@ -38,7 +39,7 @@ interface DashboardProps {
   currentProject: Project | null;
   onNavigateToMembers: () => void;
   onNavigateToExpenses: () => void;
-  onSettleUp: (fromId: string, toId: string, amount: number) => void;
+  onSettleUp: (fromId: string, toId: string, amount: number, notes?: string) => void;
   onDeleteProject: () => void;
   onAddMember: (name: string) => Promise<void>;
 }
@@ -59,6 +60,8 @@ export default function Dashboard({
   const [newMemberName, setNewMemberName] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [settlementDrawerOpen, setSettlementDrawerOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const handleAddMember = async () => {
     if (!newMemberName.trim()) {
@@ -71,6 +74,32 @@ export default function Dashboard({
       setNewMemberName('');
     } catch (error) {
       console.error('Error adding member:', error);
+    }
+  };
+
+  // Helper to check if current user is the debtor in a transaction
+  const isCurrentUserDebtor = (transaction: Transaction) => {
+    // Find current user's member record
+    const currentMember = members.find(m => m.name === transaction.fromName);
+    return !!currentMember;
+  };
+
+  // Handle settlement confirmation
+  const handleSettlement = async (amount: number, notes?: string) => {
+    if (!selectedTransaction) return;
+
+    try {
+      await _onSettleUp(
+        selectedTransaction.from,
+        selectedTransaction.to,
+        amount,
+        notes
+      );
+      setSettlementDrawerOpen(false);
+      setSelectedTransaction(null);
+    } catch (error) {
+      console.error('Error settling debt:', error);
+      alert('Error al registrar el pago. Intenta nuevamente.');
     }
   };
 
@@ -317,17 +346,17 @@ export default function Dashboard({
 
       {/* ===== MIDDLE COLUMN: ACTIVIDAD RECIENTE ===== */}
       <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden flex flex-col h-full">
+        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col h-full">
           {/* Header */}
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-[12px] border-b border-stone-100">
-            <div className="flex items-center gap-2 text-stone-950 h-fit">
+          <div className="flex items-center justify-between px-4 py-[12px] border-b border-neutral-100">
+            <div className="flex items-center gap-2 text-neutral-950 h-fit">
               <Clock size={20} weight="regular" />
               <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Actividad reciente</p>
             </div>
             <button
               onClick={onNavigateToExpenses}
-              className="text-base font-medium text-stone-900 flex items-center gap-2 hover:text-stone-600 transition-colors"
+              className="text-base font-medium text-neutral-900 flex items-center gap-2 hover:text-neutral-600 transition-colors"
             >
               Detalles <ArrowRight size={18} weight="bold" />
             </button>
@@ -339,19 +368,19 @@ export default function Dashboard({
           <div className="px-4 pb-4 pt-4">
             <div className="relative">
               <MagnifyingGlass
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
                 size={18}
               />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar gastos..."
-                className="pl-11 h-12 bg-stone-50 border-stone-100 rounded-lg"
+                className="pl-11 h-12 bg-neutral-50 border-neutral-100 rounded-lg"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-900"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
                 >
                   <X size={16} />
                 </button>
@@ -360,32 +389,34 @@ export default function Dashboard({
           </div>
 
           {/* Expense List */}
-          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-2 no-scrollbar pb-4 pr-1 scroll-smooth">
+          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-3 no-scrollbar pb-4 pr-1 scroll-smooth">
             {filteredExpenses.length === 0 ? (
               <div className="p-12 text-center flex flex-col items-center gap-3">
-                <div className="w-14 h-14 bg-stone-50 rounded-full flex items-center justify-center text-stone-300">
+                <div className="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-300">
                   <Receipt size={28} />
                 </div>
-                <p className="text-stone-400 text-sm">No hay gastos aún</p>
+                <p className="text-neutral-400 text-sm">No hay gastos aún</p>
               </div>
             ) : (
               (isDesktop ? filteredExpenses : filteredExpenses.slice(0, 6)).map((expense) => {
                 const paidBy = members.find(m => m.id === expense.paidBy);
                 return (
-                  <div key={expense.id} className="px-4 py-0 flex items-start gap-4 hover:bg-stone-50/50 transition-colors">
+                  <div key={expense.id} className="px-4 py-0 flex items-start gap-4 hover:bg-neutral-50/50 transition-colors">
                     {/* Icon Circle */}
                     {(() => {
+                      const isSettlement = (expense as any).expense_type === 'settlement';
                       const colors = getExpenseColor(expense.id);
                       return (
                         <div className={cn(
                           "w-11 h-11 aspect-square self-start rounded-full flex items-center justify-center flex-shrink-0",
-                          colors.bg,
-                          colors.text
+                          isSettlement ? "bg-emerald-100 text-emerald-600" : `${colors.bg} ${colors.text}`
                         )}>
-                          {expense.icon ? (
+                          {isSettlement ? (
+                            <HandCoins size={24} weight="light" />
+                          ) : expense.icon ? (
                             <span className="text-xl leading-none block">{expense.icon}</span>
                           ) : (
-                            <CurrencyCircleDollar size={24} weight="regular" />
+                            <Receipt size={24} weight="light" />
                           )}
                         </div>
                       );
@@ -393,15 +424,18 @@ export default function Dashboard({
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-stone-900 text-base leading-tight truncate">
+                      <p className="font-medium text-neutral-900 text-base leading-tight truncate">
+                        {(expense as any).expense_type === 'settlement' && (
+                          <span className="text-emerald-600 mr-1">💸</span>
+                        )}
                         {expense.description ? (expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()) : 'Sin descripción'}
                       </p>
                       <div className="flex items-center justify-between mt-1">
-                        <p className="text-sm text-stone-400">
+                        <p className="text-sm text-neutral-400">
                           Por {(paidBy?.name || 'Alguien').split(' ')[0]}
                         </p>
                         <p style={{
-                          color: 'var(--general-foreground, #020617)',
+                          color: 'var(--general-foreground, var(--neutral-950))',
                           fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
                           fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
                           fontStyle: 'normal',
@@ -410,7 +444,7 @@ export default function Dashboard({
                           letterSpacing: '0.00438rem'
                         }}>
                           $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1" style={{
-                            color: 'var(--stone-500, #78716C)',
+                            color: 'var(--neutral-500, var(--neutral-500))',
                             fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
                             fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
                             fontStyle: 'normal',
@@ -429,7 +463,7 @@ export default function Dashboard({
 
           {/* Footer */}
           <div className="p-5 pt-3">
-            <span className="text-sm text-stone-500">{expenses.length} Gastos en total</span>
+            <span className="text-sm text-neutral-500">{expenses.length} Gastos en total</span>
           </div>
         </div>
       </section>
@@ -437,10 +471,10 @@ export default function Dashboard({
 
       {/* ===== RIGHT COLUMN: SINGLE CARD WITH DEUDAS + ESTADO + FOOTER ===== */}
       <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm flex flex-col h-full overflow-hidden">
           {/* Header matching Actividad reciente */}
-          <div className="flex items-center justify-between p-4 border-b border-stone-100">
-            <div className="flex items-center gap-2 text-stone-950">
+          <div className="flex items-center justify-between p-4 border-b border-neutral-100">
+            <div className="flex items-center gap-2 text-neutral-950">
               <ArrowsLeftRight size={20} weight="regular" />
               <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Deudas y cobros</p>
             </div>
@@ -461,76 +495,94 @@ export default function Dashboard({
               ) : (
                 <div className="space-y-2">
                   {transactionsByCurrency.map((t, idx) => (
-                    <div key={idx} className="bg-stone-50 rounded-2xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const fromMember = members.find(m => m.name === t.fromName);
-                            const colors = fromMember ? getMemberAvatarColor(fromMember) : { bg: '#E7E5E4', text: '#44403C' };
-                            return (
-                              <Avatar className="w-8 h-8 border border-white">
-                                <AvatarFallback
-                                  className="text-[10px] font-semibold"
-                                  style={{ backgroundColor: colors.bg, color: colors.text }}
-                                >
-                                  {(t.fromName || '?').charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            );
-                          })()}
-                          <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
-                            {capitalizeName((t.fromName || '').split(' ')[0])}
-                          </span>
+                    <div key={idx} className="bg-neutral-50 rounded-2xl p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const fromMember = members.find(m => m.id === t.from);
+                              const colors = fromMember ? getMemberAvatarColor(fromMember) : { bg: 'var(--neutral-200)', text: 'var(--neutral-900)' };
+                              return (
+                                <Avatar className="w-8 h-8 border border-white">
+                                  <AvatarFallback
+                                    className="text-[10px] font-semibold"
+                                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                                  >
+                                    {(t.fromName || '?').charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              );
+                            })()}
+                            <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
+                              {capitalizeName((t.fromName || '').split(' ')[0])}
+                            </span>
+                          </div>
+                          <ArrowRight size={12} className="text-neutral-600" />
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const toMember = members.find(m => m.id === t.to);
+                              const colors = toMember ? getMemberAvatarColor(toMember) : { bg: 'var(--neutral-200)', text: 'var(--neutral-900)' };
+                              return (
+                                <Avatar className="w-8 h-8 border border-white">
+                                  <AvatarFallback
+                                    className="text-[10px] font-semibold"
+                                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                                  >
+                                    {(t.toName || '?').charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              );
+                            })()}
+                            <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
+                              {capitalizeName((t.toName || '').split(' ')[0])}
+                            </span>
+                          </div>
                         </div>
-                        <ArrowRight size={12} className="text-stone-300" />
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const toMember = members.find(m => m.name === t.toName);
-                            const colors = toMember ? getMemberAvatarColor(toMember) : { bg: '#E7E5E4', text: '#44403C' };
-                            return (
-                              <Avatar className="w-8 h-8 border border-white">
-                                <AvatarFallback
-                                  className="text-[10px] font-semibold"
-                                  style={{ backgroundColor: colors.bg, color: colors.text }}
-                                >
-                                  {(t.toName || '?').charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            );
-                          })()}
-                          <span className="text-xs font-medium text-stone-600 truncate max-w-[80px]">
-                            {capitalizeName((t.toName || '').split(' ')[0])}
-                          </span>
-                        </div>
-                      </div>
-                      <p style={{
-                        color: 'var(--general-foreground, #020617)',
-                        fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                        fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                        fontStyle: 'normal',
-                        fontWeight: 600,
-                        lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                        letterSpacing: '0.00438rem'
-                      }}>
-                        $ {t.amount.toLocaleString('es-CL')} <span style={{
-                          color: 'var(--stone-500, #78716C)',
+                        <p style={{
+                          color: 'var(--general-foreground, var(--neutral-950))',
                           fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
                           fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
                           fontStyle: 'normal',
-                          fontWeight: 500,
+                          fontWeight: 600,
                           lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
                           letterSpacing: '0.00438rem'
-                        }}>{t.currency}</span>
-                      </p>
+                        }}>
+                          $ {t.amount.toLocaleString('es-CL')} <span style={{
+                            color: 'var(--neutral-500, var(--neutral-500))',
+                            fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
+                            fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
+                            fontStyle: 'normal',
+                            fontWeight: 500,
+                            lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
+                            letterSpacing: '0.00438rem'
+                          }}>{t.currency}</span>
+                        </p>
+                      </div>
+
+                      {/* Botón Saldar - solo visible para deudores */}
+                      {isCurrentUserDebtor(t) && (
+                        <UIButton
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedTransaction(t);
+                            setSettlementDrawerOpen(true);
+                          }}
+                          className="w-full"
+                        >
+                          Saldar deuda
+                        </UIButton>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
+
             </div>
 
             {/* Estado individual Section */}
             <div>
-              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem] text-stone-950 flex items-center gap-2 mb-4">
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem] text-neutral-950 flex items-center gap-2 mb-4">
                 <ArrowsLeftRight size={18} /> Estado individual
               </p>
               <div className="space-y-2">
@@ -543,14 +595,14 @@ export default function Dashboard({
                         key={`${currency}-${bIdx}`}
                         className={cn(
                           "px-4 py-3 rounded-lg text-sm flex items-center justify-between",
-                          isPositive ? "bg-stone-100" :
+                          isPositive ? "bg-neutral-100" :
                             isNegative ? "bg-rose-50" :
-                              "bg-stone-50"
+                              "bg-neutral-50"
                         )}
                       >
                         <span className={cn(
                           "font-medium",
-                          isNegative ? "text-rose-600" : "text-stone-700"
+                          isNegative ? "text-rose-600" : "text-neutral-700"
                         )}>
                           {capitalizeName(b.memberName) || 'Alguien'}
                         </span>
@@ -558,7 +610,7 @@ export default function Dashboard({
                           {isNegative && <TrendDown size={16} weight="bold" className="text-rose-500" />}
                           <span className={cn(
                             "font-bold",
-                            isNegative ? "text-rose-600" : "text-stone-900"
+                            isNegative ? "text-rose-600" : "text-neutral-900"
                           )}>
                             {currency} {Math.abs(b.balance).toLocaleString('es-CL')}
                           </span>
@@ -573,7 +625,7 @@ export default function Dashboard({
 
           </div>
           {/* Datos del grupo footer */}
-          <div className="hidden md:flex justify-end p-4 pt-4 border-t border-stone-100">
+          <div className="hidden md:flex justify-end p-4 pt-4 border-t border-neutral-100">
             <button
               onClick={() => setDeleteDialogOpen(true)}
               className="flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-600 transition-colors"
@@ -588,8 +640,8 @@ export default function Dashboard({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
           <DialogHeader className="space-y-4">
-            <DialogTitle className="text-[28px] font-serif font-bold text-stone-900 text-left leading-tight">Cerrar grupo</DialogTitle>
-            <DialogDescription className="text-stone-500 font-medium text-left text-base leading-relaxed">
+            <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
+            <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
               ¿Estás seguro que quieres cerrar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
             </DialogDescription>
           </DialogHeader>
@@ -617,6 +669,16 @@ export default function Dashboard({
         </DialogContent>
       </Dialog>
 
+      {/* Settlement Drawer */}
+      {selectedTransaction && (
+        <SettlementDrawer
+          open={settlementDrawerOpen}
+          onOpenChange={setSettlementDrawerOpen}
+          transaction={selectedTransaction}
+          members={members}
+          onConfirm={handleSettlement}
+        />
+      )}
 
     </div>
   );

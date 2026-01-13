@@ -43,11 +43,11 @@ function Calendar({
                 ),
                 day_range_end: "day-range-end",
                 day_selected:
-                    "bg-stone-900 text-white hover:bg-stone-800 hover:text-white focus:bg-stone-900 focus:text-white", // Customizing for BoniMoney branding (stone-900)
-                day_today: "bg-stone-100 text-stone-900", // Customizing for today
+                    "bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white focus:bg-neutral-900 focus:text-white", // Customizing for BoniMoney branding (neutral-900)
+                day_today: "bg-neutral-100 text-neutral-900", // Customizing for today
                 day_outside:
-                    "day-outside text-stone-400 opacity-50 aria-selected:bg-stone-100/50 aria-selected:text-stone-500 aria-selected:opacity-30",
-                day_disabled: "text-stone-400 opacity-50",
+                    "day-outside text-neutral-400 opacity-50 aria-selected:bg-neutral-100/50 aria-selected:text-neutral-500 aria-selected:opacity-30",
+                day_disabled: "text-neutral-400 opacity-50",
                 day_range_middle:
                     "aria-selected:bg-accent aria-selected:text-accent-foreground",
                 day_hidden: "invisible",

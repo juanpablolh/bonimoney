@@ -43,7 +43,7 @@ function HomeView() {
           variant="outline"
           size="icon"
           onClick={() => signOut()}
-          className="rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-lg border-stone-100 hover:bg-stone-50 transition-all active:scale-90"
+          className="rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-lg border-neutral-100 hover:bg-neutral-50 transition-all active:scale-90"
         >
           <SignOut size={20} weight="bold" />
         </Button>
@@ -83,16 +83,17 @@ function ProjectView() {
   }, [projectId, projects, setCurrentProject, navigate]);
 
   // Handlers for Dashboard
-  const handleSettleUp = async (fromId: string, toId: string, amount: number) => {
+  const handleSettleUp = async (fromId: string, toId: string, amount: number, notes?: string) => {
     try {
       await addExpense({
-        description: `Pago de deuda`,
+        description: notes || `Pago de deuda`,
         amount: amount,
         paid_by: fromId,
         split_method: 'exact',
         split_details: [{ member_id: toId, amount: amount }],
         date: new Date().toISOString(),
-        expense_type: 'settlement'
+        expense_type: 'settlement',
+        metadata: notes ? { notes } : undefined
       });
     } catch (error) {
       console.error('Error settling up:', error);
@@ -109,19 +110,19 @@ function ProjectView() {
   // Show loading while project is being set
   if (!currentProject) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
-          <p className="font-medium text-stone-500">Cargando proyecto...</p>
+          <div className="w-12 h-12 border-4 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
+          <p className="font-medium text-neutral-500">Cargando proyecto...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-100 lg:h-screen lg:overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-neutral-100 lg:h-screen lg:overflow-hidden">
       {/* Header - Figma Design */}
-      <header className="bg-white sticky top-0 z-40 border-b border-stone-100 flex-shrink-0">
+      <header className="bg-white sticky top-0 z-40 border-b border-neutral-100 flex-shrink-0">
         <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left: Breadcrumb with Home + Title */}
           <div className="flex items-center gap-2">
@@ -133,7 +134,7 @@ function ProjectView() {
                   setActiveTab('dashboard');
                 }
               }}
-              className="w-12 h-9 rounded-lg bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors flex items-center justify-center"
+              className="w-12 h-9 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors flex items-center justify-center"
             >
               {activeTab === 'dashboard' ? (
                 <House size={16} weight="regular" />
@@ -143,7 +144,7 @@ function ProjectView() {
             </button>
 
             {/* Title */}
-            <h1 className="font-serif text-2xl text-stone-900 tracking-tight">
+            <h1 className="font-serif text-2xl text-neutral-900 tracking-tight">
               Bonimoney
             </h1>
           </div>
@@ -152,14 +153,14 @@ function ProjectView() {
           <div className="flex items-center gap-4">
             <Avatar className="w-12 h-12">
               <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-stone-200 text-stone-700 font-bold">
+              <AvatarFallback className="bg-neutral-200 text-neutral-700 font-bold">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
 
             <button
               onClick={() => setExpenseModalOpen(true)}
-              className="w-12 h-12 rounded-xl bg-stone-900 text-white flex items-center justify-center hover:bg-stone-800 transition-colors shadow-lg"
+              className="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors shadow-lg"
             >
               <Plus size={20} weight="bold" />
             </button>
@@ -168,7 +169,7 @@ function ProjectView() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 lg:overflow-hidden flex flex-col bg-stone-100">
+      <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 lg:overflow-hidden flex flex-col bg-neutral-100">
         {activeTab === 'dashboard' && (
           <Dashboard
             members={members}
@@ -305,10 +306,10 @@ function App() {
   // Show loading state
   if (authLoading || projectsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
-          <p className="font-medium text-stone-500">BoniMoney</p>
+          <div className="w-12 h-12 border-4 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
+          <p className="font-medium text-neutral-500">BoniMoney</p>
         </div>
       </div>
     );

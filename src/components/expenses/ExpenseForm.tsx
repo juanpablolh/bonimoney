@@ -10,6 +10,7 @@ import {
     X,
     CaretDown
 } from '@phosphor-icons/react';
+import { getMemberAvatarColor } from '../../utils/avatarColors';
 
 interface Member {
     id: string;
@@ -77,18 +78,18 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col h-[80svh] bg-stone-50 md:h-full md:max-h-[85svh] rounded-t-3xl overflow-hidden">
+        <div className="flex flex-col h-[80svh] bg-neutral-50 md:h-full md:max-h-[85svh] rounded-t-3xl overflow-hidden">
             {/* Header Wrapper to avoid corner slivers */}
-            <div className="bg-[#44403C] shrink-0 rounded-t-3xl overflow-hidden pt-4">
+            <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                 {/* Drawer Handle */}
-                <div className="mx-auto h-1 w-[100px] rounded-full bg-white/20 mb-4" />
+                <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200 mb-4" />
                 <header className="px-6 pb-5 flex items-center justify-between">
-                    <h2 className="font-serif text-2xl font-medium text-[#FAFAF9] tracking-[-1px] leading-tight">
+                    <h2 className="font-serif text-2xl font-medium text-neutral-900 tracking-[-1px] leading-tight">
                         Nuevo gasto
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-1 min-w-12 hover:bg-white/10 rounded-full transition-colors text-[#FAFAF9] flex flex-col justify-center items-center"
+                        className="p-1 min-w-12 hover:bg-neutral-200 rounded-full transition-colors text-neutral-900 flex flex-col justify-center items-center"
                     >
                         <X size={24} weight="regular" />
                     </button>
@@ -96,14 +97,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto bg-stone-50 relative">
+            <div className="flex-1 overflow-y-auto bg-neutral-50 relative">
                 <div className="px-6 py-6 space-y-6">
                     {/* AMOUNT */}
                     <section className="space-y-3">
-                        <label className="block text-sm font-semibold text-stone-900">¿Cuánto fue?</label>
+                        <label className="block text-sm font-semibold text-neutral-900">¿Cuánto fue?</label>
                         <div className="flex items-center gap-2">
                             <span style={{
-                                color: '#57534E',
+                                color: 'var(--neutral-600)',
                                 fontFamily: 'DM Sans',
                                 fontSize: '2.5rem',
                                 fontStyle: 'normal',
@@ -129,9 +130,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 value={displayAmount}
                                 onChange={handleAmountChange}
                                 onWheel={(e) => e.currentTarget.blur()}
-                                className="border-none bg-transparent h-auto p-0 focus-visible:ring-0 placeholder:text-stone-200 w-full"
+                                className="border-none bg-transparent h-auto p-0 focus-visible:ring-0 placeholder:text-neutral-200 w-full"
                                 style={{
-                                    color: '#57534E',
+                                    color: 'var(--neutral-600)',
                                     fontFamily: 'DM Sans',
                                     fontSize: '2.5rem',
                                     fontStyle: 'normal',
@@ -151,12 +152,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-3"
                             >
-                                <label className="block text-sm font-semibold text-stone-900">¿Qué compraste?</label>
+                                <label className="block text-sm font-semibold text-neutral-900">¿Qué compraste?</label>
                                 <Input
                                     placeholder="Cena para bonis"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="h-14 bg-stone-50 border-stone-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-stone-300 placeholder:text-stone-400 px-4"
+                                    className="h-14 bg-neutral-50 border-neutral-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-neutral-300 placeholder:text-neutral-400 px-4"
                                 />
                             </motion.section>
                         )}
@@ -171,10 +172,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 className="space-y-4"
                             >
                                 <div className="flex justify-between items-center">
-                                    <label className="text-sm font-semibold text-stone-900">Dividir con</label>
+                                    <label className="text-sm font-semibold text-neutral-900">Dividir con</label>
                                     <button
                                         onClick={() => setSplitWith(members.map(m => m.id))}
-                                        className="text-sm font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg transition-colors"
+                                        className="text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-lg transition-colors"
                                     >
                                         Todos
                                     </button>
@@ -188,15 +189,25 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                                 key={member.id}
                                                 onClick={() => toggleMember(member.id)}
                                                 className={cn(
-                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
+                                                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all shadow-sm",
                                                     isSelected
-                                                        ? "bg-stone-900 text-white"
-                                                        : "bg-white text-stone-600 border border-stone-200 hover:border-stone-300"
+                                                        ? "border-transparent"
+                                                        : "bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300"
                                                 )}
+                                                style={isSelected ? { backgroundColor: getMemberAvatarColor(member).bg, color: getMemberAvatarColor(member).text } : {}}
                                             >
                                                 <Avatar className="h-6 w-6 shrink-0">
                                                     <AvatarImage src={member.avatar_url} />
-                                                    <AvatarFallback className={isSelected ? "bg-white/10 text-white text-xs" : "bg-stone-100 text-xs"}>
+                                                    <AvatarFallback
+                                                        className="text-[10px] font-bold"
+                                                        style={(() => {
+                                                            const colors = getMemberAvatarColor(member);
+                                                            return {
+                                                                backgroundColor: isSelected ? colors.text : colors.bg,
+                                                                color: isSelected ? colors.bg : colors.text
+                                                            };
+                                                        })()}
+                                                    >
                                                         {(member.name || '?').charAt(0).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
@@ -207,67 +218,26 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                     })}
                                 </div>
 
-                                {/* Payer Selector */}
-                                <div
-                                    onClick={() => setIsSelectingPayer(!isSelectingPayer)}
-                                    className="bg-stone-50 rounded-xl p-4 flex items-center justify-between cursor-pointer transition-colors hover:bg-stone-100 border border-stone-200"
+                                {/* Payer Selector Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSelectingPayer(true)}
+                                    className="w-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-xl px-4 h-14 flex items-center justify-between transition-colors text-left"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-sm shrink-0">
-                                            {(currentMember?.name || '?').charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">Pagado por</p>
-                                            <p className="text-base font-semibold text-stone-900">
+                                    <div className="flex items-center gap-1">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Pagado por</p>
+                                            <p className="text-base font-semibold text-neutral-900">
                                                 {currentMember?.name
                                                     ? currentMember.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
                                                     : 'Seleccionar...'}
                                             </p>
                                         </div>
                                     </div>
-                                    <CaretDown size={20} weight="regular" className={cn("text-stone-400 transition-transform", isSelectingPayer && "rotate-180")} />
-                                </div>
+                                    <CaretDown size={20} className="text-neutral-400" />
+                                </button>
 
-                                {/* Payer Dropdown */}
-                                <AnimatePresence>
-                                    {isSelectingPayer && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-20"
-                                                onClick={() => setIsSelectingPayer(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="bg-white rounded-xl border border-stone-200 mt-2 z-30 relative divide-y divide-stone-100"
-                                            >
-                                                {members.map((member) => (
-                                                    <button
-                                                        key={member.id}
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setPaidBy(member.id);
-                                                            setIsSelectingPayer(false);
-                                                        }}
-                                                        className={cn(
-                                                            "w-full flex items-center gap-3 p-3 hover:bg-stone-50 transition-colors text-left",
-                                                            paidBy === member.id && "bg-stone-50"
-                                                        )}
-                                                    >
-                                                        <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-xs shrink-0">
-                                                            {(member.name || '?').charAt(0).toUpperCase()}
-                                                        </div>
-                                                        <span className={cn("text-sm font-semibold flex-1", paidBy === member.id ? "text-stone-900" : "text-stone-500")}>
-                                                            {member.name ? (member.name.charAt(0).toUpperCase() + member.name.slice(1).toLowerCase()) : ''}
-                                                        </span>
-                                                        {paidBy === member.id && <Check size={16} weight="bold" className="text-stone-900" />}
-                                                    </button>
-                                                ))}
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
+
                             </motion.section>
                         )}
                     </AnimatePresence>
@@ -276,7 +246,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
             {/* Fixed Footer - Outside scroll area, adjusts for keyboard */}
             <footer
-                className="shrink-0 p-6 bg-stone-50 border-t border-stone-200 transition-[padding] duration-200"
+                className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200 transition-[padding] duration-200"
                 style={{
                     paddingBottom: keyboardHeight > 0
                         ? `${keyboardHeight + 16}px`
@@ -296,13 +266,75 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     className={cn(
                         "w-full h-14 rounded-xl text-base font-semibold transition-colors",
                         progress.amountFilled
-                            ? "bg-stone-900 text-white hover:bg-stone-800"
-                            : "bg-stone-200 text-stone-400 cursor-not-allowed"
+                            ? "bg-neutral-900 text-white hover:bg-neutral-800"
+                            : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
                     )}
                 >
                     Guardar gasto
                 </Button>
             </footer>
+
+            {/* Payer Picker Overlay */}
+            {isSelectingPayer && (
+                <div className="absolute inset-0 z-[70] flex flex-col bg-neutral-50 animate-in slide-in-from-bottom duration-300 rounded-t-3xl md:rounded-3xl overflow-hidden">
+                    <header className="bg-neutral-50 shrink-0 pt-4 overflow-hidden border-b border-neutral-100">
+                        {/* Drawer Handle */}
+                        <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200 mb-4 md:hidden" />
+                        <div className="px-6 pb-5 flex items-center justify-between">
+                            <h2 className="font-serif text-2xl font-medium text-neutral-900 tracking-[-1px] leading-tight">
+                                ¿Quién pagó?
+                            </h2>
+                            <button
+                                onClick={() => setIsSelectingPayer(false)}
+                                className="p-1 min-w-12 hover:bg-neutral-200 rounded-full transition-colors text-neutral-900 flex flex-col justify-center items-center"
+                            >
+                                <X size={24} weight="regular" />
+                            </button>
+                        </div>
+                    </header>
+                    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                        <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Integrantes</p>
+
+                        <div className="bg-white rounded-[1.5rem] p-2 space-y-0.5 border border-neutral-100 mb-8">
+                            {members.map((member) => (
+                                <button
+                                    key={member.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setPaidBy(member.id);
+                                        setIsSelectingPayer(false);
+                                    }}
+                                    className={cn(
+                                        "w-full flex items-center gap-4 p-2 transition-all text-left rounded-[1rem]",
+                                        paidBy === member.id ? "bg-neutral-100 text-neutral-900" : "hover:bg-neutral-50"
+                                    )}
+                                >
+                                    <Avatar className="w-12 h-12 shrink-0">
+                                        <AvatarFallback
+                                            className="text-base font-bold"
+                                            style={(() => {
+                                                const colors = getMemberAvatarColor(member);
+                                                return {
+                                                    backgroundColor: colors.bg,
+                                                    color: colors.text
+                                                };
+                                            })()}
+                                        >
+                                            {(member.name || '?').charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-base font-semibold truncate text-neutral-900">
+                                            {member.name ? member.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : 'Sin nombre'}
+                                        </p>
+                                    </div>
+                                    {paidBy === member.id && <Check size={20} weight="bold" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

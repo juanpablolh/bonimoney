@@ -34,7 +34,65 @@
   --project-amber: oklch(0.55 0.15 70);
   --project-sky: oklch(0.45 0.15 220);
   --project-indigo: oklch(0.40 0.18 280);
-  --project-stone: oklch(0.216 0.006 56.043);
+
+  /* Neutral scale - True neutral */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+  --neutral-950: #0a0a0a;
+
+  --project-neutral: var(--neutral-900);
+
+  /* User Color Scale Tokens */
+  --user-blue-bg: #BFDBFE;
+  --user-blue-main: #3B82F6;
+  --user-blue-text: #1E3A8A;
+  --user-red-bg: #FECACA;
+  --user-red-main: #EF4444;
+  --user-red-text: #991B1B;
+  --user-green-bg: #BBF7D0;
+  --user-green-main: #22C55E;
+  --user-green-text: #166534;
+  --user-purple-bg: #E9D5FF;
+  --user-purple-main: #A855F7;
+  --user-purple-text: #6B21A8;
+  --user-sky-bg: #BAE6FD;
+  --user-sky-main: #0EA5E9;
+  --user-sky-text: #075985;
+  --user-teal-bg: #99F6E4;
+  --user-teal-main: #14B8A6;
+  --user-teal-text: #115E59;
+  --user-orange-bg: #FED7AA;
+  --user-orange-main: #F97316;
+  --user-orange-text: #9A3412;
+  --user-indigo-bg: #C7D2FE;
+  --user-indigo-main: #6366F1;
+  --user-indigo-text: #3730A3;
+  --user-pink-bg: #FBCFE8;
+  --user-pink-main: #EC4899;
+  --user-pink-text: #9F1239;
+  --user-emerald-bg: #A7F3D0;
+  --user-emerald-main: #10B981;
+  --user-emerald-text: #065F46;
+  --user-yellow-bg: #FEF08A;
+  --user-yellow-main: #EAB308;
+  --user-yellow-text: #854D0E;
+  --user-violet-bg: #DDD6FE;
+  --user-violet-main: #8B5CF6;
+  --user-violet-text: #5B21B6;
+  --user-rose-bg: #FECDD3;
+  --user-rose-main: #F43F5E;
+  --user-rose-text: #831843;
+  --user-cyan-bg: #A5F3FC;
+  --user-cyan-main: #06B6D4;
+  --user-cyan-text: #155E75;
 }
 
 .dark {
@@ -88,7 +146,64 @@
   --color-project-amber: var(--project-amber);
   --color-project-sky: var(--project-sky);
   --color-project-indigo: var(--project-indigo);
-  --color-project-stone: var(--project-stone);
+  --color-project-neutral: var(--project-neutral);
+
+  /* Neutral scale tokens */
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+  --color-neutral-950: var(--neutral-950);
+
+  /* User color scale for utilities */
+  --color-user-blue-bg: var(--user-blue-bg);
+  --color-user-blue-main: var(--user-blue-main);
+  --color-user-blue-text: var(--user-blue-text);
+  --color-user-red-bg: var(--user-red-bg);
+  --color-user-red-main: var(--user-red-main);
+  --color-user-red-text: var(--user-red-text);
+  --color-user-green-bg: var(--user-green-bg);
+  --color-user-green-main: var(--user-green-main);
+  --color-user-green-text: var(--user-green-text);
+  --color-user-purple-bg: var(--user-purple-bg);
+  --color-user-purple-main: var(--user-purple-main);
+  --color-user-purple-text: var(--user-purple-text);
+  --color-user-sky-bg: var(--user-sky-bg);
+  --color-user-sky-main: var(--user-sky-main);
+  --color-user-sky-text: var(--user-sky-text);
+  --color-user-teal-bg: var(--user-teal-bg);
+  --color-user-teal-main: var(--user-teal-main);
+  --color-user-teal-text: var(--user-teal-text);
+  --color-user-orange-bg: var(--user-orange-bg);
+  --color-user-orange-main: var(--user-orange-main);
+  --color-user-orange-text: var(--user-orange-text);
+  --color-user-indigo-bg: var(--user-indigo-bg);
+  --color-user-indigo-main: var(--user-indigo-main);
+  --color-user-indigo-text: var(--user-indigo-text);
+  --color-user-pink-bg: var(--user-pink-bg);
+  --color-user-pink-main: var(--user-pink-main);
+  --color-user-pink-text: var(--user-pink-text);
+  --color-user-emerald-bg: var(--user-emerald-bg);
+  --color-user-emerald-main: var(--user-emerald-main);
+  --color-user-emerald-text: var(--user-emerald-text);
+  --color-user-yellow-bg: var(--user-yellow-bg);
+  --color-user-user-yellow-main: var(--user-yellow-main);
+  --color-user-yellow-text: var(--user-yellow-text);
+  --color-user-violet-bg: var(--user-violet-bg);
+  --color-user-violet-main: var(--user-violet-main);
+  --color-user-violet-text: var(--user-violet-text);
+  --color-user-rose-bg: var(--user-rose-bg);
+  --color-user-rose-main: var(--user-rose-main);
+  --color-user-rose-text: var(--user-rose-text);
+  --color-user-cyan-bg: var(--user-cyan-bg);
+  --color-user-cyan-main: var(--user-cyan-main);
+  --color-user-cyan-text: var(--user-cyan-text);
 
   --color-red-50: oklch(0.96 0.02 20);
   --color-red-400: oklch(0.58 0.22 20);
