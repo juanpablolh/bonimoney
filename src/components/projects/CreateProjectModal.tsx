@@ -142,6 +142,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             title={step === 1 ? "Crea tu primer grupo" : "Agrega integrantes"}
             hideHeader={true}
             showCloseButton={false}
+            fixedHeight={true}
         >
             <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
                 {/* Header with X button - same style as ExpenseForm */}
