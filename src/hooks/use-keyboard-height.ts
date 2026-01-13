@@ -13,36 +13,45 @@ export function useKeyboardHeight() {
     typeof window !== 'undefined' ? window.innerHeight : 0
   );
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  // Store the initial window height to detect keyboard vs address bar changes
-  const initialHeightRef = useRef<number | null>(null);
+  // Store the maximum observed viewport height (without keyboard)
+  const maxHeightRef = useRef<number>(
+    typeof window !== 'undefined' ? window.innerHeight : 0
+  );
+  // Track previous keyboard state to detect close events
+  const wasKeyboardOpenRef = useRef(false);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
 
-    // Capture initial height on mount (before keyboard opens)
-    if (initialHeightRef.current === null) {
-      initialHeightRef.current = window.innerHeight;
-    }
-
     const handleResize = () => {
       const currentVVHeight = visualViewport.height;
-      const initialHeight = initialHeightRef.current || window.innerHeight;
-      // The difference between the initial height and visual viewport height
-      // equals the keyboard height
-      const height = initialHeight - currentVVHeight;
 
-      // Threshold of 150px to distinguish keyboard from address bar changes
-      const keyboardIsOpen = height > 150;
-
-      // When keyboard closes and viewport grew (Safari address bar changed),
-      // recapture the initial height to fix re-focus bug
-      if (!keyboardIsOpen && currentVVHeight > initialHeight) {
-        initialHeightRef.current = currentVVHeight;
+      // Always track the maximum height we've seen (full viewport without keyboard)
+      if (currentVVHeight > maxHeightRef.current) {
+        maxHeightRef.current = currentVVHeight;
       }
 
+      // Calculate potential keyboard height based on max observed height
+      const potentialKeyboardHeight = maxHeightRef.current - currentVVHeight;
+
+      // Threshold of 150px to distinguish keyboard from address bar changes
+      const keyboardIsOpen = potentialKeyboardHeight > 150;
+
+      // When keyboard closes, update max height to current (handles Safari address bar changes)
+      if (wasKeyboardOpenRef.current && !keyboardIsOpen) {
+        // Small delay to let viewport settle after keyboard animation
+        setTimeout(() => {
+          if (window.visualViewport) {
+            maxHeightRef.current = Math.max(maxHeightRef.current, window.visualViewport.height);
+          }
+        }, 100);
+      }
+
+      wasKeyboardOpenRef.current = keyboardIsOpen;
+
       setVvHeight(currentVVHeight);
-      setKeyboardHeight(keyboardIsOpen ? height : 0);
+      setKeyboardHeight(keyboardIsOpen ? potentialKeyboardHeight : 0);
       setIsKeyboardOpen(keyboardIsOpen);
     };
 

@@ -53,8 +53,11 @@ export function ResponsiveModal({
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const { keyboardHeight, vvHeight, isKeyboardOpen } = useKeyboardHeight()
 
-    // Dynamic drawer height: viewport height when keyboard is open, 96dvh when closed
+    // Dynamic drawer height: visual viewport height when keyboard is open, 96dvh when closed
+    // We use vvHeight (visual viewport) which shrinks when keyboard opens
     const drawerHeight = isKeyboardOpen ? `${vvHeight}px` : '96dvh'
+    // Calculate the offset from bottom when keyboard is open (for Safari)
+    const keyboardOffset = isKeyboardOpen ? keyboardHeight : 0
 
     if (isDesktop) {
         return (
