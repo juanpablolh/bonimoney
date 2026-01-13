@@ -9,8 +9,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@fontsource-variable/dm-sans": "^5.2.8",
     "@fontsource/abhaya-libre": "^5.0.0",
+    "@fontsource/dm-sans": "^5.2.8",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.5",

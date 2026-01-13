@@ -1,7 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/dm-sans";
+@import "@fontsource/dm-sans/index.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/600.css";
+@import "@fontsource/dm-sans/700.css";
+@import "@fontsource/dm-sans/800.css";
+@import "@fontsource/dm-sans/900.css";
 @import "@fontsource/abhaya-libre";
 
 @custom-variant dark (&:is(.dark *));
@@ -118,7 +124,7 @@
 }
 
 @theme inline {
-  --font-sans: 'DM Sans Variable', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
   --font-serif: 'Abhaya Libre', serif;
 
   --color-background: var(--background);
@@ -230,7 +236,7 @@
   h4,
   h5,
   h6 {
-    @apply font-serif;
+    /* @apply font-serif; */
   }
 
   /* Global UI Constraints */

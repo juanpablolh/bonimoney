@@ -274,12 +274,12 @@ export default function Dashboard({
             </p>
             {currencies.length > 0 ? (
               currencies.map(([curr, amount]) => (
-                <h3 key={curr} className="font-serif tracking-tighter text-white leading-none" style={{ fontSize: '32px' }}>
-                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide">{curr}</span>
+                <h3 key={curr} className="font-sans font-bold tracking-tight text-white leading-none" style={{ fontSize: '32px' }}>
+                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide uppercase">{curr}</span>
                 </h3>
               ))
             ) : (
-              <h3 className="font-serif text-4xl tracking-tighter text-white/40">$ 0</h3>
+              <h3 className="font-sans font-bold text-4xl tracking-tight text-white/40">$ 0</h3>
             )}
           </div>
 
@@ -434,24 +434,8 @@ export default function Dashboard({
                         <p className="text-sm text-neutral-400">
                           Por {(paidBy?.name || 'Alguien').split(' ')[0]}
                         </p>
-                        <p style={{
-                          color: 'var(--general-foreground, var(--neutral-950))',
-                          fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                          fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                          fontStyle: 'normal',
-                          fontWeight: 600,
-                          lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                          letterSpacing: '0.00438rem'
-                        }}>
-                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1" style={{
-                            color: 'var(--neutral-500, var(--neutral-500))',
-                            fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                            fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                            fontStyle: 'normal',
-                            fontWeight: 500,
-                            lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                            letterSpacing: '0.00438rem'
-                          }}>{expense.currency}</span>
+                        <p className="font-sans font-semibold text-neutral-950 text-sm">
+                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1 text-neutral-500 font-medium uppercase">{expense.currency}</span>
                         </p>
                       </div>
                     </div>
@@ -538,24 +522,8 @@ export default function Dashboard({
                             </span>
                           </div>
                         </div>
-                        <p style={{
-                          color: 'var(--general-foreground, var(--neutral-950))',
-                          fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                          fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                          fontStyle: 'normal',
-                          fontWeight: 600,
-                          lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                          letterSpacing: '0.00438rem'
-                        }}>
-                          $ {t.amount.toLocaleString('es-CL')} <span style={{
-                            color: 'var(--neutral-500, var(--neutral-500))',
-                            fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                            fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                            fontStyle: 'normal',
-                            fontWeight: 500,
-                            lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                            letterSpacing: '0.00438rem'
-                          }}>{t.currency}</span>
+                        <p className="font-sans font-semibold text-neutral-950 text-sm">
+                          $ {t.amount.toLocaleString('es-CL')} <span className="text-neutral-500 font-medium uppercase ml-1">{t.currency}</span>
                         </p>
                       </div>
 

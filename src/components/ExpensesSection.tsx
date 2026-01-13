@@ -163,30 +163,14 @@ export default function ExpensesSection({
                       );
                     })()}
                     <div>
-                      <p className="mb-1" style={{
-                        color: 'var(--neutral-900, var(--neutral-900))',
-                        fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                        fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                        fontStyle: 'normal',
-                        fontWeight: 500,
-                        lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                        letterSpacing: '0.00438rem'
-                      }}>
+                      <p className="mb-1 font-sans text-sm font-medium text-neutral-900 tracking-[0.00438rem]">
                         {expense.description.charAt(0).toUpperCase() + expense.description.slice(1)}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right space-y-1">
-                    <p style={{
-                      color: 'var(--general-foreground, var(--neutral-950))',
-                      fontFamily: 'var(--font-definitions-font-family-body, "DM Sans")',
-                      fontSize: 'var(--paragraph-small-font-size, 0.875rem)',
-                      fontStyle: 'normal',
-                      fontWeight: 600,
-                      lineHeight: 'var(--paragraph-small-line-height, 1.3125rem)',
-                      letterSpacing: '0.00438rem'
-                    }}>
+                    <p className="font-sans font-semibold text-neutral-950 text-sm">
                       {formatCurrency(expense.amount, expense.currency)}
                     </p>
                   </div>
