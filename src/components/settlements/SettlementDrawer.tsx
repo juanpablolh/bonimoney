@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { ArrowRight, X } from '@phosphor-icons/react';
 import { Transaction } from '@/types';
-import { ResponsiveModal } from '@/components/ui-custom/ResponsiveModal';
+import { ResponsiveModal, KeyboardViewportContext } from '@/components/ui-custom/ResponsiveModal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -25,6 +25,7 @@ export function SettlementDrawer({
     members,
     onConfirm
 }: SettlementDrawerProps) {
+    const { keyboardHeight } = useContext(KeyboardViewportContext);
     const [amount, setAmount] = useState(transaction.amount.toString());
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
@@ -234,7 +235,10 @@ export function SettlementDrawer({
                 </div>
 
                 {/* Fixed Footer */}
-                <footer className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200">
+                <footer
+                    className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200 transition-[padding] duration-200"
+                    style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 24}px` : 'max(1.5rem, env(safe-area-inset-bottom))' }}
+                >
                     <Button
                         onClick={handleConfirm}
                         disabled={loading || !!error || amountNum <= 0}

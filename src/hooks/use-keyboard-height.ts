@@ -9,7 +9,10 @@ import { useState, useEffect, useRef } from 'react';
  */
 export function useKeyboardHeight() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [vvHeight, setVvHeight] = useState<number | null>(null);
+  const [vvHeight, setVvHeight] = useState<number>(
+    typeof window !== 'undefined' ? window.innerHeight : 0
+  );
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   // Store the initial window height to detect keyboard vs address bar changes
   const initialHeightRef = useRef<number | null>(null);
 
@@ -24,13 +27,17 @@ export function useKeyboardHeight() {
 
     const handleResize = () => {
       const initialHeight = initialHeightRef.current || window.innerHeight;
+      const currentVVHeight = visualViewport.height;
       // The difference between the initial height and visual viewport height
       // equals the keyboard height
-      const height = initialHeight - visualViewport.height;
+      const height = initialHeight - currentVVHeight;
 
-      setVvHeight(visualViewport.height);
-      // Only set if positive (keyboard is up) and significant (> 150px to avoid false positives from address bar)
-      setKeyboardHeight(height > 150 ? height : 0);
+      // Threshold of 150px to distinguish keyboard from address bar changes
+      const keyboardIsOpen = height > 150;
+
+      setVvHeight(currentVVHeight);
+      setKeyboardHeight(keyboardIsOpen ? height : 0);
+      setIsKeyboardOpen(keyboardIsOpen);
     };
 
     // Initial check
@@ -45,7 +52,7 @@ export function useKeyboardHeight() {
     };
   }, []);
 
-  return { keyboardHeight, vvHeight: vvHeight || (typeof window !== 'undefined' ? window.innerHeight : 0) };
+  return { keyboardHeight, vvHeight, isKeyboardOpen };
 }
 
 /**

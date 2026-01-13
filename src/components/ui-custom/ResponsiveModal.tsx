@@ -21,9 +21,10 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 // Context to share keyboard and viewport info with children
-export const KeyboardViewportContext = React.createContext<{ keyboardHeight: number; vvHeight: number }>({
+export const KeyboardViewportContext = React.createContext<{ keyboardHeight: number; vvHeight: number; isKeyboardOpen: boolean }>({
     keyboardHeight: 0,
-    vvHeight: 0
+    vvHeight: 0,
+    isKeyboardOpen: false
 })
 
 interface ResponsiveModalProps {
@@ -50,7 +51,10 @@ export function ResponsiveModal({
     isNested = false,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
-    const { keyboardHeight, vvHeight } = useKeyboardHeight()
+    const { keyboardHeight, vvHeight, isKeyboardOpen } = useKeyboardHeight()
+
+    // Dynamic drawer height: viewport height when keyboard is open, 96dvh when closed
+    const drawerHeight = isKeyboardOpen ? `${vvHeight}px` : '96dvh'
 
     if (isDesktop) {
         return (
@@ -93,19 +97,24 @@ export function ResponsiveModal({
             open={open}
             onOpenChange={onOpenChange}
             shouldScaleBackground={false}
+            repositionInputs={false}
             direction={isNested ? "right" : "bottom"}
         >
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
                 hideHandle={hideHeader || isNested}
                 className={cn(
-                    isNested ? "h-full" : "h-[96svh]",
+                    isNested && "h-full",
                     hideHeader && "p-0 border-none",
                     "bg-neutral-50 flex flex-col"
                 )}
-                style={vvHeight > 0 && !isDesktop ? { height: `${vvHeight}px`, top: 0 } : {}}
+                style={isNested ? undefined : {
+                    height: drawerHeight,
+                    maxHeight: '100dvh',
+                    transition: 'height 0.15s ease-out'
+                }}
             >
-                <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight }}>
+                <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight, isKeyboardOpen }}>
                     {hideHeader ? (
                         children
                     ) : (

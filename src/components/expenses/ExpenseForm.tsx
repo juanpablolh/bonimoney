@@ -228,7 +228,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Fixed Footer - Outside scroll area */}
-            <footer className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200">
+            <footer
+                className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200"
+                style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+            >
                 <Button
                     onClick={() => onSave({
                         amount: parseFloat(amount),
