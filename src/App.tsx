@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useProject } from './contexts/ProjectContext';
 import { useMembers } from './contexts/MemberContext';
 import { useExpenses } from './contexts/ExpenseContext';
-import HomeLogin from './components/auth/HomeLogin';
+import { AuthLanding, AuthLogin, AuthRegister, AuthForgotPassword } from './components/auth/DesktopAuthLanding';
 
 import AuthModal from './components/auth/AuthModal';
-import { GlobalDashboard } from './components/dashboard/GlobalDashboard';
 import { Button } from './components/ui/button';
 import { adaptMembers, adaptExpenses } from './utils/dataAdapters';
 import { calculateBalancesByCurrency, optimizeTransactionsByCurrency } from './utils/calculations';
@@ -15,10 +14,21 @@ import { ResponsiveModal } from './components/ui-custom/ResponsiveModal';
 import { ExpenseForm } from './components/expenses/ExpenseForm';
 import { CreateProjectModal } from './components/projects/CreateProjectModal';
 import { Plus, House, SignOut, CaretLeft } from '@phosphor-icons/react';
-import Dashboard from './components/Dashboard';
-import MembersSection from './components/MembersSection';
-import ExpensesSection from './components/ExpensesSection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+// Lazy load heavy components
+const GlobalDashboard = lazy(() => import('./components/dashboard/GlobalDashboard').then(m => ({ default: m.GlobalDashboard })));
+const InviteAcceptPage = lazy(() => import('./components/invite/InviteAcceptPage'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const MembersSection = lazy(() => import('./components/MembersSection'));
+const ExpensesSection = lazy(() => import('./components/ExpensesSection'));
+
+// Loading fallback component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+  </div>
+);
 
 // Component for the home/groups view
 function HomeView() {
@@ -63,7 +73,7 @@ function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useAuth();
   const { projects, setCurrentProject, currentProject, deleteProject } = useProject();
-  const { members: contextMembers, addMember, updateMember, removeMember } = useMembers();
+  const { members: contextMembers, addMember, updateMember, removeMember, loadMembers } = useMembers();
   const { expenses: contextExpenses, addExpense, updateExpense, deleteExpense } = useExpenses();
   const navigate = useNavigate();
 
@@ -97,8 +107,8 @@ function ProjectView() {
         expense_type: 'settlement',
         metadata: notes ? { notes } : undefined
       });
-    } catch (error) {
-      console.error('Error settling up:', error);
+    } catch {
+      // Error handled by expense context
     }
   };
 
@@ -188,30 +198,18 @@ function ProjectView() {
                 navigate('/');
               }
             }}
-            onAddMember={async (name) => {
-              if (currentProject) {
-                await addMember({ name });
-              }
-            }}
           />
         )}
         {activeTab === 'members' && (
           <MembersSection
-            members={members}
+            members={contextMembers}
             onAddMember={async (name) => {
               await addMember({ name });
             }}
             onEditMember={async (id, name) => {
               await updateMember(id, { name });
             }}
-            onDeleteMember={async (id) => {
-              try {
-                await removeMember(id);
-              } catch (error) {
-                console.error("Failed to delete member:", error);
-                alert("No se puede eliminar este integrante porque tiene gastos o transacciones asociadas. Elimina sus gastos primero.");
-              }
-            }}
+            onDeleteMember={removeMember}
             onShareGroup={() => {
               // Share functionality
               if (navigator.share) {
@@ -219,7 +217,7 @@ function ProjectView() {
                   title: `Unirse a ${currentProject.name}`,
                   text: `Unete a mi grupo en BoniMoney para dividir gastos.`,
                   url: window.location.href,
-                }).catch(console.error);
+                }).catch(() => { /* User cancelled */ });
               } else {
                 navigator.clipboard.writeText(window.location.href);
                 alert('¡Enlace copiado al portapapeles!');
@@ -231,6 +229,7 @@ function ProjectView() {
                 navigate('/');
               }
             }}
+            onMembersRefresh={loadMembers}
           />
         )}
         {activeTab === 'expenses' && (
@@ -318,21 +317,41 @@ function App() {
     );
   }
 
-  // Not logged in view
+  // Not logged in - show auth routes
   if (!user) {
-    return <HomeLogin />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route path="/" element={<AuthLanding />} />
+          <Route path="/login" element={<AuthLogin />} />
+          <Route path="/register" element={<AuthRegister />} />
+          <Route path="/forgot-password" element={<AuthForgotPassword />} />
+          {/* Invitation accept page - accessible without login */}
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
+          {/* Redirect any other route to landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    );
   }
 
+  // Logged in - show app routes
   return (
-    <>
+    <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         <Route path="/" element={<HomeView />} />
         <Route path="/project/:projectId" element={<ProjectView />} />
+        {/* Invitation accept page - also accessible when logged in */}
+        <Route path="/invite/:token" element={<InviteAcceptPage />} />
+        {/* Redirect auth routes to home if already logged in */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
+        <Route path="/forgot-password" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Common Modals hoisted to top level */}
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-    </>
+    </Suspense>
   );
 }
 

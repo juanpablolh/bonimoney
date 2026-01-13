@@ -7,9 +7,16 @@ import {
   Check,
   X,
   UsersThree,
-  Info
+  Info,
+  EnvelopeSimple,
+  User,
+  PaperPlaneTilt,
+  Clock,
+  CheckCircle,
+  Spinner
 } from '@phosphor-icons/react';
 import { Member } from '../types';
+import { Member as ContextMember } from '../contexts/MemberContext';
 import { cn } from '@/lib/utils';
 import { capitalizeName } from '../utils/calculations';
 import { Button } from '@/components/ui/button';
@@ -24,19 +31,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { sendProjectInvitation, resendInvitation } from '@/services/invitations';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MembersSectionProps {
-  members: Member[];
+  members: (Member | ContextMember)[];
   onAddMember: (name: string) => void;
   onEditMember: (id: string, newName: string) => void;
-  onDeleteMember: (id: string) => void;
+  onDeleteMember: (id: string) => Promise<void>;
   onShareGroup: () => void;
   onDeleteProject: () => void;
+  onMembersRefresh?: () => void;
 }
 
 import { useProject } from '@/contexts/ProjectContext';
-
-// ... (existing imports)
 
 export default function MembersSection({
   members,
@@ -44,15 +52,27 @@ export default function MembersSection({
   onEditMember,
   onDeleteMember,
   onShareGroup,
-  onDeleteProject
+  onDeleteProject,
+  onMembersRefresh
 }: MembersSectionProps) {
-  const { currentProject } = useProject(); // Get current project context
+  const { currentProject } = useProject();
+  const { user } = useAuth();
   const [newMemberName, setNewMemberName] = useState('');
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteMemberDialogOpen, setDeleteMemberDialogOpen] = useState(false);
-  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<Member | ContextMember | null>(null);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Email invitation state
+  const [addMode, setAddMode] = useState<'name' | 'email'>('name');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Helper functions for colors (same as Dashboard)
   const getProjectBgColor = () => {
@@ -181,6 +201,65 @@ export default function MembersSection({
     setEditingName('');
   };
 
+  // Handle email invitation
+  const handleInviteByEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !currentProject || !user) return;
+
+    setInviting(true);
+    setInviteError(null);
+    setInviteSuccess(false);
+
+    const inviterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Un usuario';
+
+    const result = await sendProjectInvitation(
+      currentProject.id,
+      inviteEmail,
+      inviterName,
+      currentProject.name,
+      currentProject.icon
+    );
+
+    if (result.success) {
+      setInviteSuccess(true);
+      setInviteEmail('');
+      onMembersRefresh?.();
+      // Reset success message after 3 seconds
+      setTimeout(() => setInviteSuccess(false), 3000);
+    } else {
+      setInviteError(result.error || 'Error al enviar invitacion');
+    }
+
+    setInviting(false);
+  };
+
+  // Handle resend invitation
+  const handleResendInvitation = async (member: ContextMember) => {
+    if (!currentProject || !user || !member.email) return;
+
+    setResendingId(member.id);
+
+    const inviterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Un usuario';
+
+    const result = await resendInvitation(
+      member.id,
+      inviterName,
+      currentProject.name,
+      currentProject.icon
+    );
+
+    if (!result.success) {
+      setInviteError(result.error || 'Error al reenviar invitacion');
+    }
+
+    setResendingId(null);
+  };
+
+  // Helper to check if member has context fields (email, status)
+  const isContextMember = (m: Member | ContextMember): m is ContextMember => {
+    return 'status' in m;
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* 1. ADD MEMBER HERO CARD (Styled like Dashboard Project Card) */}
@@ -195,32 +274,119 @@ export default function MembersSection({
               Agranda el Círculo
             </h3>
             <p className="text-white/80 text-sm font-medium max-w-sm">
-              Suma a quienes compartirán gastos en este grupo.
+              Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="relative mt-4">
-            <div className="relative w-full">
-              <Input
-                placeholder="Nuevo integrante"
-                value={newMemberName}
-                onChange={(e) => setNewMemberName(e.target.value)}
-                required
-                className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
-              />
+          {/* Mode Toggle */}
+          {user && (
+            <div className="flex gap-2 mb-2">
               <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
-                style={{
-                  backgroundColor: getProjectButtonBgColor(),
-                  borderRadius: '0.5rem'
-                }}
+                type="button"
+                onClick={() => { setAddMode('name'); setInviteError(null); }}
+                className={cn(
+                  "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
+                  addMode === 'name'
+                    ? "bg-white/20 text-white"
+                    : "bg-transparent text-white/60 hover:text-white/80"
+                )}
               >
-                <UserPlus size={16} weight="bold" className="text-white" />
-                <span className="text-sm font-semibold text-white">Agregar</span>
+                <User size={16} weight="bold" />
+                Por nombre
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAddMode('email'); setInviteError(null); }}
+                className={cn(
+                  "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
+                  addMode === 'email'
+                    ? "bg-white/20 text-white"
+                    : "bg-transparent text-white/60 hover:text-white/80"
+                )}
+              >
+                <EnvelopeSimple size={16} weight="bold" />
+                Por email
               </button>
             </div>
-          </form>
+          )}
+
+          {/* Add by Name Form */}
+          {addMode === 'name' && (
+            <form onSubmit={handleSubmit} className="relative mt-2">
+              <div className="relative w-full">
+                <Input
+                  placeholder="Nuevo integrante"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  required
+                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
+                />
+                <button
+                  type="submit"
+                  disabled={!newMemberName.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
+                  style={{
+                    backgroundColor: getProjectButtonBgColor(),
+                    borderRadius: '0.75rem'
+                  }}
+                >
+                  <UserPlus size={16} weight="bold" className="text-white" />
+                  <span className="text-sm font-semibold text-white">Agregar</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Invite by Email Form */}
+          {addMode === 'email' && (
+            <form onSubmit={handleInviteByEmail} className="relative mt-2 space-y-3">
+              <div className="relative w-full">
+                <Input
+                  type="email"
+                  placeholder="email@ejemplo.com"
+                  value={inviteEmail}
+                  onChange={(e) => { setInviteEmail(e.target.value); setInviteError(null); }}
+                  required
+                  disabled={inviting}
+                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
+                />
+                <button
+                  type="submit"
+                  disabled={inviting || !inviteEmail.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
+                  style={{
+                    backgroundColor: getProjectButtonBgColor(),
+                    borderRadius: '0.75rem'
+                  }}
+                >
+                  {inviting ? (
+                    <Spinner size={16} className="text-white animate-spin" />
+                  ) : (
+                    <PaperPlaneTilt size={16} weight="bold" className="text-white" />
+                  )}
+                  <span className="text-sm font-semibold text-white">
+                    {inviting ? 'Enviando...' : 'Invitar'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Success message */}
+              {inviteSuccess && (
+                <div className="flex items-center gap-2 text-emerald-200 text-sm font-medium animate-in fade-in">
+                  <CheckCircle size={16} weight="fill" />
+                  <span>Invitacion enviada correctamente</span>
+                </div>
+              )}
+
+              {/* Error message */}
+              {inviteError && (
+                <div className="flex items-center gap-2 text-orange-200 text-sm font-medium animate-in fade-in">
+                  <Info size={16} weight="fill" />
+                  <span>{inviteError}</span>
+                </div>
+              )}
+            </form>
+          )}
         </div>
       </section>
 
@@ -230,7 +396,7 @@ export default function MembersSection({
           <h4 className="text-base font-normal tracking-[0.1px] text-neutral-400">Integrantes ({members.length})</h4>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 overflow-hidden">
           {members.length === 0 ? (
             <div className="py-20 bg-neutral-50 rounded-[2rem] border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center space-y-3">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
@@ -245,82 +411,119 @@ export default function MembersSection({
                 <div
                   key={member.id}
                   className={cn(
-                    "bg-white rounded-xl p-4 border transition-all flex items-center justify-between group shadow-sm",
+                    "bg-white rounded-xl p-4 border transition-all flex flex-col gap-3 group shadow-sm overflow-hidden",
                     isEditing ? "border-neutral-900 ring-4 ring-neutral-900/5 shadow-xl" : "border-neutral-100 hover:border-neutral-300 hover:shadow-md"
                   )}
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    {(() => {
-                      const colors = getMemberAvatarColor(member);
-                      return (
-                        <Avatar className="w-12 h-12 shadow-sm ring-1 ring-neutral-100">
-                          <AvatarImage src={member.avatar_url} />
-                          <AvatarFallback
-                            className="font-black text-lg"
-                            style={{ backgroundColor: colors.bg, color: colors.text }}
-                          >
-                            {(member.name || '?').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      );
-                    })()}
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
+                      {(() => {
+                        const colors = getMemberAvatarColor(member);
+                        return (
+                          <Avatar className="w-10 h-10 shadow-sm ring-1 ring-neutral-100">
+                            <AvatarImage src={'avatar_url' in member ? member.avatar_url : undefined} />
+                            <AvatarFallback
+                              className="font-semibold text-lg"
+                              style={{ backgroundColor: colors.bg, color: colors.text }}
+                            >
+                              {(member.name || '?').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        );
+                      })()}
 
-                    {isEditing ? (
-                      <Input
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit(member.id);
-                          if (e.key === 'Escape') handleCancelEdit();
-                        }}
-                        className="h-10 border-none bg-neutral-50 rounded-xl font-bold text-lg focus-visible:ring-0"
-                      />
-                    ) : (
-                      <div>
-                        <p className="text-base font-medium text-neutral-900 tracking-tight leading-none group-hover:translate-x-1 transition-transform">
-                          {member.name.charAt(0).toUpperCase() + member.name.slice(1)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    {isEditing ? (
-                      <>
-                        <button
-                          onClick={() => handleSaveEdit(member.id)}
-                          className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
-                        >
-                          <Check size={20} weight="bold" />
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="w-10 h-10 rounded-full bg-neutral-50 text-neutral-400 flex items-center justify-center hover:bg-neutral-100 transition-colors"
-                        >
-                          <X size={20} weight="bold" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleStartEdit(member)}
-                          className="w-12 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-neutral-900 hover:bg-neutral-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                        >
-                          <PencilSimple size={18} weight="bold" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setMemberToDelete(member);
-                            setDeleteMemberDialogOpen(true);
+                      {isEditing ? (
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit(member.id);
+                            if (e.key === 'Escape') handleCancelEdit();
                           }}
-                          className="w-12 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-12"
-                        >
-                          <Trash size={18} weight="bold" />
-                        </button>
-                      </>
-                    )}
+                          className="h-10 border-none bg-neutral-50 rounded-xl font-bold text-lg focus-visible:ring-0"
+                        />
+                      ) : (
+                        <div className="space-y-0 min-w-0 flex-1">
+                          <div className="flex flex-col gap-1 flex-nowrap justify-center items-start">
+                            <p className="text-base font-medium text-neutral-900 tracking-tight leading-none">
+                              {member.name.charAt(0).toUpperCase() + member.name.slice(1)}
+                            </p>
+                            {/* Status badges */}
+                            {isContextMember(member) && (
+                              <>
+                                {member.status === 'pending' && member.email && (
+                                  <span className="inline-flex items-center gap-1 text-[12px] bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-medium shrink-0">
+                                    <Clock size={10} weight="bold" />
+                                    Pendiente
+                                  </span>
+                                )}
+                                {member.status === 'accepted' && member.user_id && (
+                                  <span className="inline-flex items-center gap-1 text-[12px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full font-medium shrink-0">
+                                    <CheckCircle size={10} weight="fill" />
+                                    Verificado
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveEdit(member.id)}
+                            className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                          >
+                            <Check size={20} weight="bold" />
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="w-10 h-10 rounded-full bg-neutral-50 text-neutral-400 flex items-center justify-center hover:bg-neutral-100 transition-colors"
+                          >
+                            <X size={20} weight="bold" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleStartEdit(member)}
+                            className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-neutral-900 hover:bg-neutral-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                          >
+                            <PencilSimple size={18} weight="bold" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setMemberToDelete(member);
+                              setDeleteMemberDialogOpen(true);
+                            }}
+                            className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-10"
+                          >
+                            <Trash size={18} weight="bold" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Resend invitation button for pending members (Full Width at Bottom) */}
+                  {isContextMember(member) && member.status === 'pending' && member.email && !isEditing && (
+                    <button
+                      onClick={() => handleResendInvitation(member)}
+                      disabled={resendingId === member.id}
+                      className="w-full h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center gap-2 hover:bg-amber-100 transition-all text-sm font-semibold disabled:opacity-50"
+                    >
+                      {resendingId === member.id ? (
+                        <Spinner size={16} className="animate-spin" />
+                      ) : (
+                        <PaperPlaneTilt size={16} weight="bold" />
+                      )}
+                      Reenviar invitación
+                    </button>
+                  )}
                 </div>
               );
             })
@@ -399,14 +602,14 @@ export default function MembersSection({
 
       {/* DELETE MEMBER DIALOG */}
       <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
-        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
           <DialogHeader className="space-y-4">
             <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Eliminar integrante</DialogTitle>
             <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
-              ¿Estás seguro que quieres eliminar a <span className="text-neutral-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>? Si tiene gastos o deudas pendientes, no podrás eliminarlo hasta resolverlas.
+              ¿Estás seguro que quieres eliminar a <span className="text-neutral-900 font-bold">{capitalizeName(memberToDelete?.name)}</span>?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
             <Button
               variant="outline"
               size="lg"
@@ -419,14 +622,42 @@ export default function MembersSection({
               variant="destructive"
               size="lg"
               className="rounded-2xl w-full sm:w-auto"
-              onClick={() => {
+              onClick={async () => {
                 if (memberToDelete) {
-                  onDeleteMember(memberToDelete.id);
-                  setDeleteMemberDialogOpen(false);
+                  try {
+                    await onDeleteMember(memberToDelete.id);
+                    setDeleteMemberDialogOpen(false);
+                  } catch (error) {
+                    setDeleteMemberDialogOpen(false);
+                    setErrorMessage('No se puede eliminar este integrante porque tiene gastos o transacciones asociadas. Elimina sus gastos primero.');
+                    setErrorDialogOpen(true);
+                  }
                 }
               }}
             >
               Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ERROR DIALOG */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">No se puede eliminar</DialogTitle>
+            <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+            <Button
+              variant="default"
+              size="lg"
+              className="rounded-2xl w-full sm:w-auto"
+              onClick={() => setErrorDialogOpen(false)}
+            >
+              Entendido
             </Button>
           </DialogFooter>
         </DialogContent>

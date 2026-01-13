@@ -56,50 +56,28 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         try {
             setLoading(true);
 
-            // Query projects where user is a member
-            const { data: projectsData, error } = await supabase
-                .from('projects')
-                .select(`
-          *,
-          project_members!inner(user_id, status)
-        `)
-                .eq('project_members.user_id', user.id)
-                .eq('project_members.status', 'accepted')
-                .order('updated_at', { ascending: false });
+            // Use RPC function to get projects (bypasses RLS issues)
+            const { data: projectsData, error } = await supabase.rpc('get_my_projects');
 
             if (error) {
-                console.error('Error loading projects:', error);
-                throw error;
+                setProjects([]);
+                return;
             }
 
-            // Filter out archived projects and add member count
-            const userProjects = await Promise.all(
-                (projectsData || [])
-                    .filter(project => !project.archived)
-                    .map(async (project) => {
-                        // Get member count for this project
-                        const { count, error: countError } = await supabase
-                            .from('project_members')
-                            .select('*', { count: 'exact', head: true })
-                            .eq('project_id', project.id)
-                            .eq('status', 'accepted');
+            if (!projectsData || projectsData.length === 0) {
+                setProjects([]);
+                return;
+            }
 
-                        if (countError) {
-                            console.error('Error counting members:', countError);
-                        }
+            // Map RPC result to Project type
+            const userProjects = projectsData.map((p: any) => ({
+                ...p,
+                memberCount: p.member_count || 1
+            }));
 
-                        return {
-                            ...project,
-                            memberCount: count || 0
-                        };
-                    })
-            );
             setProjects(userProjects);
-
-            // Don't auto-select any project - let the URL routing handle it
-            // currentProject will be set by the ProjectView component based on URL params
-        } catch (error) {
-            console.error('Error loading projects:', error);
+        } catch {
+            setProjects([]);
         } finally {
             setLoading(false);
         }
@@ -171,7 +149,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
             return newProject;
         } catch (error) {
-            console.error('Error creating project:', error);
             throw error;
         }
     };
@@ -195,7 +172,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 setCurrentProject(prev => prev ? { ...prev, ...data } : null);
             }
         } catch (error) {
-            console.error('Error updating project:', error);
             throw error;
         }
     };
@@ -221,7 +197,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 localStorage.removeItem('currentProjectId');
             }
         } catch (error) {
-            console.error('Error deleting project:', error);
             throw error;
         }
     };
@@ -240,9 +215,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 .update({ last_accessed_at: new Date().toISOString() })
                 .eq('user_id', user.id)
                 .eq('project_id', currentProject.id)
-                .then(({ error }) => {
-                    if (error) console.error('Error updating last_accessed_at:', error);
-                });
+                .then(() => { /* Silent update */ });
         }
     }, [currentProject, user]);
 

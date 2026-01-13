@@ -379,7 +379,7 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
   const thousandsSeparator = '.';
 
   // Remove all non-digit characters except dots and commas
-  let cleaned = value.replace(/[^\d.,]/g, '');
+  const cleaned = value.replace(/[^\d.,]/g, '');
 
   if (decimalSeparator === ',') {
     // For currencies with comma as decimal separator (BRL, ARS, EUR)

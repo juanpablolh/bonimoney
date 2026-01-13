@@ -106,8 +106,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             // Cast to ExpenseWithSplits[]
             setExpenses((data || []) as ExpenseWithSplits[]);
-        } catch (error) {
-            console.error('Error loading expenses:', error);
+        } catch {
+            // Silent fail
         } finally {
             setLoading(false);
         }
@@ -207,7 +207,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             return newExpense;
         } catch (error) {
-            console.error('Error adding expense:', error);
             throw error;
         }
     };
@@ -287,7 +286,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
             // Reload expenses to get updated splits
             await loadExpenses();
         } catch (error) {
-            console.error('Error updating expense:', error);
             throw error;
         }
     };
@@ -309,7 +307,6 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             setExpenses(prev => prev.filter(e => e.id !== id));
         } catch (error) {
-            console.error('Error deleting expense:', error);
             throw error;
         }
     };

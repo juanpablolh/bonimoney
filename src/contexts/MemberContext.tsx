@@ -60,8 +60,8 @@ export function MemberProvider({ children }: { children: ReactNode }) {
             if (error) throw error;
 
             setMembers(data || []);
-        } catch (error) {
-            console.error('Error loading members:', error);
+        } catch {
+            // Silent fail
         } finally {
             setLoading(false);
         }
@@ -91,7 +91,6 @@ export function MemberProvider({ children }: { children: ReactNode }) {
             setMembers(prev => [...prev, newMember]);
             return newMember;
         } catch (error) {
-            console.error('Error adding member:', error);
             throw error;
         }
     };
@@ -110,7 +109,6 @@ export function MemberProvider({ children }: { children: ReactNode }) {
                 prev.map(m => (m.id === id ? { ...m, ...data } : m))
             );
         } catch (error) {
-            console.error('Error updating member:', error);
             throw error;
         }
     };
@@ -127,7 +125,6 @@ export function MemberProvider({ children }: { children: ReactNode }) {
 
             setMembers(prev => prev.filter(m => m.id !== id));
         } catch (error) {
-            console.error('Error removing member:', error);
             throw error;
         }
     };

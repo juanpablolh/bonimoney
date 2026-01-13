@@ -4,7 +4,6 @@ import {
   TrendDown,
   Clock,
   ArrowsLeftRight,
-  UserPlus,
   MagnifyingGlass,
   X,
   Sparkle,
@@ -41,7 +40,6 @@ interface DashboardProps {
   onNavigateToExpenses: () => void;
   onSettleUp: (fromId: string, toId: string, amount: number, notes?: string) => void;
   onDeleteProject: () => void;
-  onAddMember: (name: string) => Promise<void>;
 }
 
 export default function Dashboard({
@@ -52,30 +50,14 @@ export default function Dashboard({
   currentProject,
   onNavigateToMembers,
   onNavigateToExpenses,
-  onSettleUp: _onSettleUp,
-  onDeleteProject,
-  onAddMember
+  onSettleUp,
+  onDeleteProject
 }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [newMemberName, setNewMemberName] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [settlementDrawerOpen, setSettlementDrawerOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-
-  const handleAddMember = async () => {
-    if (!newMemberName.trim()) {
-      onNavigateToMembers();
-      return;
-    }
-
-    try {
-      await onAddMember(newMemberName.trim());
-      setNewMemberName('');
-    } catch (error) {
-      console.error('Error adding member:', error);
-    }
-  };
 
   // Helper to check if current user is the debtor in a transaction
   const isCurrentUserDebtor = (transaction: Transaction) => {
@@ -89,7 +71,7 @@ export default function Dashboard({
     if (!selectedTransaction) return;
 
     try {
-      await _onSettleUp(
+      await onSettleUp(
         selectedTransaction.from,
         selectedTransaction.to,
         amount,
@@ -97,8 +79,7 @@ export default function Dashboard({
       );
       setSettlementDrawerOpen(false);
       setSelectedTransaction(null);
-    } catch (error) {
-      console.error('Error settling debt:', error);
+    } catch {
       alert('Error al registrar el pago. Intenta nuevamente.');
     }
   };
@@ -115,9 +96,11 @@ export default function Dashboard({
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // Calculate total expenses by currency
+  // Calculate total expenses by currency (excluding settlements)
   const totalByCurrency = new Map<Currency, number>();
   expenses.forEach((expense) => {
+    // Skip settlement transactions from total
+    if ((expense as any).expense_type === 'settlement') return;
     const current = totalByCurrency.get(expense.currency) || 0;
     totalByCurrency.set(expense.currency, current + expense.amount);
   });
@@ -187,59 +170,6 @@ export default function Dashboard({
     return palette[0];
   };
 
-  // Darker version for buttons (950 equivalent)
-  const getProjectButtonBgColor = () => {
-    // Generated darker variants (approx L-0.08, C-0.02)
-    const palette = [
-      'oklch(0.22 0.06 145)', // 0. Emerald
-      'oklch(0.20 0.06 175)', // 1. Deep Teal
-      'oklch(0.19 0.07 200)', // 2. Sky
-      'oklch(0.17 0.08 225)', // 3. Sapphire
-      'oklch(0.17 0.08 250)', // 4. Indigo
-      'oklch(0.17 0.08 265)', // 5. Deep Violet
-      'oklch(0.19 0.09 290)', // 6. Purple
-      'oklch(0.22 0.10 310)', // 7. Orchid
-      'oklch(0.19 0.10 330)', // 8. Magenta
-      'oklch(0.19 0.08 350)', // 9. Rose
-      'oklch(0.22 0.10 15)',  // 10. Crimson
-      'oklch(0.24 0.08 35)',  // 11. Red Orange
-      'oklch(0.24 0.07 55)',  // 12. Burnt Orange
-      'oklch(0.24 0.06 80)',  // 13. Amber
-      'oklch(0.22 0.05 110)', // 14. Olive
-    ];
-
-    if (currentProject?.color) {
-      switch (currentProject.color) {
-        case 'project-emerald': return palette[0];
-        case 'project-teal': return palette[1];
-        case 'project-sky': return palette[2];
-        case 'project-sapphire': return palette[3];
-        case 'project-indigo': return palette[4];
-        case 'project-violet': return palette[5];
-        case 'project-purple': return palette[6];
-        case 'project-orchid': return palette[7];
-        case 'project-magenta': return palette[8];
-        case 'project-rose': return palette[9];
-        case 'project-crimson': return palette[10];
-        case 'project-orange': return palette[11];
-        case 'project-burntorange': return palette[12];
-        case 'project-amber': return palette[13];
-        case 'project-olive': return palette[14];
-      }
-    }
-
-    if (currentProject?.id) {
-      const id = currentProject.id;
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return palette[Math.abs(hash) % palette.length];
-    }
-
-    return palette[0];
-  };
-
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 pb-0 lg:pb-0 w-full min-w-0 lg:h-full">
 
@@ -281,36 +211,6 @@ export default function Dashboard({
             ) : (
               <h3 className="font-serif text-4xl tracking-tighter text-white/40">$ 0</h3>
             )}
-          </div>
-
-          {/* Input Section */}
-          <div className="mt-4 relative">
-            <Input
-              value={newMemberName}
-              onChange={(e) => setNewMemberName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddMember();
-                }
-              }}
-              placeholder="Nuevo integrante"
-              className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base"
-            />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddMember();
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm"
-              style={{
-                backgroundColor: getProjectButtonBgColor(),
-                borderRadius: '0.5rem'
-              }}
-            >
-              <UserPlus size={16} weight="bold" />
-              <span className="text-xs font-semibold">Integrante</span>
-            </button>
           </div>
 
           {/* Footer Row: Count + Avatars */}
@@ -434,8 +334,8 @@ export default function Dashboard({
                         <p className="text-sm text-neutral-400">
                           Por {(paidBy?.name || 'Alguien').split(' ')[0]}
                         </p>
-                        <p className="font-sans font-semibold text-neutral-950 text-sm">
-                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1 text-neutral-500 font-medium uppercase">{expense.currency}</span>
+                        <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
+                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1 text-neutral-500 font-medium uppercase text-xs">{expense.currency}</span>
                         </p>
                       </div>
                     </div>
@@ -482,19 +382,15 @@ export default function Dashboard({
                     <div key={idx} className="bg-neutral-50 rounded-2xl p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {(() => {
                               const fromMember = members.find(m => m.id === t.from);
                               const colors = fromMember ? getMemberAvatarColor(fromMember) : { bg: 'var(--neutral-200)', text: 'var(--neutral-900)' };
                               return (
-                                <Avatar className="w-8 h-8 border border-white">
-                                  <AvatarFallback
-                                    className="text-[10px] font-semibold"
-                                    style={{ backgroundColor: colors.bg, color: colors.text }}
-                                  >
-                                    {(t.fromName || '?').charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <div
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: colors.bg }}
+                                />
                               );
                             })()}
                             <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
@@ -502,19 +398,15 @@ export default function Dashboard({
                             </span>
                           </div>
                           <ArrowRight size={12} className="text-neutral-600" />
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {(() => {
                               const toMember = members.find(m => m.id === t.to);
                               const colors = toMember ? getMemberAvatarColor(toMember) : { bg: 'var(--neutral-200)', text: 'var(--neutral-900)' };
                               return (
-                                <Avatar className="w-8 h-8 border border-white">
-                                  <AvatarFallback
-                                    className="text-[10px] font-semibold"
-                                    style={{ backgroundColor: colors.bg, color: colors.text }}
-                                  >
-                                    {(t.toName || '?').charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <div
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: colors.bg }}
+                                />
                               );
                             })()}
                             <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
@@ -522,8 +414,8 @@ export default function Dashboard({
                             </span>
                           </div>
                         </div>
-                        <p className="font-sans font-semibold text-neutral-950 text-sm">
-                          $ {t.amount.toLocaleString('es-CL')} <span className="text-neutral-500 font-medium uppercase ml-1">{t.currency}</span>
+                        <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
+                          $ {t.amount.toLocaleString('es-CL')} <span className="text-neutral-500 font-medium uppercase ml-1 text-xs">{t.currency}</span>
                         </p>
                       </div>
 

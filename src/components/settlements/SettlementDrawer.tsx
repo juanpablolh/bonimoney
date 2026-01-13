@@ -67,8 +67,7 @@ export function SettlementDrawer({
             setAmount(transaction.amount.toString());
             setNotes('');
             setError('');
-        } catch (err) {
-            console.error('Error confirming settlement:', err);
+        } catch {
             setError('Error al registrar el pago. Intenta nuevamente.');
         } finally {
             setLoading(false);

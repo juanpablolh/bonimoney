@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
+import { processPendingInvitations } from '../services/invitations';
 
 interface AuthContextType {
     user: User | null;
@@ -8,6 +9,8 @@ interface AuthContextType {
     loading: boolean;
     signInWithEmail: (email: string, name?: string) => Promise<{ error: AuthError | null }>;
     signInWithPassword: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+    signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+    resetPassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -59,12 +62,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                             if (!error && data.user) {
                                 setUser(data.user); // Update local state immediately
                             }
-                        } catch (e) {
-                            console.error("Failed to update user metadata", e);
+                        } catch {
+                            // Silent fail - non-critical metadata update
                         }
                     }
                     localStorage.removeItem('temp_login_name');
                 }
+
+                // Process any pending invitations for this user (non-blocking)
+                processPendingInvitations()
+                    .then(acceptedCount => {
+                        if (acceptedCount > 0) {
+                            window.dispatchEvent(new CustomEvent('invitations-accepted', {
+                                detail: { count: acceptedCount }
+                            }));
+                        }
+                    })
+                    .catch(() => { /* Silent fail - non-blocking operation */ });
             }
         });
 
@@ -90,12 +104,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return { error };
     };
 
+    const signUp = async (email: string, password: string, name: string) => {
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: window.location.origin,
+                data: { full_name: name },
+            },
+        });
+        return { error };
+    };
+
+    const resetPassword = async (newPassword: string) => {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        return { error };
+    };
+
     const signOut = async () => {
         localStorage.removeItem('currentProjectId');
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('Error signing out:', error);
-        }
+        await supabase.auth.signOut();
         // Force clear local state in case onAuthStateChange doesn't fire
         setUser(null);
         setSession(null);
@@ -107,6 +135,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         loading,
         signInWithEmail,
         signInWithPassword,
+        signUp,
+        resetPassword,
         signOut,
     };
 

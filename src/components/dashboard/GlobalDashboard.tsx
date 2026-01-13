@@ -111,8 +111,9 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                 {/* Personalized Greeting */}
                 <section className="mb-12">
                     <motion.h1
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
                         className="font-serif text-6xl md:text-7xl text-neutral-900 tracking-tighter leading-[0.9]"
                     >
                         Hola<br />
@@ -121,9 +122,14 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                 </section>
 
                 <div className="space-y-6 rounded-b-[20px] h-fit overflow-visible md:h-auto md:overflow-visible pt-12">
-                    <h3 className="font-serif text-2xl text-neutral-900 tracking-tight">
+                    <motion.h3
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+                        className="font-serif text-2xl text-neutral-900 tracking-tight"
+                    >
                         Tus grupos
-                    </h3>
+                    </motion.h3>
 
                     {!projects.length ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center space-y-8 bg-neutral-100 rounded-[3rem]">
