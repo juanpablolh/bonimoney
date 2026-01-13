@@ -78,7 +78,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const currentMember = members.find(m => m.id === paidBy);
 
     return (
-        <div className="flex flex-col h-[80svh] bg-neutral-50 md:h-full md:max-h-[85svh] rounded-t-3xl overflow-hidden">
+        <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
             {/* Header Wrapper to avoid corner slivers */}
             <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                 {/* Drawer Handle */}
@@ -97,7 +97,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto bg-neutral-50 relative">
+            <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar">
                 <div className="px-6 py-6 space-y-6">
                     {/* AMOUNT */}
                     <section className="space-y-3">

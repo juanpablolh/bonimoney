@@ -81,7 +81,7 @@ export function SettlementDrawer({
             title=""
             hideHeader={true}
         >
-            <div className="flex flex-col h-[80svh] bg-neutral-50 md:h-full md:max-h-[85svh] rounded-t-3xl overflow-hidden">
+            <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
                 {/* Header Wrapper - Dark header like ExpenseForm */}
                 <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                     {/* Drawer Handle */}
@@ -100,7 +100,7 @@ export function SettlementDrawer({
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto bg-neutral-50 relative">
+                <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar">
                     <div className="px-6 py-6 space-y-6">
                         {/* Info visual - De/A */}
                         <section className="bg-neutral-100 rounded-xl p-4 border border-neutral-200">

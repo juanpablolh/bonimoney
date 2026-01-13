@@ -32,6 +32,7 @@ interface ResponsiveModalProps {
     onOpenChange?: (open: boolean) => void
     hideHeader?: boolean
     showCloseButton?: boolean
+    isNested?: boolean
 }
 
 export function ResponsiveModal({
@@ -43,6 +44,7 @@ export function ResponsiveModal({
     onOpenChange,
     hideHeader = false,
     showCloseButton = true,
+    isNested = false,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const keyboardHeight = useKeyboardHeight()
@@ -51,7 +53,11 @@ export function ResponsiveModal({
         return (
             <Dialog open={open} onOpenChange={onOpenChange}>
                 {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-                <DialogContent showCloseButton={showCloseButton} className={cn("sm:max-w-[425px]", hideHeader && "p-0 gap-0")}>
+                <DialogContent
+                    showCloseButton={showCloseButton}
+                    className={cn("sm:max-w-[425px]", hideHeader && "p-0 gap-0")}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                >
                     {hideHeader ? (
                         <>
                             <VisuallyHidden>
@@ -81,11 +87,20 @@ export function ResponsiveModal({
     }
 
     return (
-        <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
+        <Drawer
+            open={open}
+            onOpenChange={onOpenChange}
+            shouldScaleBackground={false}
+            direction={isNested ? "right" : "bottom"}
+        >
             {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
             <DrawerContent
-                hideHandle={hideHeader}
-                className={cn("max-h-[85svh]", hideHeader && "p-0 border-none")}
+                hideHandle={hideHeader || isNested}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className={cn(
+                    isNested ? "h-full" : "h-[96svh]",
+                    hideHeader && "p-0 border-none"
+                )}
             >
                 <KeyboardHeightContext.Provider value={keyboardHeight}>
                     {hideHeader ? (
@@ -108,7 +123,7 @@ export function ResponsiveModal({
                                     </VisuallyHidden>
                                 )}
                             </DrawerHeader>
-                            <div className="px-0 pb-0 flex-1 overflow-hidden h-full">
+                            <div className="px-0 pb-0 flex-1 overflow-y-auto no-scrollbar">
                                 {children}
                             </div>
                         </div>
