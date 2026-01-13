@@ -5,9 +5,7 @@ import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
 import { Plus, Trash, X, CaretDown, Check } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
-import i18nEs from '@emoji-mart/data/i18n/es.json';
+import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -347,28 +345,19 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                         {/* Emoji Picker Content */}
                         <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
                             <style>{`
-                                em-emoji-picker {
-                                    width: 100%;
-                                    height: 100%;
-                                    --font-size: 16px;
-                                }
+                                .epr-category-nav { display: none !important; }
+                                .epr-search-container input { font-size: 16px !important; }
                             `}</style>
-                            <Picker
-                                data={data}
-                                onEmojiSelect={(emoji: any) => {
-                                    setIcon(emoji.native);
+                            <EmojiPicker
+                                onEmojiClick={(emojiData) => {
+                                    setIcon(emojiData.emoji);
                                     setShowPicker(false);
                                 }}
-                                locale="es"
-                                i18n={i18nEs}
-                                theme="light"
-                                previewPosition="none"
-                                skinTonePosition="none"
-                                searchPosition="sticky"
-                                navPosition="bottom"
-                                perLine={8}
-                                emojiSize={32}
-                                emojiButtonSize={40}
+                                lazyLoadEmojis={true}
+                                skinTonesDisabled={true}
+                                searchPlaceholder="Buscar emoji..."
+                                width="100%"
+                                height="100%"
                             />
                         </div>
                     </div>
