@@ -236,7 +236,7 @@
   h4,
   h5,
   h6 {
-    /* @apply font-serif; */
+    @apply font-serif;
   }
 
   /* Global UI Constraints */
