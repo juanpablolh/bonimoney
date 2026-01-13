@@ -38,16 +38,18 @@ function HomeView() {
         onDeleteProject={deleteProject}
         userName={user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuario"}
       />
-      <div className="fixed bottom-6 right-6 z-[60]">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => signOut()}
-          className="rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-lg border-neutral-100 hover:bg-neutral-50 transition-all active:scale-90"
-        >
-          <SignOut size={20} weight="bold" />
-        </Button>
-      </div>
+      {!createProjectModalOpen && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => signOut()}
+            className="rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-lg border-neutral-100 hover:bg-neutral-50 transition-all active:scale-90"
+          >
+            <SignOut size={20} weight="bold" />
+          </Button>
+        </div>
+      )}
       <CreateProjectModal
         open={createProjectModalOpen}
         onOpenChange={setCreateProjectModalOpen}

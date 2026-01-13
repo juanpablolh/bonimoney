@@ -143,7 +143,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             hideHeader={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col h-[85svh] max-h-[85svh] bg-neutral-50 md:h-full rounded-t-3xl overflow-hidden">
+            <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
                 {/* Header with X button - same style as ExpenseForm */}
                 <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                     {/* Drawer Handle */}
@@ -162,7 +162,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 </div>
 
                 {/* Scrollable Content Area */}
-                <div className="flex-1 overflow-y-auto bg-neutral-50 relative">
+                <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar">
                     <div className="px-6 py-6 space-y-6">
                         {step === 1 ? (
                             <>
