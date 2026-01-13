@@ -325,6 +325,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                     title="Elige un emoji"
                     hideHeader={true}
                     isNested={false}
+                    fixedHeight={true}
                 >
                     <div className="flex flex-col h-full bg-neutral-50">
                         {/* Header */}

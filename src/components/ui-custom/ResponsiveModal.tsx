@@ -37,6 +37,7 @@ interface ResponsiveModalProps {
     hideHeader?: boolean
     showCloseButton?: boolean
     isNested?: boolean
+    fixedHeight?: boolean
 }
 
 export function ResponsiveModal({
@@ -49,12 +50,13 @@ export function ResponsiveModal({
     hideHeader = false,
     showCloseButton = true,
     isNested = false,
+    fixedHeight = false,
 }: ResponsiveModalProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const { keyboardHeight, vvHeight, isKeyboardOpen } = useKeyboardHeight()
 
-    // Dynamic drawer height: viewport height when keyboard is open, 96dvh when closed
-    const drawerHeight = isKeyboardOpen ? `${vvHeight}px` : '96dvh'
+    // Dynamic drawer height: fixed at 96dvh if fixedHeight is true, otherwise viewport height when keyboard is open
+    const drawerHeight = fixedHeight ? '96dvh' : (isKeyboardOpen ? `${vvHeight}px` : '96dvh')
 
     if (isDesktop) {
         return (
