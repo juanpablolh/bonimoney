@@ -7,7 +7,7 @@ import { Plus, Trash, X, CaretDown, Check } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import '@emoji-mart/data/i18n/es.json';
+import i18nEs from '@emoji-mart/data/i18n/es.json';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -360,6 +360,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     setShowPicker(false);
                                 }}
                                 locale="es"
+                                i18n={i18nEs}
                                 theme="light"
                                 previewPosition="none"
                                 skinTonePosition="none"
