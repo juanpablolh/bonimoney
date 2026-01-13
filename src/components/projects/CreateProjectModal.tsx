@@ -5,7 +5,8 @@ import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
 import { Plus, Trash, X, CaretDown, Check } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-import EmojiPicker from 'emoji-picker-react';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -318,28 +319,55 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                     </div>
                 </footer>
 
-                {/* Emoji Picker Overlay */}
-                {showPicker && (
-                    <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm animate-in fade-in duration-200 rounded-[inherit]">
-                        <div className="absolute inset-0" onClick={() => setShowPicker(false)}></div>
-                        <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
+                {/* Emoji Picker - Nested Drawer on mobile */}
+                <ResponsiveModal
+                    open={showPicker}
+                    onOpenChange={setShowPicker}
+                    title="Elige un emoji"
+                    hideHeader={true}
+                    isNested={false}
+                >
+                    <div className="flex flex-col h-full bg-neutral-50">
+                        {/* Header */}
+                        <div className="bg-neutral-50 shrink-0 pt-4 border-b border-neutral-100">
+                            <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200 mb-4 md:hidden" />
+                            <header className="px-6 pb-5 flex items-center justify-between">
+                                <h2 className="font-serif text-2xl font-medium text-neutral-900 tracking-[-1px] leading-tight">
+                                    Elige un emoji
+                                </h2>
+                                <button
+                                    onClick={() => setShowPicker(false)}
+                                    className="p-1 min-w-12 hover:bg-neutral-200 rounded-full transition-colors text-neutral-900 flex flex-col justify-center items-center"
+                                >
+                                    <X size={24} weight="regular" />
+                                </button>
+                            </header>
+                        </div>
+                        {/* Emoji Picker Content */}
+                        <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
                             <style>{`
-                                    .epr-category-nav { display: none !important; }
-                                `}</style>
-                            <EmojiPicker
-                                onEmojiClick={(emojiData) => {
-                                    setIcon(emojiData.emoji);
+                                em-emoji-picker {
+                                    width: 100%;
+                                    height: 100%;
+                                    --font-size: 16px;
+                                }
+                            `}</style>
+                            <Picker
+                                data={data}
+                                onEmojiSelect={(emoji: any) => {
+                                    setIcon(emoji.native);
                                     setShowPicker(false);
                                 }}
-                                lazyLoadEmojis={true}
-                                skinTonesDisabled={true}
-                                searchPlaceholder="Buscar emoji..."
-                                width={350}
-                                height={450}
+                                locale="es"
+                                theme="light"
+                                previewPosition="none"
+                                skinTonePosition="none"
+                                searchPosition="sticky"
+                                navPosition="bottom"
                             />
                         </div>
                     </div>
-                )}
+                </ResponsiveModal>
 
                 {/* Currency Picker Overlay */}
                 {showCurrencyPicker && (

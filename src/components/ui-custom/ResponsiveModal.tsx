@@ -53,11 +53,8 @@ export function ResponsiveModal({
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const { keyboardHeight, vvHeight, isKeyboardOpen } = useKeyboardHeight()
 
-    // Dynamic drawer height: visual viewport height when keyboard is open, 96dvh when closed
-    // We use vvHeight (visual viewport) which shrinks when keyboard opens
+    // Dynamic drawer height: viewport height when keyboard is open, 96dvh when closed
     const drawerHeight = isKeyboardOpen ? `${vvHeight}px` : '96dvh'
-    // Calculate the offset from bottom when keyboard is open (for Safari)
-    const keyboardOffset = isKeyboardOpen ? keyboardHeight : 0
 
     if (isDesktop) {
         return (
@@ -109,20 +106,19 @@ export function ResponsiveModal({
                 className={cn(
                     isNested && "h-full",
                     hideHeader && "p-0 border-none",
-                    "bg-neutral-50 flex flex-col rounded-t-3xl"
+                    "bg-neutral-50 flex flex-col !rounded-t-3xl overflow-hidden"
                 )}
                 style={isNested ? undefined : {
                     height: drawerHeight,
                     maxHeight: '100dvh',
-                    bottom: keyboardOffset > 0 ? `${keyboardOffset}px` : undefined,
-                    transition: 'height 0.15s ease-out, bottom 0.15s ease-out'
+                    transition: 'height 0.15s ease-out'
                 }}
             >
                 <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight, isKeyboardOpen }}>
                     {hideHeader ? (
                         children
                     ) : (
-                        <div className="flex flex-col h-full bg-neutral-50 overflow-hidden rounded-t-3xl">
+                        <div className="flex flex-col h-full bg-neutral-50 overflow-hidden">
                             {!isNested && (
                                 <DrawerHeader className="text-left py-4 shrink-0 border-b border-neutral-100">
                                     <DrawerTitle className="font-serif text-2xl">{title}</DrawerTitle>

@@ -13,53 +13,30 @@ export function useKeyboardHeight() {
     typeof window !== 'undefined' ? window.innerHeight : 0
   );
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  // Store the baseline viewport height (when no keyboard is open)
-  const baselineHeightRef = useRef<number>(
-    typeof window !== 'undefined' ? window.innerHeight : 0
-  );
-  // Track previous keyboard state to detect close events
-  const wasKeyboardOpenRef = useRef(false);
-  // Debounce timer for baseline updates
-  const baselineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Store the initial window height to detect keyboard vs address bar changes
+  const initialHeightRef = useRef<number | null>(null);
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) return;
 
+    // Capture initial height on mount (before keyboard opens)
+    if (initialHeightRef.current === null) {
+      initialHeightRef.current = window.innerHeight;
+    }
+
     const handleResize = () => {
       const currentVVHeight = visualViewport.height;
-      const baseline = baselineHeightRef.current;
-
-      // Calculate potential keyboard height
-      const potentialKeyboardHeight = baseline - currentVVHeight;
+      const initialHeight = initialHeightRef.current || window.innerHeight;
+      // The difference between the initial height and visual viewport height
+      // equals the keyboard height
+      const height = initialHeight - currentVVHeight;
 
       // Threshold of 150px to distinguish keyboard from address bar changes
-      // Keyboard is open if viewport shrunk significantly
-      const keyboardIsOpen = potentialKeyboardHeight > 150;
-
-      // When keyboard closes, recapture baseline after animation settles
-      if (wasKeyboardOpenRef.current && !keyboardIsOpen) {
-        // Clear any pending timer
-        if (baselineTimerRef.current) {
-          clearTimeout(baselineTimerRef.current);
-        }
-        // Wait for keyboard animation to complete, then capture new baseline
-        baselineTimerRef.current = setTimeout(() => {
-          if (window.visualViewport) {
-            baselineHeightRef.current = window.visualViewport.height;
-          }
-        }, 300);
-      }
-
-      // If viewport is larger than baseline (Safari address bar hidden), update baseline
-      if (currentVVHeight > baseline && !keyboardIsOpen) {
-        baselineHeightRef.current = currentVVHeight;
-      }
-
-      wasKeyboardOpenRef.current = keyboardIsOpen;
+      const keyboardIsOpen = height > 150;
 
       setVvHeight(currentVVHeight);
-      setKeyboardHeight(keyboardIsOpen ? potentialKeyboardHeight : 0);
+      setKeyboardHeight(keyboardIsOpen ? height : 0);
       setIsKeyboardOpen(keyboardIsOpen);
     };
 
@@ -72,9 +49,6 @@ export function useKeyboardHeight() {
     return () => {
       visualViewport.removeEventListener('resize', handleResize);
       visualViewport.removeEventListener('scroll', handleResize);
-      if (baselineTimerRef.current) {
-        clearTimeout(baselineTimerRef.current);
-      }
     };
   }, []);
 
