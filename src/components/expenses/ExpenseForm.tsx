@@ -130,7 +130,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 value={displayAmount}
                                 onChange={handleAmountChange}
                                 onWheel={(e) => e.currentTarget.blur()}
-                                autoFocus
                                 className="border-none bg-transparent h-auto p-0 focus-visible:ring-0 placeholder:text-neutral-200 w-full"
                                 style={{
                                     color: 'var(--neutral-600)',
