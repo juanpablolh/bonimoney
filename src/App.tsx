@@ -264,6 +264,7 @@ function ProjectView() {
         title={editingExpense ? "Editar Gasto" : "Nuevo Gasto"}
         hideHeader={true}
         showCloseButton={false}
+        fixedHeight={true}
       >
         <ExpenseForm
           members={members}
