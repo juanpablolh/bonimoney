@@ -6,9 +6,11 @@ import { cn } from '@/lib/utils';
 import {
     Check,
     X,
-    CaretDown
+    CaretDown,
+    Spinner
 } from '@phosphor-icons/react';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface Member {
     id: string;
@@ -18,7 +20,7 @@ interface Member {
 
 interface ExpenseFormProps {
     members: Member[];
-    onSave: (data: any) => void;
+    onSave: (data: any) => Promise<void>;
     onClose?: () => void;
     initialData?: any;
 }
@@ -36,6 +38,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     const [isSelectingPayer, setIsSelectingPayer] = useState(false);
     const [splitWith, setSplitWith] = useState<string[]>(initialData?.split_details?.map((s: any) => s.member_id) || members.map(m => m.id));
     const [notes] = useState(initialData?.notes || '');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
     const [date] = useState<Date | undefined>(
         initialData?.date ? new Date(initialData.date) : new Date()
@@ -50,6 +53,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
 
     const amountRef = useRef<HTMLInputElement>(null);
+
+    // Sync splitWith when members change (e.g., new member added)
+    useEffect(() => {
+        // Only sync if not editing (initialData) - for new expenses, include all members
+        if (!initialData) {
+            const memberIds = members.map(m => m.id);
+            setSplitWith(memberIds);
+        }
+    }, [members, initialData]);
 
     // Auto-focus amount on mount
     useEffect(() => {
@@ -75,6 +87,35 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         );
     };
 
+    const handleSave = async () => {
+        setStatus('loading');
+        try {
+            // Dismiss keyboard
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+
+            await onSave({
+                amount: parseFloat(amount),
+                description,
+                paid_by: paidBy,
+                split_details: splitWith.map(id => ({ member_id: id })),
+                notes,
+                date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            });
+
+            setStatus('success');
+
+            // Close after animation
+            setTimeout(() => {
+                onClose?.();
+            }, 1500);
+        } catch (error) {
+            console.error(error);
+            setStatus('idle');
+        }
+    };
+
     const currentMember = members.find(m => m.id === paidBy);
     const isAllSelected = members.length > 0 && splitWith.length === members.length;
 
@@ -86,7 +127,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200 mb-4" />
                 <header className="px-6 pb-5 flex items-center justify-between">
                     <h2 className="font-serif text-2xl font-medium text-neutral-900 tracking-[-1px] leading-tight">
-                        Nuevo gasto
+                        {initialData ? 'Editar gasto' : 'Nuevo gasto'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -141,6 +182,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                     lineHeight: '100%',
                                     letterSpacing: '0.0125rem'
                                 }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        e.currentTarget.blur();
+                                    }
+                                }}
+                                enterKeyHint="done"
                             />
                         </div>
                     </section>
@@ -239,23 +287,51 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
             >
                 <Button
-                    onClick={() => onSave({
-                        amount: parseFloat(amount),
-                        description,
-                        paid_by: paidBy,
-                        split_details: splitWith.map(id => ({ member_id: id })),
-                        notes,
-                        date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-                    })}
-                    disabled={!progress.amountFilled}
+                    onClick={handleSave}
+                    disabled={!progress.amountFilled || status === 'loading' || status === 'success'}
                     className={cn(
-                        "w-full h-14 rounded-xl text-base font-semibold transition-colors",
-                        progress.amountFilled
-                            ? "bg-neutral-900 text-white hover:bg-neutral-800"
-                            : "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                        "w-full h-14 rounded-xl text-base font-semibold transition-all duration-300 relative overflow-hidden",
+                        status === 'success'
+                            ? "bg-green-600 hover:bg-green-700 w-full"
+                            : (progress.amountFilled
+                                ? "bg-neutral-900 text-white hover:bg-neutral-800"
+                                : "bg-neutral-200 text-neutral-400 cursor-not-allowed")
                     )}
                 >
-                    Guardar gasto
+                    <AnimatePresence mode="wait">
+                        {status === 'success' ? (
+                            <motion.div
+                                key="success"
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.5, opacity: 0 }}
+                                className="flex items-center gap-2"
+                            >
+                                <Check size={20} weight="bold" />
+                                <span>¡Guardado!</span>
+                            </motion.div>
+                        ) : status === 'loading' ? (
+                            <motion.div
+                                key="loading"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="flex items-center gap-2"
+                            >
+                                <Spinner size={20} className="animate-spin" />
+                                <span>Guardando...</span>
+                            </motion.div>
+                        ) : (
+                            <motion.span
+                                key="idle"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                {initialData ? 'Actualizar gasto' : 'Guardar gasto'}
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
                 </Button>
             </footer>
 

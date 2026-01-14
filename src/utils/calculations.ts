@@ -90,7 +90,7 @@ export const calculateBalancesByCurrency = (
 
     // SETTLEMENT HANDLING: Treat settlements as counter-expenses
     // Settlements directly adjust balances without affecting totalPaid/totalOwed
-    if ((expense as any).expense_type === 'settlement') {
+    if ((expense as any).expense_type === 'settlement' || (expense as any).expense_type === 'payment') {
       // Who pays: their balance increases (debt reduced)
       const paidByBalance = balances.get(expense.paidBy);
       if (paidByBalance) {
@@ -140,7 +140,7 @@ export const calculateBalancesByCurrency = (
   const result = new Map<Currency, Balance[]>();
   balancesByCurrency.forEach((balances, currency) => {
     balances.forEach((balance) => {
-      balance.balance = balance.totalPaid - balance.totalOwed;
+      balance.balance += balance.totalPaid - balance.totalOwed;
     });
     // Only include currencies that have non-zero balances
     const nonZeroBalances = Array.from(balances.values()).filter(

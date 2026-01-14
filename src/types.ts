@@ -40,6 +40,8 @@ export interface Expense {
   icon?: ExpenseIcon;
   lastModified?: number; // timestamp
   splits?: Split[]; // Optional splits for advanced calculation
+  expense_type?: 'expense' | 'settlement' | 'payment';
+  created_at?: string;
 }
 
 export interface Balance {

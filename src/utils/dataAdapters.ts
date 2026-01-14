@@ -38,7 +38,9 @@ export function adaptExpense(contextExpense: ExpenseWithSplits): OldExpense {
         splits: contextExpense.splits.map(s => ({
             memberId: s.member_id,
             amountOwed: s.amount_owed
-        }))
+        })),
+        expense_type: contextExpense.expense_type,
+        created_at: contextExpense.created_at
     };
 }
 

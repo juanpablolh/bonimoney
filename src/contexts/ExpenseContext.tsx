@@ -286,13 +286,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const deleteExpense = async (id: string) => {
         if (!user) throw new Error('User not authenticated');
 
-        const { error } = await supabase
-            .from('expenses')
-            .update({
-                deleted_at: new Date().toISOString(),
-                deleted_by: user.id,
-            })
-            .eq('id', id);
+        const { error } = await supabase.rpc('delete_expense', {
+            expense_id: id
+        });
 
         if (error) throw error;
 

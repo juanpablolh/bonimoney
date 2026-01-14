@@ -266,30 +266,32 @@ export default function ExpensesSection({
 
       {/* DELETE CONFIRMATION DIALOG */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-3xl overflow-hidden">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-xl font-serif font-normal text-neutral-900 text-left">Eliminar gasto</DialogTitle>
-            <DialogDescription className="text-neutral-500 font-medium text-left">
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
+          <DialogHeader className="space-y-4">
+            <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Eliminar gasto</DialogTitle>
+            <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
               ¿Estás seguro que quieres eliminar <span className="text-neutral-900 font-bold">"{expenseToDelete?.description}"</span>? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center mt-6">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
             <Button
               variant="outline"
+              size="lg"
               onClick={() => setDeleteDialogOpen(false)}
-              className="h-12 px-6 rounded-2xl font-bold bg-neutral-50 border-neutral-100 hover:bg-neutral-100 w-full sm:w-auto text-neutral-900"
+              className="rounded-2xl w-full sm:w-auto text-neutral-900 font-bold"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
+              size="lg"
               onClick={() => {
                 if (expenseToDelete) {
                   onDeleteExpense(expenseToDelete.id);
                   setDeleteDialogOpen(false);
                 }
               }}
-              className="h-12 px-6 rounded-2xl font-bold bg-red-500 hover:bg-red-600 w-full sm:w-auto text-white"
+              className="rounded-2xl w-full sm:w-auto font-bold"
             >
               Eliminar
             </Button>

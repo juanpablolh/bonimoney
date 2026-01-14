@@ -5,6 +5,7 @@ import { useProject } from './contexts/ProjectContext';
 import { useMembers } from './contexts/MemberContext';
 import { useExpenses } from './contexts/ExpenseContext';
 import { AuthLanding, AuthLogin, AuthRegister, AuthForgotPassword } from './components/auth/DesktopAuthLanding';
+import { Toaster, toast } from 'sonner';
 
 import AuthModal from './components/auth/AuthModal';
 import { Button } from './components/ui/button';
@@ -280,19 +281,34 @@ function ProjectView() {
             setEditingExpense(null);
           }}
           onSave={async (data) => {
-            if (editingExpense) {
-              await updateExpense(editingExpense.id, {
-                ...data,
-                split_method: 'equal',
+            try {
+              if (editingExpense) {
+                await updateExpense(editingExpense.id, {
+                  ...data,
+                  split_method: 'equal',
+                });
+                toast.success('Gasto actualizado', {
+                  description: `${data.description} - $${data.amount.toLocaleString('es-CL')}`
+                });
+              } else {
+                await addExpense({
+                  ...data,
+                  split_method: 'equal',
+                });
+                toast.success('Gasto guardado', {
+                  description: `${data.description} - $${data.amount.toLocaleString('es-CL')}`
+                });
+              }
+              // Don't close immediately to allow animation
+              // setExpenseModalOpen(false);
+              // setEditingExpense(null);
+            } catch (error) {
+              console.error(error);
+              toast.error('Error al guardar', {
+                description: 'Por favor intenta de nuevo.'
               });
-            } else {
-              await addExpense({
-                ...data,
-                split_method: 'equal',
-              });
+              throw error; // Re-throw to let ExpenseForm know it failed
             }
-            setExpenseModalOpen(false);
-            setEditingExpense(null);
           }}
         />
       </ResponsiveModal>
@@ -338,6 +354,7 @@ function App() {
   // Logged in - show app routes
   return (
     <Suspense fallback={<LoadingSpinner />}>
+      <Toaster richColors position="top-center" theme="light" />
       <Routes>
         <Route path="/" element={<HomeView />} />
         <Route path="/project/:projectId" element={<ProjectView />} />

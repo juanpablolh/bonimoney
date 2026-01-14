@@ -17,7 +17,7 @@ function AuthCard({ children, title }: { children: React.ReactNode; title?: stri
             <div className="bg-orange-950 px-6 py-6 flex items-center justify-between">
                 <button
                     onClick={() => navigate('/')}
-                    className="font-serif text-2xl text-orange-300 tracking-[-0.015em] hover:text-orange-200 transition-colors"
+                    className="font-serif text-2xl text-orange-300 tracking-[-0.015em] hover:text-orange-200 transition-colors cursor-pointer"
                 >
                     Bonimoney
                 </button>
@@ -70,14 +70,14 @@ function LandingView() {
                     <div className="flex gap-4 lg:gap-5 mt-4 lg:mt-6">
                         <button
                             onClick={() => navigate('/login')}
-                            className="flex-1 lg:flex-none aspect-square lg:w-[160px] lg:h-[160px] rounded-[24px] bg-orange-500 text-white flex flex-col items-start justify-between p-5 hover:bg-orange-600 transition-colors shadow-sm active:scale-[0.98]"
+                            className="flex-1 lg:flex-none aspect-square lg:w-[160px] lg:h-[160px] rounded-[24px] bg-orange-500 text-white flex flex-col items-start justify-between p-5 hover:bg-orange-600 transition-colors shadow-sm active:scale-[0.98] cursor-pointer"
                         >
                             <SignIn size={32} weight="bold" />
                             <span className="text-[1.125rem] font-semibold leading-tight text-left">Iniciar Sesión</span>
                         </button>
                         <button
                             onClick={() => navigate('/register')}
-                            className="flex-1 lg:flex-none aspect-square lg:w-[160px] lg:h-[160px] rounded-[24px] bg-neutral-200 text-neutral-700 flex flex-col items-start justify-between p-5 hover:bg-neutral-300 transition-colors shadow-sm active:scale-[0.98]"
+                            className="flex-1 lg:flex-none aspect-square lg:w-[160px] lg:h-[160px] rounded-[24px] bg-neutral-200 text-neutral-700 flex flex-col items-start justify-between p-5 hover:bg-neutral-300 transition-colors shadow-sm active:scale-[0.98] cursor-pointer"
                         >
                             <UserPlus size={32} weight="regular" />
                             <span className="text-[1.125rem] font-semibold leading-tight text-left">Crear Cuenta</span>
@@ -156,7 +156,7 @@ function LoginView() {
                             <button
                                 type="button"
                                 onClick={() => navigate('/forgot-password')}
-                                className="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors"
+                                className="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors cursor-pointer"
                             >
                                 ¿Olvidaste tu contraseña?
                             </button>
@@ -184,7 +184,7 @@ function LoginView() {
                     <Button
                         type="submit"
                         disabled={loading || !email || !password}
-                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98]"
+                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98] cursor-pointer"
                     >
                         {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
                     </Button>
@@ -194,7 +194,7 @@ function LoginView() {
                         <button
                             type="button"
                             onClick={() => navigate('/register')}
-                            className="font-bold text-neutral-900 hover:underline px-1"
+                            className="font-bold text-neutral-900 hover:underline px-1 cursor-pointer"
                         >
                             Regístrate
                         </button>
@@ -265,7 +265,7 @@ function RegisterView() {
                     </div>
                     <button
                         onClick={() => navigate('/login')}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:text-neutral-900 transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:text-neutral-900 transition-colors cursor-pointer"
                     >
                         <ArrowLeft size={18} weight="bold" />
                         Volver a iniciar sesión
@@ -357,7 +357,7 @@ function RegisterView() {
                     <Button
                         type="submit"
                         disabled={loading || !email || !password || !name || !confirmPassword}
-                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98]"
+                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98] cursor-pointer"
                     >
                         {loading ? 'Registrando...' : 'Registrarse'}
                     </Button>
@@ -367,7 +367,7 @@ function RegisterView() {
                         <button
                             type="button"
                             onClick={() => navigate('/login')}
-                            className="font-bold text-neutral-900 hover:underline px-1"
+                            className="font-bold text-neutral-900 hover:underline px-1 cursor-pointer"
                         >
                             Inicia sesión
                         </button>
@@ -419,7 +419,7 @@ function ForgotPasswordView() {
                     </div>
                     <button
                         onClick={() => navigate('/login')}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:text-neutral-900 transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-700 hover:text-neutral-900 transition-colors cursor-pointer"
                     >
                         <ArrowLeft size={18} weight="bold" />
                         Volver a iniciar sesión
@@ -465,7 +465,7 @@ function ForgotPasswordView() {
                     <Button
                         type="submit"
                         disabled={loading || !email}
-                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98]"
+                        className="w-full h-14 rounded-2xl text-base font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition-all shadow-md active:scale-[0.98] cursor-pointer"
                     >
                         {loading ? 'Enviando...' : 'Enviar enlace'}
                     </Button>
@@ -473,7 +473,7 @@ function ForgotPasswordView() {
                     <button
                         type="button"
                         onClick={() => navigate('/login')}
-                        className="w-full text-center text-sm font-bold text-neutral-700 hover:text-neutral-900 transition-colors"
+                        className="w-full text-center text-sm font-bold text-neutral-700 hover:text-neutral-900 transition-colors cursor-pointer"
                     >
                         Volver a iniciar sesión
                     </button>

@@ -100,7 +100,7 @@ export default function Dashboard({
   const totalByCurrency = new Map<Currency, number>();
   expenses.forEach((expense) => {
     // Skip settlement transactions from total
-    if ((expense as any).expense_type === 'settlement') return;
+    if (expense.expense_type === 'settlement' || expense.expense_type === 'payment') return;
     const current = totalByCurrency.get(expense.currency) || 0;
     totalByCurrency.set(expense.currency, current + expense.amount);
   });
@@ -108,9 +108,20 @@ export default function Dashboard({
   const currencies = Array.from(totalByCurrency.entries());
 
   const sortedExpenses = [...expenses].sort((a, b) => {
+    // Compare dates at midnight to ignore time differences (like 00:00 vs 05:00)
     const dateA = new Date(a.date);
+    dateA.setHours(0, 0, 0, 0);
     const dateB = new Date(b.date);
-    return dateB.getTime() - dateA.getTime();
+    dateB.setHours(0, 0, 0, 0);
+
+    const diff = dateB.getTime() - dateA.getTime();
+    if (diff !== 0) return diff;
+
+    // Fallback to creation time for same-day expenses
+    const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+    return createdB - createdA;
   });
 
   const filteredExpenses = sortedExpenses.filter(e =>
@@ -332,7 +343,11 @@ export default function Dashboard({
                       </p>
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-sm text-neutral-400">
-                          Por {(paidBy?.name || 'Alguien').split(' ')[0]}
+                          Por {paidBy?.name || 'Alguien'}
+                          {((expense as any).expense_type === 'settlement' || (expense as any).expense_type === 'payment') && expense.splits && expense.splits.length > 0 && (() => {
+                            const toMember = members.find(m => m.id === expense.splits![0].memberId);
+                            return toMember ? ` a ${toMember.name}` : '';
+                          })()}
                         </p>
                         <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
                           $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1 text-neutral-500 font-medium uppercase text-xs">{expense.currency}</span>
@@ -350,11 +365,11 @@ export default function Dashboard({
             <span className="text-sm text-neutral-500">{expenses.length} Gastos en total</span>
           </div>
         </div>
-      </section>
+      </section >
 
 
       {/* ===== RIGHT COLUMN: SINGLE CARD WITH DEUDAS + ESTADO + FOOTER ===== */}
-      <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
+      < section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0" >
         <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm flex flex-col h-full overflow-hidden">
           {/* Header matching Actividad reciente */}
           <div className="flex items-center justify-between p-4 border-b border-neutral-100">
@@ -494,10 +509,10 @@ export default function Dashboard({
             </button>
           </div>
         </div>
-      </section>
+      </section >
 
       {/* DELETE PROJECT DIALOG */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      < Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} >
         <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
           <DialogHeader className="space-y-4">
             <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
@@ -527,19 +542,21 @@ export default function Dashboard({
             </UIButton>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       {/* Settlement Drawer */}
-      {selectedTransaction && (
-        <SettlementDrawer
-          open={settlementDrawerOpen}
-          onOpenChange={setSettlementDrawerOpen}
-          transaction={selectedTransaction}
-          members={members}
-          onConfirm={handleSettlement}
-        />
-      )}
+      {
+        selectedTransaction && (
+          <SettlementDrawer
+            open={settlementDrawerOpen}
+            onOpenChange={setSettlementDrawerOpen}
+            transaction={selectedTransaction}
+            members={members}
+            onConfirm={handleSettlement}
+          />
+        )
+      }
 
-    </div>
+    </div >
   );
 }

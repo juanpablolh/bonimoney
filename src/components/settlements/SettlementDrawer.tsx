@@ -1,5 +1,5 @@
-import { useState, useContext } from 'react';
-import { ArrowRight, X } from '@phosphor-icons/react';
+import { useState, useContext, useEffect } from 'react';
+import { ArrowRight, X, WarningCircle } from '@phosphor-icons/react';
 import { Transaction } from '@/types';
 import { ResponsiveModal, KeyboardViewportContext } from '@/components/ui-custom/ResponsiveModal';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,15 @@ export function SettlementDrawer({
 
     const totalDebt = transaction.amount;
     const amountNum = parseFloat(amount) || 0;
+
+    useEffect(() => {
+        if (open) {
+            setAmount(transaction.amount.toString());
+            setNotes('');
+            setError('');
+            setSelectedQuickOption('full');
+        }
+    }, [open, transaction.amount]);
 
     const handleAmountChange = (value: string) => {
         setAmount(value);
@@ -80,6 +89,8 @@ export function SettlementDrawer({
             onOpenChange={onOpenChange}
             title=""
             hideHeader={true}
+            fixedHeight={true}
+            showCloseButton={false}
         >
             <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
                 {/* Header Wrapper - Dark header like ExpenseForm */}
@@ -181,7 +192,10 @@ export function SettlementDrawer({
                                 </span>
                             </div>
                             {error && (
-                                <p className="text-sm text-rose-600">⚠️ {error}</p>
+                                <p className="text-sm text-rose-600 flex items-center gap-2">
+                                    <WarningCircle size={16} weight="regular" />
+                                    {error}
+                                </p>
                             )}
 
                             {/* Botones rápidos */}
