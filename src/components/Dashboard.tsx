@@ -498,7 +498,7 @@ export default function Dashboard({
 
       {/* DELETE PROJECT DIALOG */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
           <DialogHeader className="space-y-4">
             <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
             <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">

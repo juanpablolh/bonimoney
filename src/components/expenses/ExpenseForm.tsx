@@ -76,6 +76,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
 
     const currentMember = members.find(m => m.id === paidBy);
+    const isAllSelected = members.length > 0 && splitWith.length === members.length;
 
     return (
         <div className="flex flex-col h-full bg-neutral-50 overflow-hidden">
@@ -160,8 +161,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-semibold text-neutral-900">Dividir con</label>
                             <button
+                                type="button"
                                 onClick={() => setSplitWith(members.map(m => m.id))}
-                                className="text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-lg transition-colors"
+                                className={cn(
+                                    "text-sm font-semibold px-4 h-10 min-h-0 rounded-lg transition-colors flex items-center justify-center",
+                                    isAllSelected
+                                        ? "bg-neutral-900 text-white hover:bg-neutral-800"
+                                        : "text-neutral-600 bg-neutral-100 hover:bg-neutral-200"
+                                )}
                             >
                                 Todos
                             </button>

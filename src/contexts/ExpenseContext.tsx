@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useProject } from './ProjectContext';
 import { supabase } from '../utils/supabase';
@@ -83,7 +83,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
 
     // Load expenses for current project
-    const loadExpenses = async () => {
+    const loadExpenses = useCallback(async () => {
         if (!currentProject) {
             setExpenses([]);
             return;
@@ -111,7 +111,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentProject]);
 
     // Helper to calculate split amounts based on method
     const calculateSplitAmounts = (
@@ -156,165 +156,153 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const addExpense = async (data: AddExpenseData): Promise<Expense> => {
         if (!currentProject || !user) throw new Error('No project selected or user not authenticated');
 
-        try {
-            // 1. Calculate split amounts
-            const splits = calculateSplitAmounts(
-                data.amount,
-                data.split_method || 'equal',
-                data.split_details
-            );
+        // 1. Calculate split amounts
+        const splits = calculateSplitAmounts(
+            data.amount,
+            data.split_method || 'equal',
+            data.split_details
+        );
 
-            // 2. Create expense
-            const { data: newExpense, error: expenseError } = await supabase
-                .from('expenses')
-                .insert({
-                    project_id: currentProject.id,
-                    description: data.description,
-                    amount: data.amount,
-                    paid_by: data.paid_by,
-                    expense_type: data.expense_type || 'expense',
-                    split_method: data.split_method || 'equal',
-                    payment_method: data.payment_method,
-                    payment_reference: data.payment_reference,
-                    metadata: data.metadata,
-                    settled_to: data.settled_to,
-                    date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
-                    created_by: user.id,
-                })
-                .select()
-                .single();
+        // 2. Create expense
+        const { data: newExpense, error: expenseError } = await supabase
+            .from('expenses')
+            .insert({
+                project_id: currentProject.id,
+                description: data.description,
+                amount: data.amount,
+                paid_by: data.paid_by,
+                expense_type: data.expense_type || 'expense',
+                split_method: data.split_method || 'equal',
+                payment_method: data.payment_method,
+                payment_reference: data.payment_reference,
+                metadata: data.metadata,
+                settled_to: data.settled_to,
+                date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+                created_by: user.id,
+            })
+            .select()
+            .single();
 
-            if (expenseError) throw expenseError;
+        if (expenseError) throw expenseError;
 
-            // 3. Create splits
-            const splitsToInsert = splits.map((split, index) => ({
-                expense_id: newExpense.id,
-                member_id: split.member_id,
-                amount_owed: split.amount_owed,
-                percentage: data.split_details[index].percentage,
-                shares: data.split_details[index].shares,
-                notes: data.split_details[index].notes,
-            }));
+        // 3. Create splits
+        const splitsToInsert = splits.map((split, index) => ({
+            expense_id: newExpense.id,
+            member_id: split.member_id,
+            amount_owed: split.amount_owed,
+            percentage: data.split_details[index].percentage,
+            shares: data.split_details[index].shares,
+            notes: data.split_details[index].notes,
+        }));
 
-            const { error: splitsError } = await supabase
-                .from('splits')
-                .insert(splitsToInsert);
+        const { error: splitsError } = await supabase
+            .from('splits')
+            .insert(splitsToInsert);
 
-            if (splitsError) throw splitsError;
+        if (splitsError) throw splitsError;
 
-            // Reload expenses to get splits
-            await loadExpenses();
+        // Reload expenses to get splits
+        await loadExpenses();
 
-            return newExpense;
-        } catch (error) {
-            throw error;
-        }
+        return newExpense;
     };
 
     // Update expense
     const updateExpense = async (id: string, data: Partial<AddExpenseData>) => {
-        try {
-            // 1. Update expense
-            const updateData: any = {};
-            if (data.description) updateData.description = data.description;
-            if (data.amount) updateData.amount = data.amount;
-            if (data.paid_by) updateData.paid_by = data.paid_by;
-            if (data.expense_type) updateData.expense_type = data.expense_type;
-            if (data.split_method) updateData.split_method = data.split_method;
-            if (data.payment_method) updateData.payment_method = data.payment_method;
-            if (data.payment_reference) updateData.payment_reference = data.payment_reference;
-            if (data.metadata) updateData.metadata = data.metadata;
-            if (data.settled_to) updateData.settled_to = data.settled_to;
+        // 1. Update expense
+        const updateData: any = {};
+        if (data.description) updateData.description = data.description;
+        if (data.amount) updateData.amount = data.amount;
+        if (data.paid_by) updateData.paid_by = data.paid_by;
+        if (data.expense_type) updateData.expense_type = data.expense_type;
+        if (data.split_method) updateData.split_method = data.split_method;
+        if (data.payment_method) updateData.payment_method = data.payment_method;
+        if (data.payment_reference) updateData.payment_reference = data.payment_reference;
+        if (data.metadata) updateData.metadata = data.metadata;
+        if (data.settled_to) updateData.settled_to = data.settled_to;
 
-            const { error: expenseError } = await supabase
-                .from('expenses')
-                .update(updateData)
-                .eq('id', id);
+        const { error: expenseError } = await supabase
+            .from('expenses')
+            .update(updateData)
+            .eq('id', id);
 
-            if (expenseError) throw expenseError;
+        if (expenseError) throw expenseError;
 
-            // 2. Update splits if split_details or amount changed
-            if ((data.split_details || data.amount) && id) {
-                // We need the full current data for calculation if only part is provided
-                const currentExpense = expenses.find(e => e.id === id);
-                if (currentExpense) {
-                    const totalAmount = data.amount || currentExpense.amount;
-                    const splitMethod = data.split_method || currentExpense.split_method;
+        // 2. Update splits if split_details or amount changed
+        if ((data.split_details || data.amount) && id) {
+            // We need the full current data for calculation if only part is provided
+            const currentExpense = expenses.find(e => e.id === id);
+            if (currentExpense) {
+                const totalAmount = data.amount || currentExpense.amount;
+                const splitMethod = data.split_method || currentExpense.split_method;
 
-                    // Reconstruct split details if not provided
-                    let splitDetails = data.split_details;
-                    if (!splitDetails) {
-                        splitDetails = currentExpense.splits.map(s => ({
-                            member_id: s.member_id,
-                            amount: s.amount_owed,
-                            percentage: s.percentage,
-                            shares: s.shares,
-                            notes: s.notes,
-                        }));
-                    }
-
-                    const calculatedSplits = calculateSplitAmounts(
-                        totalAmount,
-                        splitMethod,
-                        splitDetails
-                    );
-
-                    // Delete old splits
-                    await supabase
-                        .from('splits')
-                        .delete()
-                        .eq('expense_id', id);
-
-                    // Create new splits
-                    const splitsToInsert = calculatedSplits.map((split, index) => ({
-                        expense_id: id,
-                        member_id: split.member_id,
-                        amount_owed: split.amount_owed,
-                        percentage: splitDetails![index].percentage,
-                        shares: splitDetails![index].shares,
-                        notes: splitDetails![index].notes,
+                // Reconstruct split details if not provided
+                let splitDetails = data.split_details;
+                if (!splitDetails) {
+                    splitDetails = currentExpense.splits.map(s => ({
+                        member_id: s.member_id,
+                        amount: s.amount_owed,
+                        percentage: s.percentage,
+                        shares: s.shares,
+                        notes: s.notes,
                     }));
-
-                    const { error: splitsError } = await supabase
-                        .from('splits')
-                        .insert(splitsToInsert);
-
-                    if (splitsError) throw splitsError;
                 }
-            }
 
-            // Reload expenses to get updated splits
-            await loadExpenses();
-        } catch (error) {
-            throw error;
+                const calculatedSplits = calculateSplitAmounts(
+                    totalAmount,
+                    splitMethod,
+                    splitDetails
+                );
+
+                // Delete old splits
+                await supabase
+                    .from('splits')
+                    .delete()
+                    .eq('expense_id', id);
+
+                // Create new splits
+                const splitsToInsert = calculatedSplits.map((split, index) => ({
+                    expense_id: id,
+                    member_id: split.member_id,
+                    amount_owed: split.amount_owed,
+                    percentage: splitDetails![index].percentage,
+                    shares: splitDetails![index].shares,
+                    notes: splitDetails![index].notes,
+                }));
+
+                const { error: splitsError } = await supabase
+                    .from('splits')
+                    .insert(splitsToInsert);
+
+                if (splitsError) throw splitsError;
+            }
         }
+
+        // Reload expenses to get updated splits
+        await loadExpenses();
     };
 
     // Delete expense (soft delete)
     const deleteExpense = async (id: string) => {
         if (!user) throw new Error('User not authenticated');
 
-        try {
-            const { error } = await supabase
-                .from('expenses')
-                .update({
-                    deleted_at: new Date().toISOString(),
-                    deleted_by: user.id,
-                })
-                .eq('id', id);
+        const { error } = await supabase
+            .from('expenses')
+            .update({
+                deleted_at: new Date().toISOString(),
+                deleted_by: user.id,
+            })
+            .eq('id', id);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setExpenses(prev => prev.filter(e => e.id !== id));
-        } catch (error) {
-            throw error;
-        }
+        setExpenses(prev => prev.filter(e => e.id !== id));
     };
 
     // Load expenses when project changes
     useEffect(() => {
         loadExpenses();
-    }, [currentProject]);
+    }, [loadExpenses]);
 
     return (
         <ExpenseContext.Provider

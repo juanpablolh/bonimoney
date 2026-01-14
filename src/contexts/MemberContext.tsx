@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useProject } from './ProjectContext';
 import { supabase } from '../utils/supabase';
@@ -42,7 +42,7 @@ export function MemberProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
 
     // Load members for current project
-    const loadMembers = async () => {
+    const loadMembers = useCallback(async () => {
         if (!currentProject) {
             setMembers([]);
             return;
@@ -65,74 +65,62 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentProject]);
 
     // Add member (ghost or invited)
     const addMember = async (data: AddMemberData): Promise<Member> => {
         if (!currentProject || !user) throw new Error('No project selected or user not authenticated');
 
-        try {
-            const { data: newMember, error } = await supabase
-                .from('project_members')
-                .insert({
-                    project_id: currentProject.id,
-                    name: data.name,
-                    email: data.email,
-                    role: data.role || 'member',
-                    status: data.email ? 'pending' : 'accepted', // Ghost members are auto-accepted
-                    invited_by: user.id,
-                    joined_at: data.email ? null : new Date().toISOString(), // Ghost members join immediately
-                })
-                .select()
-                .single();
+        const { data: newMember, error } = await supabase
+            .from('project_members')
+            .insert({
+                project_id: currentProject.id,
+                name: data.name,
+                email: data.email,
+                role: data.role || 'member',
+                status: data.email ? 'pending' : 'accepted', // Ghost members are auto-accepted
+                invited_by: user.id,
+                joined_at: data.email ? null : new Date().toISOString(), // Ghost members join immediately
+            })
+            .select()
+            .single();
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setMembers(prev => [...prev, newMember]);
-            return newMember;
-        } catch (error) {
-            throw error;
-        }
+        setMembers(prev => [...prev, newMember]);
+        return newMember;
     };
 
     // Update member
     const updateMember = async (id: string, data: Partial<Member>) => {
-        try {
-            const { error } = await supabase
-                .from('project_members')
-                .update(data)
-                .eq('id', id);
+        const { error } = await supabase
+            .from('project_members')
+            .update(data)
+            .eq('id', id);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setMembers(prev =>
-                prev.map(m => (m.id === id ? { ...m, ...data } : m))
-            );
-        } catch (error) {
-            throw error;
-        }
+        setMembers(prev =>
+            prev.map(m => (m.id === id ? { ...m, ...data } : m))
+        );
     };
 
     // Remove member
     const removeMember = async (id: string) => {
-        try {
-            const { error } = await supabase
-                .from('project_members')
-                .delete()
-                .eq('id', id);
+        const { error } = await supabase
+            .from('project_members')
+            .delete()
+            .eq('id', id);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            setMembers(prev => prev.filter(m => m.id !== id));
-        } catch (error) {
-            throw error;
-        }
+        setMembers(prev => prev.filter(m => m.id !== id));
     };
 
     // Load members when project changes
     useEffect(() => {
         loadMembers();
-    }, [currentProject]);
+    }, [loadMembers]);
 
     return (
         <MemberContext.Provider

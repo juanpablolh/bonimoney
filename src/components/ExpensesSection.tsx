@@ -104,8 +104,7 @@ export default function ExpensesSection({
             placeholder="Buscar por descripción..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-14 pl-12 bg-neutral-50 border-neutral-100 rounded-2xl font-semibold text-sm text-neutral-900 focus-visible:ring-neutral-200 placeholder:text-neutral-300"
-            style={{ letterSpacing: '-0.2px' }}
+            className="pl-11 h-12 bg-neutral-50 border-neutral-100 rounded-lg"
           />
           {searchQuery && (
             <button

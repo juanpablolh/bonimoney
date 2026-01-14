@@ -263,6 +263,10 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .bg-bonimoney {
+    background-image: url('/bg-bonimoney.webp');
+  }
 }
 
 /* Button focus-visible styles for outline variant */

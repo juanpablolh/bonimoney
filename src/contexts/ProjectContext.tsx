@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabase';
 
@@ -45,7 +45,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     // Load user's projects from Supabase
-    const loadProjects = async () => {
+    const loadProjects = useCallback(async () => {
         if (!user) {
             setProjects([]);
             setCurrentProject(null);
@@ -81,130 +81,118 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
 
     // Create new project
     const createProject = async (data: CreateProjectData): Promise<Project> => {
         if (!user) throw new Error('Must be authenticated to create project');
 
-        try {
-            // Generate short ID (8 characters, alphanumeric)
-            const generateId = () => {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let id = '';
-                for (let i = 0; i < 8; i++) {
-                    id += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                return id;
-            };
+        // Generate short ID (8 characters, alphanumeric)
+        const generateId = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let id = '';
+            for (let i = 0; i < 8; i++) {
+                id += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return id;
+        };
 
-            const projectId = generateId();
+        const projectId = generateId();
 
-            // 1. Create project
-            const { data: newProject, error: projectError } = await supabase
-                .from('projects')
-                .insert({
-                    id: projectId,
-                    name: data.name,
-                    description: data.description,
-                    currency: data.currency || 'CLP',
-                    icon: data.icon || '📊',
-                    owner_id: user.id,
-                    view_mode: 'public',
-                })
-                .select()
-                .single();
+        // 1. Create project
+        const { data: newProject, error: projectError } = await supabase
+            .from('projects')
+            .insert({
+                id: projectId,
+                name: data.name,
+                description: data.description,
+                currency: data.currency || 'CLP',
+                icon: data.icon || '📊',
+                owner_id: user.id,
+                view_mode: 'public',
+            })
+            .select()
+            .single();
 
-            if (projectError) throw projectError;
+        if (projectError) throw projectError;
 
-            // 2. Add creator as owner in project_members
-            const { error: memberError } = await supabase
-                .from('project_members')
-                .insert({
-                    project_id: newProject.id,
-                    user_id: user.id,
-                    role: 'owner',
-                    status: 'accepted',
-                    joined_at: new Date().toISOString(),
-                    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario', // Added name
-                });
+        // 2. Add creator as owner in project_members
+        const { error: memberError } = await supabase
+            .from('project_members')
+            .insert({
+                project_id: newProject.id,
+                user_id: user.id,
+                role: 'owner',
+                status: 'accepted',
+                joined_at: new Date().toISOString(),
+                name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario', // Added name
+            });
 
-            if (memberError) throw memberError;
+        if (memberError) throw memberError;
 
-            // 3. Add to user_projects for quick access
-            const { error: userProjectError } = await supabase
-                .from('user_projects')
-                .insert({
-                    user_id: user.id,
-                    project_id: newProject.id,
-                    last_accessed_at: new Date().toISOString(),
-                });
+        // 3. Add to user_projects for quick access
+        const { error: userProjectError } = await supabase
+            .from('user_projects')
+            .insert({
+                user_id: user.id,
+                project_id: newProject.id,
+                last_accessed_at: new Date().toISOString(),
+            });
 
-            if (userProjectError) throw userProjectError;
+        if (userProjectError) throw userProjectError;
 
-            // Update local state
-            setProjects(prev => [newProject, ...prev]);
-            setCurrentProject(newProject);
-            localStorage.setItem('currentProjectId', newProject.id);
+        // Update local state
+        setProjects(prev => [newProject, ...prev]);
+        setCurrentProject(newProject);
+        localStorage.setItem('currentProjectId', newProject.id);
 
-            return newProject;
-        } catch (error) {
-            throw error;
-        }
+        return newProject;
     };
 
     // Update project
     const updateProject = async (id: string, data: Partial<Project>) => {
-        try {
-            const { error } = await supabase
-                .from('projects')
-                .update(data)
-                .eq('id', id);
+        const { error } = await supabase
+            .from('projects')
+            .update(data)
+            .eq('id', id);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            // Update local state
-            setProjects(prev =>
-                prev.map(p => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p))
-            );
+        // Update local state
+        setProjects(prev =>
+            prev.map(p => (p.id === id ? { ...p, ...data, updated_at: new Date().toISOString() } : p))
+        );
 
-            if (currentProject?.id === id) {
-                setCurrentProject(prev => prev ? { ...prev, ...data } : null);
-            }
-        } catch (error) {
-            throw error;
+        if (currentProject?.id === id) {
+            setCurrentProject(prev => prev ? { ...prev, ...data } : null);
         }
     };
 
     // Delete project (soft delete - archive)
     const deleteProject = async (id: string) => {
-        try {
-            const { error } = await supabase
-                .from('projects')
-                .update({
-                    archived: true,
-                    archived_at: new Date().toISOString(),
-                })
-                .eq('id', id);
+        const { error } = await supabase
+            .from('projects')
+            .update({
+                archived: true,
+                archived_at: new Date().toISOString(),
+            })
+            .eq('id', id);
 
-            if (error) throw error;
+        if (error) throw error;
 
-            // Update local state
-            setProjects(prev => prev.filter(p => p.id !== id));
+        // Update local state
+        setProjects(prev => prev.filter(p => p.id !== id));
 
-            if (currentProject?.id === id) {
-                setCurrentProject(null);
-                localStorage.removeItem('currentProjectId');
-            }
-        } catch (error) {
-            throw error;
+        if (currentProject?.id === id) {
+            setCurrentProject(null);
+            localStorage.removeItem('currentProjectId');
         }
     };
 
     // Load projects when user changes
     useEffect(() => {
         loadProjects();
-    }, [user]);
+    }, [loadProjects]);
 
     // Update last_accessed_at when currentProject changes
     useEffect(() => {

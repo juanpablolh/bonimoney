@@ -28,8 +28,8 @@ export default function HomeLogin() {
             } else {
                 setSent(true);
             }
-        } catch (err) {
-            setError('Ocurrió un error inesperado');
+        } catch {
+            setError('Error al iniciar sesión con Google');
         } finally {
             setLoading(false);
         }

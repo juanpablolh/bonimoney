@@ -114,7 +114,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="font-serif text-6xl md:text-7xl text-neutral-900 tracking-tighter leading-[0.9]"
+                        className="font-serif text-[56px] text-neutral-900 tracking-tighter leading-[0.9]"
                     >
                         Hola<br />
                         <span className="text-neutral-400">{userName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}.</span>

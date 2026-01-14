@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getInvitationByToken, acceptInvitationByToken, InvitationDetails } from '@/services/invitations';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, WarningCircle, Users, ArrowRight, Spinner } from '@phosphor-icons/react';
+import { CheckCircle, WarningCircle, UsersThree, ArrowRight, Spinner } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/utils/supabase';
 
 type PageState = 'loading' | 'preview' | 'accepting' | 'accepted' | 'error';
 
@@ -69,6 +70,23 @@ export default function InviteAcceptPage() {
         return;
       }
 
+      // Sync user name from profile if available
+      if (result.projectId && (user.user_metadata?.full_name || user.user_metadata?.name)) {
+        try {
+          // We don't await this to avoid blocking the UI flow
+          supabase
+            .from('project_members')
+            .update({ name: user.user_metadata.full_name || user.user_metadata.name })
+            .eq('project_id', result.projectId)
+            .eq('user_id', user.id)
+            .then(({ error }) => {
+              if (error) console.error('Error syncing name:', error);
+            });
+        } catch (e) {
+          console.error('Error attempting to sync name:', e);
+        }
+      }
+
       setPageState('accepted');
 
       // Redirect after brief delay
@@ -102,8 +120,8 @@ export default function InviteAcceptPage() {
         className="w-full max-w-[400px] bg-neutral-50 rounded-3xl shadow-lg overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-neutral-900 px-5 py-5 flex flex-col items-start justify-center">
-          <h1 className="font-serif text-3xl leading-none text-white tracking-[-1px]">
+        <div className="bg-orange-950 px-5 py-5 flex flex-col items-start justify-center">
+          <h1 className="font-serif text-3xl leading-none text-orange-300 tracking-[-1px]">
             Bonimoney
           </h1>
         </div>
@@ -145,7 +163,7 @@ export default function InviteAcceptPage() {
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-neutral-500">
-                    <Users size={16} weight="fill" />
+                    <UsersThree size={18} weight="light" />
                     <span>Invitado por <strong className="text-neutral-700">{invitation.inviter_name}</strong></span>
                   </div>
                 </div>

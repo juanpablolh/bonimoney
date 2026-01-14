@@ -12,8 +12,9 @@ import {
   User,
   PaperPlaneTilt,
   Clock,
-  CheckCircle,
-  Spinner
+  Spinner,
+  Crown,
+  CheckCircle
 } from '@phosphor-icons/react';
 import { Member } from '../types';
 import { Member as ContextMember } from '../contexts/MemberContext';
@@ -407,6 +408,17 @@ export default function MembersSection({
           ) : (
             members.map((member) => {
               const isEditing = editingMemberId === member.id;
+
+              // Check if member is ContextMember to access user_id
+              const isContext = isContextMember(member);
+              const isMe = isContext && member.user_id === user?.id;
+
+              // Find current user's role
+              // We calculate this for every item to keep it simple within the map scope, 
+              // though it could be optimized by moving outside the map.
+              const myMemberRecord = members.find(m => isContextMember(m) && m.user_id === user?.id) as ContextMember | undefined;
+              const isOwner = myMemberRecord?.role === 'owner';
+
               return (
                 <div
                   key={member.id}
@@ -454,14 +466,33 @@ export default function MembersSection({
                               <>
                                 {member.status === 'pending' && member.email && (
                                   <span className="inline-flex items-center gap-1 text-[12px] bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-medium shrink-0">
-                                    <Clock size={10} weight="bold" />
+                                    <Clock size={12} weight="bold" />
                                     Pendiente
                                   </span>
                                 )}
-                                {member.status === 'accepted' && member.user_id && (
-                                  <span className="inline-flex items-center gap-1 text-[12px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full font-medium shrink-0">
-                                    <CheckCircle size={10} weight="fill" />
-                                    Verificado
+                                {member.status === 'accepted' && (
+                                  <span className={`inline-flex items-center gap-1 text-[12px] px-2 py-1 rounded-full font-medium shrink-0 ${member.role === 'owner'
+                                    ? 'bg-purple-50 text-purple-700'
+                                    : member.user_id
+                                      ? 'bg-emerald-50 text-emerald-700'
+                                      : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                    {member.role === 'owner' ? (
+                                      <>
+                                        <Crown size={12} weight="fill" />
+                                        Admin
+                                      </>
+                                    ) : member.user_id ? (
+                                      <>
+                                        <User size={12} weight="fill" />
+                                        Miembro
+                                      </>
+                                    ) : (
+                                      <>
+                                        <User size={12} weight="regular" />
+                                        Invitado
+                                      </>
+                                    )}
                                   </span>
                                 )}
                               </>
@@ -489,21 +520,27 @@ export default function MembersSection({
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => handleStartEdit(member)}
-                            className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-neutral-900 hover:bg-neutral-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                          >
-                            <PencilSimple size={18} weight="bold" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setMemberToDelete(member);
-                              setDeleteMemberDialogOpen(true);
-                            }}
-                            className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-10"
-                          >
-                            <Trash size={18} weight="bold" />
-                          </button>
+                          {(isOwner || isMe) && (
+                            <button
+                              onClick={() => handleStartEdit(member)}
+                              className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-neutral-900 hover:bg-neutral-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                              title={isMe ? "Cambiar mi nombre" : "Editar integrante"}
+                            >
+                              <PencilSimple size={18} weight="bold" />
+                            </button>
+                          )}
+                          {isOwner && !isMe && (
+                            <button
+                              onClick={() => {
+                                setMemberToDelete(member);
+                                setDeleteMemberDialogOpen(true);
+                              }}
+                              className="w-10 h-10 rounded-full bg-transparent text-neutral-400 md:text-neutral-300 flex items-center justify-center hover:text-orange-600 hover:bg-orange-50 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 min-w-10"
+                              title="Eliminar integrante"
+                            >
+                              <Trash size={18} weight="bold" />
+                            </button>
+                          )}
                         </>
                       )}
                     </div>
@@ -569,7 +606,7 @@ export default function MembersSection({
 
       {/* DELETE PROJECT DIALOG */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-8 gap-0">
+        <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0">
           <DialogHeader className="space-y-4">
             <DialogTitle className="text-[28px] font-serif font-bold text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
             <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed">
@@ -627,8 +664,10 @@ export default function MembersSection({
                   try {
                     await onDeleteMember(memberToDelete.id);
                     setDeleteMemberDialogOpen(false);
-                  } catch (error) {
-                    setDeleteMemberDialogOpen(false);
+                  } catch {
+                    // silent fail
+                  } finally {
+                    eteMemberDialogOpen(false);
                     setErrorMessage('No se puede eliminar este integrante porque tiene gastos o transacciones asociadas. Elimina sus gastos primero.');
                     setErrorDialogOpen(true);
                   }

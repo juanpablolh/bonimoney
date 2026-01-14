@@ -118,10 +118,16 @@ export function ResponsiveModal({
             >
                 <KeyboardViewportContext.Provider value={{ keyboardHeight, vvHeight, isKeyboardOpen }}>
                     {hideHeader ? (
-                        children
+                        <>
+                            <VisuallyHidden>
+                                <DrawerTitle>{title}</DrawerTitle>
+                                <DrawerDescription>{description || title}</DrawerDescription>
+                            </VisuallyHidden>
+                            {children}
+                        </>
                     ) : (
                         <div className="flex flex-col h-full bg-neutral-50 overflow-hidden">
-                            {!isNested && (
+                            {!isNested ? (
                                 <DrawerHeader className="text-left py-4 shrink-0 border-b border-neutral-100">
                                     <DrawerTitle className="font-serif text-2xl">{title}</DrawerTitle>
                                     {description ? (
@@ -132,6 +138,11 @@ export function ResponsiveModal({
                                         </VisuallyHidden>
                                     )}
                                 </DrawerHeader>
+                            ) : (
+                                <VisuallyHidden>
+                                    <DrawerTitle>{title}</DrawerTitle>
+                                    <DrawerDescription>{description || title}</DrawerDescription>
+                                </VisuallyHidden>
                             )}
                             <div className="flex-1 overflow-y-auto no-scrollbar">
                                 {children}

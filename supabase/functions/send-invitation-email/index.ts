@@ -27,7 +27,7 @@ serve(async (req) => {
       throw new Error("RESEND_API_KEY not configured");
     }
 
-    const { to, inviterName, projectName, projectIcon, invitationLink }: InvitationEmailRequest = await req.json();
+    const { to, inviterName, projectName, invitationLink }: InvitationEmailRequest = await req.json();
 
     if (!to || !inviterName || !projectName || !invitationLink) {
       throw new Error("Missing required fields");
