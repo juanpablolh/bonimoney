@@ -665,9 +665,7 @@ export default function MembersSection({
                     await onDeleteMember(memberToDelete.id);
                     setDeleteMemberDialogOpen(false);
                   } catch {
-                    // silent fail
-                  } finally {
-                    eteMemberDialogOpen(false);
+                    setDeleteMemberDialogOpen(false);
                     setErrorMessage('No se puede eliminar este integrante porque tiene gastos o transacciones asociadas. Elimina sus gastos primero.');
                     setErrorDialogOpen(true);
                   }
