@@ -334,7 +334,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentProject, loadExpenses]);
+    }, [currentProject]); // Removed loadExpenses from dependencies
 
     return (
         <ExpenseContext.Provider

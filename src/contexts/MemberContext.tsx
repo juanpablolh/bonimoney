@@ -145,7 +145,7 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentProject, loadMembers]);
+    }, [currentProject]); // Removed loadMembers from dependencies
 
     return (
         <MemberContext.Provider

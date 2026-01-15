@@ -240,7 +240,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, loadProjects]);
+    }, [user]); // Removed loadProjects from dependencies
 
     return (
         <ProjectContext.Provider
