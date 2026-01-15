@@ -207,6 +207,41 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
     }, [currentProject, user]);
 
+    // Subscribe to real-time changes for projects and project members
+    useEffect(() => {
+        if (!user) return;
+
+        const channel = supabase
+            .channel('user-projects')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'projects'
+                },
+                () => {
+                    loadProjects();
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'project_members'
+                },
+                () => {
+                    loadProjects();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, loadProjects]);
+
     return (
         <ProjectContext.Provider
             value={{

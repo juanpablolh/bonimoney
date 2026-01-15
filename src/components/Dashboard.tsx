@@ -387,7 +387,7 @@ export default function Dashboard({
               {transactionsByCurrency.length === 0 ? (
                 <div className="bg-emerald-50 rounded-2xl p-6 text-center flex items-center justify-center gap-3">
                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500">
-                    <Sparkle size={20} weight="fill" />
+                    <Sparkle size={20} weight="light" />
                   </div>
                   <p className="text-emerald-700 font-medium text-sm">Todo saldado</p>
                 </div>

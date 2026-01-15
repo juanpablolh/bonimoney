@@ -320,19 +320,21 @@ export default function MembersSection({
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   required
-                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
+                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-16 focus-visible:ring-0 text-base font-medium"
                 />
                 <button
                   type="submit"
                   disabled={!newMemberName.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
                   style={{
                     backgroundColor: getProjectButtonBgColor(),
-                    borderRadius: '0.75rem'
+                    borderRadius: '0.75rem',
+                    width: '48px',
+                    height: '48px'
                   }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
+                  title="Agregar integrante"
                 >
-                  <UserPlus size={16} weight="bold" className="text-white" />
-                  <span className="text-sm font-semibold text-white">Agregar</span>
+                  <UserPlus size={20} weight="bold" className="text-white" />
                 </button>
               </div>
             </form>
@@ -349,25 +351,25 @@ export default function MembersSection({
                   onChange={(e) => { setInviteEmail(e.target.value); setInviteError(null); }}
                   required
                   disabled={inviting}
-                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus-visible:ring-0 text-base font-medium"
+                  className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-16 focus-visible:ring-0 text-base font-medium"
                 />
                 <button
                   type="submit"
                   disabled={inviting || !inviteEmail.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
                   style={{
                     backgroundColor: getProjectButtonBgColor(),
-                    borderRadius: '0.75rem'
+                    borderRadius: '0.75rem',
+                    width: '48px',
+                    height: '48px'
                   }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50"
+                  title={inviting ? 'Enviando...' : 'Invitar por email'}
                 >
                   {inviting ? (
-                    <Spinner size={16} className="text-white animate-spin" />
+                    <Spinner size={20} className="text-white animate-spin" />
                   ) : (
-                    <PaperPlaneTilt size={16} weight="bold" className="text-white" />
+                    <PaperPlaneTilt size={20} weight="bold" className="text-white" />
                   )}
-                  <span className="text-sm font-semibold text-white">
-                    {inviting ? 'Enviando...' : 'Invitar'}
-                  </span>
                 </button>
               </div>
 

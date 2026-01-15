@@ -300,6 +300,42 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         loadExpenses();
     }, [loadExpenses]);
 
+    // Subscribe to real-time changes for expenses and splits
+    useEffect(() => {
+        if (!currentProject) return;
+
+        const channel = supabase
+            .channel(`expenses:${currentProject.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'expenses',
+                    filter: `project_id=eq.${currentProject.id}`
+                },
+                () => {
+                    loadExpenses();
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'splits'
+                },
+                () => {
+                    loadExpenses();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentProject, loadExpenses]);
+
     return (
         <ExpenseContext.Provider
             value={{

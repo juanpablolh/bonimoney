@@ -286,10 +286,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                             </>
                         ) : (
                             <>
-                                <section className="rounded-xl p-4 text-white transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] bg-neutral-900">
+                                <section className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] bg-neutral-200">
                                     <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
                                         <div className="space-y-2">
-                                            <p className="text-white/80 text-sm font-medium max-w-sm">
+                                            <p className="text-neutral-600 text-sm font-medium max-w-sm">
                                                 Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
                                             </p>
                                         </div>
@@ -299,7 +299,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                                 onClick={() => setAddMode('name')}
                                                 className={cn(
                                                     "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
-                                                    addMode === 'name' ? "bg-white/20 text-white" : "bg-transparent text-white/60 hover:text-white/80"
+                                                    addMode === 'name' ? "bg-neutral-300 text-neutral-900" : "bg-transparent text-neutral-600 hover:text-neutral-900"
                                                 )}
                                             >
                                                 Por nombre
@@ -309,7 +309,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                                 onClick={() => setAddMode('email')}
                                                 className={cn(
                                                     "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
-                                                    addMode === 'email' ? "bg-white/20 text-white" : "bg-transparent text-white/60 hover:text-white/80"
+                                                    addMode === 'email' ? "bg-neutral-300 text-neutral-900" : "bg-transparent text-neutral-600 hover:text-neutral-900"
                                                 )}
                                             >
                                                 Por email
@@ -322,24 +322,20 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                                     value={inputValue}
                                                     onChange={(e) => setInputValue(e.target.value)}
                                                     onKeyDown={handleKeyDown}
-                                                    className="w-full h-14 bg-black/20 border-none text-white placeholder:text-white/60 rounded-xl pl-4 pr-36 focus:ring-0 focus:outline-none text-base font-medium transition-colors"
+                                                    className="w-full h-12 bg-white border border-neutral-300 text-neutral-900 placeholder:text-neutral-400 rounded-xl pl-4 pr-14 focus:ring-0 focus:outline-none text-base font-medium transition-colors"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={addMember}
                                                     disabled={!inputValue.trim()}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 flex items-center gap-2 transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50 bg-neutral-800 rounded-xl"
+                                                    style={{ width: '40px', height: '40px', minHeight: '40px' }}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all active:scale-95 hover:bg-neutral-800 shadow-sm disabled:opacity-50 bg-neutral-900 rounded-xl"
+                                                    title={addMode === 'email' ? 'Invitar' : 'Agregar'}
                                                 >
                                                     {addMode === 'email' ? (
-                                                        <>
-                                                            <PaperPlaneRight size={16} weight="fill" className="text-white" />
-                                                            <span className="text-sm font-semibold text-white">Invitar</span>
-                                                        </>
+                                                        <PaperPlaneRight size={18} weight="fill" className="text-white" />
                                                     ) : (
-                                                        <>
-                                                            <Plus size={16} weight="bold" className="text-white" />
-                                                            <span className="text-sm font-semibold text-white">Agregar</span>
-                                                        </>
+                                                        <Plus size={18} weight="bold" className="text-white" />
                                                     )}
                                                 </button>
                                             </div>

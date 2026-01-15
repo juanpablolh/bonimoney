@@ -120,14 +120,11 @@ export default function ExpensesSection({
       {/* 2. EXPENSES TIMELINE */}
       <section className="space-y-3">
         {filteredExpenses.length === 0 ? (
-          <div className="py-24 text-center space-y-4 bg-white rounded-[1rem] border border-neutral-100 shadow-sm">
-            <div className="w-20 h-20 bg-neutral-50 rounded-[1rem] flex items-center justify-center mx-auto shadow-inner">
-              <Receipt size={32} className="text-neutral-200" />
+          <div className="p-12 text-center flex flex-col items-center gap-3 bg-white rounded-[1rem] border border-neutral-100 shadow-sm">
+            <div className="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-300">
+              <Receipt size={28} />
             </div>
-            <div className="space-y-1">
-              <p className="text-neutral-400 font-black text-sm uppercase tracking-widest">No hay registros</p>
-              <p className="text-neutral-300 text-xs font-medium italic">¿Quizás quieres agregar uno nuevo?</p>
-            </div>
+            <p className="text-neutral-400 text-sm">No hay gastos aún</p>
           </div>
         ) : (
           filteredExpenses.map((expense) => {

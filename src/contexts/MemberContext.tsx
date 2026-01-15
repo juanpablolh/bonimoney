@@ -122,6 +122,31 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         loadMembers();
     }, [loadMembers]);
 
+    // Subscribe to real-time changes for project members
+    useEffect(() => {
+        if (!currentProject) return;
+
+        const channel = supabase
+            .channel(`members:${currentProject.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'project_members',
+                    filter: `project_id=eq.${currentProject.id}`
+                },
+                () => {
+                    loadMembers();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentProject, loadMembers]);
+
     return (
         <MemberContext.Provider
             value={{
