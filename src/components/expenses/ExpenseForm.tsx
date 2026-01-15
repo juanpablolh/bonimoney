@@ -16,6 +16,7 @@ interface Member {
     id: string;
     name: string;
     avatar_url?: string;
+    user_id?: string; // ID of the authenticated user linked to this member
 }
 
 interface ExpenseFormProps {
@@ -23,18 +24,27 @@ interface ExpenseFormProps {
     onSave: (data: any) => Promise<void>;
     onClose?: () => void;
     initialData?: any;
+    currentUserId?: string; // ID of the authenticated user
 }
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     members,
     onSave,
     onClose,
-    initialData
+    initialData,
+    currentUserId
 }) => {
     const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
     const [displayAmount, setDisplayAmount] = useState(initialData?.amount ? new Intl.NumberFormat('es-CL').format(initialData.amount) : '');
     const [description, setDescription] = useState(initialData?.description || '');
-    const [paidBy, setPaidBy] = useState(initialData?.paid_by || members[0]?.id || '');
+
+    // Find the current user's member to set as default payer
+    const currentUserMember = currentUserId
+        ? members.find(m => m.user_id === currentUserId)
+        : null;
+    const [paidBy, setPaidBy] = useState(
+        initialData?.paid_by || currentUserMember?.id || members[0]?.id || ''
+    );
     const [isSelectingPayer, setIsSelectingPayer] = useState(false);
     const [splitWith, setSplitWith] = useState<string[]>(initialData?.split_details?.map((s: any) => s.member_id) || members.map(m => m.id));
     const [notes] = useState(initialData?.notes || '');

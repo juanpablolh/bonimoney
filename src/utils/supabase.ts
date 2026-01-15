@@ -4,8 +4,19 @@ import { AppData, Expense } from '../types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Crear cliente de Supabase
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Crear cliente de Supabase con configuración explícita de persistencia
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    // Usar localStorage para persistir la sesión entre recargas y cierres del navegador
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    // Refrescar automáticamente el token antes de que expire
+    autoRefreshToken: true,
+    // Persistir la sesión en el almacenamiento local
+    persistSession: true,
+    // Detectar sesión en URL (para magic links y confirmaciones de email)
+    detectSessionInUrl: true,
+  },
+});
 
 /**
  * Crear o actualizar un grupo en la base de datos

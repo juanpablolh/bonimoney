@@ -268,6 +268,7 @@ function ProjectView() {
       >
         <ExpenseForm
           members={members}
+          currentUserId={user?.id}
           initialData={editingExpense ? {
             amount: editingExpense.amount,
             description: editingExpense.description,

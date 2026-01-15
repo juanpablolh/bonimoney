@@ -3,6 +3,7 @@ export interface Member {
   name: string;
   avatar_url?: string;
   avatarColor?: { bg: string; main: string; text: string };
+  user_id?: string; // ID of the authenticated user linked to this member
 }
 
 export type Currency = 'CLP' | 'USD' | 'BRL' | 'ARS' | 'EUR' | 'GBP' | 'PEN' | 'UYU';
