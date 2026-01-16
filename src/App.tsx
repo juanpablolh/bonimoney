@@ -16,6 +16,7 @@ import { ExpenseForm } from './components/expenses/ExpenseForm';
 import { CreateProjectModal } from './components/projects/CreateProjectModal';
 import { Plus, House, SignOut, CaretLeft } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getMemberAvatarColor } from './utils/avatarColors';
 
 // Lazy load heavy components
 const GlobalDashboard = lazy(() => import('./components/dashboard/GlobalDashboard').then(m => ({ default: m.GlobalDashboard })));
@@ -48,6 +49,7 @@ function HomeView() {
         onCreateProject={() => setCreateProjectModalOpen(true)}
         onDeleteProject={deleteProject}
         userName={user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuario"}
+        userId={user?.id}
       />
       {!createProjectModalOpen && (
         <div className="fixed bottom-6 right-6 z-40">
@@ -164,12 +166,25 @@ function ProjectView() {
 
           {/* Right: Avatar + Plus Button */}
           <div className="flex items-center gap-4">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-neutral-200 text-neutral-700 font-bold">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
+            {(() => {
+              // Systematized avatar color logic
+              const colors = getMemberAvatarColor({
+                name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+                user_id: user?.id
+              });
+
+              return (
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback
+                    className="font-bold"
+                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                  >
+                    {user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              );
+            })()}
 
             <button
               onClick={() => setExpenseModalOpen(true)}
@@ -182,7 +197,7 @@ function ProjectView() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 lg:overflow-hidden flex flex-col bg-neutral-100">
+      <main className={`flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 flex flex-col bg-neutral-100 ${activeTab === 'dashboard' ? 'lg:overflow-hidden' : 'lg:overflow-y-auto'}`}>
         {activeTab === 'dashboard' && (
           <Dashboard
             members={members}

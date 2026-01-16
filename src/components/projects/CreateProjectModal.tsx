@@ -9,6 +9,8 @@ import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendProjectInvitation } from '@/services/invitations';
+import { PROJECT_THEMES, getProjectTheme } from '@/utils/projectTheme';
+import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -20,8 +22,10 @@ interface CreateProjectModalProps {
 const EMOJIS = ['🏠', '✈️', '🛒', '🎉'];
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
-    const { createProject, loadProjects } = useProject();
+    const { createProject } = useProject();
+    const inviteCardTheme = getProjectTheme('project-orange');
     const { user } = useAuth();
+    const adminColors = getMemberAvatarColor({ name: user?.user_metadata?.full_name || user?.email || 'U' });
     const { keyboardHeight } = useContext(KeyboardViewportContext);
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
@@ -79,12 +83,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
         setStatus('loading');
         // setLoading(true);
         try {
-            const colors = [
-                'project-emerald', 'project-teal', 'project-sky', 'project-sapphire',
-                'project-indigo', 'project-violet', 'project-purple', 'project-orchid',
-                'project-magenta', 'project-rose', 'project-crimson', 'project-orange',
-                'project-burntorange', 'project-amber', 'project-olive'
-            ];
+            const colors = Object.keys(PROJECT_THEMES);
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
             // 1. Create Project
@@ -147,8 +146,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 }
             }
 
-            // 4. Reload projects to get updated member count
-            await loadProjects();
+            // 4. Project is already in local state from createProject()
+            // Real-time subscriptions will handle any sync if needed
 
             // Show success state
             setStatus('success');
@@ -301,10 +300,20 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                             </>
                         ) : (
                             <>
-                                <section className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] bg-neutral-200">
+                                <section
+                                    className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
+                                    style={{ backgroundColor: inviteCardTheme.bgColor, borderColor: inviteCardTheme.borderColor }}
+                                >
+                                    <div className={cn(
+                                        "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                                        inviteCardTheme.overlay || "bg-gradient-to-br from-white/5 to-transparent opacity-30"
+                                    )} />
                                     <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
                                         <div className="space-y-2">
-                                            <p className="text-neutral-600 text-sm font-medium max-w-sm">
+                                            <h3 className="text-[18px] font-serif font-medium tracking-tight leading-none" style={{ color: inviteCardTheme.textColor }}>
+                                                Agranda tu círculo
+                                            </h3>
+                                            <p className="text-sm font-medium max-w-sm leading-relaxed" style={{ color: inviteCardTheme.mutedTextColor }}>
                                                 Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
                                             </p>
                                         </div>
@@ -312,20 +321,22 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                             <button
                                                 type="button"
                                                 onClick={() => setAddMode('name')}
-                                                className={cn(
-                                                    "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
-                                                    addMode === 'name' ? "bg-neutral-300 text-neutral-900" : "bg-transparent text-neutral-600 hover:text-neutral-900"
-                                                )}
+                                                style={{
+                                                    backgroundColor: addMode === 'name' ? inviteCardTheme.iconBgColor : 'transparent',
+                                                    color: addMode === 'name' ? inviteCardTheme.textColor : inviteCardTheme.mutedTextColor
+                                                }}
+                                                className="flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all hover:bg-white/20"
                                             >
                                                 Por nombre
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setAddMode('email')}
-                                                className={cn(
-                                                    "flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all",
-                                                    addMode === 'email' ? "bg-neutral-300 text-neutral-900" : "bg-transparent text-neutral-600 hover:text-neutral-900"
-                                                )}
+                                                style={{
+                                                    backgroundColor: addMode === 'email' ? inviteCardTheme.iconBgColor : 'transparent',
+                                                    color: addMode === 'email' ? inviteCardTheme.textColor : inviteCardTheme.mutedTextColor
+                                                }}
+                                                className="flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-all hover:bg-white/20"
                                             >
                                                 Por email
                                             </button>
@@ -337,20 +348,20 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                                     value={inputValue}
                                                     onChange={(e) => setInputValue(e.target.value)}
                                                     onKeyDown={handleKeyDown}
-                                                    className="w-full h-12 bg-white border border-neutral-300 text-neutral-900 placeholder:text-neutral-400 rounded-xl pl-4 pr-14 focus:ring-0 focus:outline-none text-base font-medium transition-colors"
+                                                    className="w-full h-12 bg-white/60 border-none text-neutral-900 placeholder:text-neutral-500 rounded-xl pl-4 pr-14 focus:ring-0 focus:outline-none text-base font-medium transition-colors backdrop-blur-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={addMember}
                                                     disabled={!inputValue.trim()}
-                                                    style={{ width: '40px', height: '40px', minHeight: '40px' }}
-                                                    className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all active:scale-95 hover:bg-neutral-800 shadow-sm disabled:opacity-50 bg-neutral-900 rounded-xl"
+                                                    style={{ width: '40px', height: '40px', minHeight: '40px', backgroundColor: inviteCardTheme.textColor }}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all active:scale-95 hover:brightness-110 shadow-sm disabled:opacity-50 rounded-xl text-white"
                                                     title={addMode === 'email' ? 'Invitar' : 'Agregar'}
                                                 >
                                                     {addMode === 'email' ? (
-                                                        <PaperPlaneRight size={18} weight="fill" className="text-white" />
+                                                        <PaperPlaneRight size={18} weight="fill" />
                                                     ) : (
-                                                        <Plus size={18} weight="bold" className="text-white" />
+                                                        <Plus size={18} weight="bold" />
                                                     )}
                                                 </button>
                                             </div>
@@ -363,7 +374,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-100/50">
-                                    <div className="w-10 h-10 rounded-full bg-neutral-300 flex items-center justify-center text-neutral-600 font-bold text-sm">
+                                    <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ring-1 ring-inset ring-black/5"
+                                        style={{ backgroundColor: adminColors.bg, color: adminColors.text }}
+                                    >
                                         {user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -376,31 +390,34 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     </div>
                                 </div>
                                 <div className="space-y-3">
-                                    {members.map((member, index) => (
-                                        <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-white border border-neutral-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <div className="flex items-center gap-3 overflow-hidden">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
-                                                    member.type === 'email' ? "bg-purple-100 text-purple-600" : "bg-neutral-100 text-neutral-600"
-                                                )}>
-                                                    {member.type === 'email' ? '✉️' : member.value.charAt(0).toUpperCase()}
+                                    {members.map((member, index) => {
+                                        const avatarColors = getMemberAvatarColor({ name: member.value });
+                                        return (
+                                            <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-white border border-neutral-100 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div
+                                                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 shadow-sm ring-1 ring-inset ring-black/5"
+                                                        style={{ backgroundColor: avatarColors.bg, color: avatarColors.text }}
+                                                    >
+                                                        {member.type === 'email' ? '✉️' : member.value.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-neutral-900 truncate">{member.value}</p>
+                                                        <p className="text-xs text-neutral-500">
+                                                            {member.type === 'email' ? 'Invitación por correo' : 'Agregado por nombre'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-medium text-neutral-900 truncate">{member.value}</p>
-                                                    <p className="text-xs text-neutral-500">
-                                                        {member.type === 'email' ? 'Invitación por correo' : 'Agregado por nombre'}
-                                                    </p>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeMember(index)}
+                                                    className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                                                >
+                                                    <Trash size={20} />
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeMember(index)}
-                                                className="w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
-                                            >
-                                                <Trash size={20} />
-                                            </button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </>
                         )}

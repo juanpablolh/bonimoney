@@ -21,6 +21,7 @@ interface Member {
     id: string;
     name: string;
     project_id: string;
+    user_id?: string;
 }
 
 interface GlobalDashboardProps {
@@ -29,6 +30,7 @@ interface GlobalDashboardProps {
     onCreateProject: () => void;
     onDeleteProject: (id: string) => Promise<void>;
     userName?: string;
+    userId?: string;
 }
 
 export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
@@ -36,7 +38,8 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     onProjectClick,
     onCreateProject,
     onDeleteProject,
-    userName = "Usuario"
+    userName = "Usuario",
+    userId
 }) => {
     const [projectMembers, setProjectMembers] = useState<Record<string, Member[]>>({});
 
@@ -50,7 +53,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
             for (const project of projects) {
                 const { data, error } = await supabase
                     .from('project_members')
-                    .select('id, name, project_id')
+                    .select('id, name, project_id, user_id')
                     .eq('project_id', project.id)
                     .eq('status', 'accepted')
                     .order('created_at', { ascending: true });
@@ -81,7 +84,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                     {/* Right: Avatar + Plus Button */}
                     <div className="flex items-center gap-4">
                         {(() => {
-                            const colors = getMemberAvatarColor({ name: userName });
+                            const colors = getMemberAvatarColor({ name: userName, user_id: userId });
                             return (
                                 <Avatar className="w-12 h-12">
                                     <AvatarImage src="" />

@@ -241,6 +241,11 @@
 
   /* Global UI Constraints */
   button,
+  [role="button"] {
+    @apply cursor-pointer;
+  }
+
+  button,
   [role="button"],
   input,
   select,

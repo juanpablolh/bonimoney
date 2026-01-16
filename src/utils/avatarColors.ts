@@ -65,24 +65,43 @@ export function getAvailableColor(existingMembers: { avatarColor?: { bg: string;
  * Gets the avatar color for a member
  * Uses the stored color if available, otherwise falls back to hash-based color for backward compatibility
  */
-export function getMemberAvatarColor(member: { name: string; avatarColor?: { bg: string; main: string; text: string } }): { bg: string; main: string; text: string } {
+export function getMemberAvatarColor(member: { name?: string; user_id?: string; id?: string; avatarColor?: { bg: string; main: string; text: string } }): { bg: string; main: string; text: string } {
   // If member has a stored color, use it
   if (member.avatarColor) {
     return member.avatarColor;
   }
 
-  // Safety check for null/undefined name
-  if (!member || !member.name) {
-    return CARBON_TAG_COLORS[0]; // Return default color
+  // Priority 1: Use user_id for global consistency across projects
+  if (member.user_id) {
+    let hash = 0;
+    for (let i = 0; i < member.user_id.length; i++) {
+      hash = member.user_id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % CARBON_TAG_COLORS.length;
+    return CARBON_TAG_COLORS[index];
   }
 
-  // Fallback: Generate a consistent color based on name (for backward compatibility)
-  let hash = 0;
-  for (let i = 0; i < member.name.length; i++) {
-    hash = member.name.charCodeAt(i) + ((hash << 5) - hash);
+  // Priority 2: Use member id for project-level consistency
+  if (member.id) {
+    let hash = 0;
+    for (let i = 0; i < member.id.length; i++) {
+      hash = member.id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % CARBON_TAG_COLORS.length;
+    return CARBON_TAG_COLORS[index];
   }
 
-  const index = Math.abs(hash) % CARBON_TAG_COLORS.length;
-  return CARBON_TAG_COLORS[index];
+  // Priority 3: Fallback to name
+  if (member.name) {
+    let hash = 0;
+    for (let i = 0; i < member.name.length; i++) {
+      hash = member.name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % CARBON_TAG_COLORS.length;
+    return CARBON_TAG_COLORS[index];
+  }
+
+  // Fallback default
+  return CARBON_TAG_COLORS[0];
 }
 

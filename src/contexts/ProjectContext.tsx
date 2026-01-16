@@ -75,7 +75,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 memberCount: p.member_count || 1
             }));
 
-            setProjects(userProjects);
+            // Deduplicate projects to prevent race conditions with local state
+            setProjects(prev => {
+                const newProjectIds = new Set(userProjects.map((p: Project) => p.id));
+                const existingNotInNew = prev.filter(p => !newProjectIds.has(p.id));
+                // Prefer the fetched data but keep any locally-added projects not yet in DB
+                return [...userProjects, ...existingNotInNew];
+            });
         } catch {
             setProjects([]);
         } finally {
@@ -146,6 +152,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         setCurrentProject(newProject);
         localStorage.setItem('currentProjectId', newProject.id);
 
+        // Skip realtime reloads for a short period to avoid duplicate entries
+        skipRealtimeReloadRef.current = true;
+        setTimeout(() => {
+            skipRealtimeReloadRef.current = false;
+        }, 2000); // 2 seconds grace period
+
         return newProject;
     };
 
@@ -170,6 +182,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     // Delete project (soft delete - archive)
     const deleteProject = async (id: string) => {
+        // Skip realtime reloads for a short period to avoid unnecessary reloads
+        skipRealtimeReloadRef.current = true;
+
         const { error } = await supabase
             .from('projects')
             .update({
@@ -178,7 +193,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             })
             .eq('id', id);
 
-        if (error) throw error;
+        if (error) {
+            skipRealtimeReloadRef.current = false;
+            throw error;
+        }
 
         // Update local state
         setProjects(prev => prev.filter(p => p.id !== id));
@@ -187,6 +205,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             setCurrentProject(null);
             localStorage.removeItem('currentProjectId');
         }
+
+        // Reset skip flag after grace period
+        setTimeout(() => {
+            skipRealtimeReloadRef.current = false;
+        }, 2000);
     };
 
     // Load projects when user changes
@@ -209,9 +232,26 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     // Keep a ref to the latest loadProjects function
     const loadProjectsRef = useRef(loadProjects);
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const skipRealtimeReloadRef = useRef(false);
+
     useEffect(() => {
         loadProjectsRef.current = loadProjects;
     }, [loadProjects]);
+
+    // Debounced reload function to avoid multiple rapid reloads
+    const debouncedReload = useCallback(() => {
+        // Skip if a local operation just happened
+        if (skipRealtimeReloadRef.current) {
+            return;
+        }
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+            loadProjectsRef.current();
+        }, 300); // 300ms debounce
+    }, []);
 
     // Subscribe to real-time changes for projects and project members
     useEffect(() => {
@@ -227,7 +267,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     table: 'projects'
                 },
                 () => {
-                    loadProjectsRef.current();
+                    debouncedReload();
                 }
             )
             .on(
@@ -238,7 +278,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     table: 'project_members'
                 },
                 () => {
-                    loadProjectsRef.current();
+                    debouncedReload();
                 }
             )
             .subscribe();

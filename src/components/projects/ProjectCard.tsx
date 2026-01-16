@@ -4,10 +4,13 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
 
+import { ProjectTheme } from '@/utils/projectTheme';
+
 interface Member {
     id: string;
     name: string;
     project_id: string;
+    user_id?: string;
 }
 
 interface ProjectCardProps {
@@ -17,7 +20,7 @@ interface ProjectCardProps {
     memberCount: number;
     members: Member[];
     currency: string;
-    colorClass?: string;
+    theme: ProjectTheme;
     isLastStackedCard?: boolean;
 }
 
@@ -26,20 +29,27 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     icon,
     memberCount,
     members,
-    colorClass = 'bg-[oklch(0.32_0.08_145)]',
+    theme,
     isLastStackedCard = false,
 }) => {
 
     return (
-        <div className={cn(
-            "w-full rounded-2xl p-6 transition-all duration-300 border border-white/5",
-            "shadow-xl hover:shadow-2xl hover:-translate-y-1",
-            "cursor-pointer active:scale-[0.98] group relative overflow-hidden flex flex-col justify-between",
-            "h-[180px]",
-            colorClass
-        )}>
-            {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30 pointer-events-none" />
+        <div
+            className={cn(
+                "w-full rounded-2xl p-6 transition-all duration-300",
+                "shadow-xl hover:shadow-2xl hover:-translate-y-1",
+                "cursor-pointer active:scale-[0.98] group relative overflow-hidden flex flex-col justify-between",
+                "h-[180px]"
+            )}
+            style={{
+                backgroundColor: theme.bgColor,
+            }}
+        >
+            {/* Overlay (Glossy or Gradient) */}
+            <div className={cn(
+                "absolute inset-0 pointer-events-none transition-opacity duration-300",
+                theme.overlay || "bg-gradient-to-br from-white/5 to-transparent opacity-30"
+            )} />
 
             <div className="relative z-10">
                 {/* Top Row: Icon and Actions */}
@@ -48,11 +58,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                         <span className="text-3xl filter drop-shadow-sm">
                             {icon}
                         </span>
-                        <h3 className="text-2xl font-serif text-white tracking-tight leading-tight">
+                        <h3
+                            className="text-2xl font-serif tracking-tight leading-tight"
+                            style={{ color: theme.textColor }}
+                        >
                             {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}
                         </h3>
                     </div>
-                    <div className="w-12 h-12 rounded-lg bg-black/20 backdrop-blur-sm flex items-center justify-center text-white/90 group-hover:text-white group-hover:bg-black/30 transition-all border border-white/5">
+                    <div
+                        className={cn(
+                            "w-12 h-12 rounded-lg flex items-center justify-center transition-all",
+                            "backdrop-blur-sm",
+                            "group-hover:scale-105"
+                        )}
+                        style={{
+                            backgroundColor: theme.iconBgColor,
+                            color: theme.iconTextColor
+                        }}
+                    >
                         <CaretRight size={20} weight="bold" />
                     </div>
                 </div>
@@ -66,10 +89,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 {/* Footer: Member Count & Avatars */}
                 <div className="flex items-end justify-between">
                     <div className="flex items-center gap-3">
-                        <span className="text-3xl font-serif text-white/90 leading-none">
+                        <span
+                            className="text-3xl font-serif leading-none"
+                            style={{ color: theme.textColor }}
+                        >
                             {memberCount}
                         </span>
-                        <span className="text-lg font-sans text-white/80 leading-none">
+                        <span
+                            className="text-lg font-sans leading-none"
+                            style={{ color: theme.mutedTextColor }}
+                        >
                             Integrantes
                         </span>
                     </div>

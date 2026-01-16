@@ -55,7 +55,7 @@ export async function sendProjectInvitation(
       .select('id, status, user_id, invitation_token')
       .eq('project_id', projectId)
       .eq('email', normalizedEmail)
-      .single();
+      .maybeSingle();
 
     if (existingMember) {
       if (existingMember.status === 'accepted') {

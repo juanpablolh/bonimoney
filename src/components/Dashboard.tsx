@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { getExpenseColor } from '../utils/expenseIcons';
 import { getMemberAvatarColor } from '../utils/avatarColors';
+import { getProjectTheme } from '@/utils/projectTheme';
 import {
   Dialog,
   DialogContent,
@@ -128,58 +129,7 @@ export default function Dashboard({
     e.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Premium OKLCH Color Palette matching GlobalDashboard (15 variants)
-  const getProjectBgColor = () => {
-    const palette = [
-      'oklch(0.32 0.08 145)', // 0. Emerald
-      'oklch(0.30 0.08 175)', // 1. Deep Teal
-      'oklch(0.29 0.09 200)', // 2. Sky
-      'oklch(0.27 0.10 225)', // 3. Sapphire
-      'oklch(0.27 0.10 250)', // 4. Indigo
-      'oklch(0.27 0.10 265)', // 5. Deep Violet
-      'oklch(0.29 0.11 290)', // 6. Purple
-      'oklch(0.32 0.12 310)', // 7. Orchid
-      'oklch(0.29 0.12 330)', // 8. Magenta
-      'oklch(0.29 0.10 350)', // 9. Rose
-      'oklch(0.32 0.12 15)',  // 10. Crimson
-      'oklch(0.34 0.10 35)',  // 11. Red Orange
-      'oklch(0.34 0.09 55)',  // 12. Burnt Orange
-      'oklch(0.34 0.08 80)',  // 13. Amber
-      'oklch(0.32 0.07 110)', // 14. Olive
-    ];
-
-    if (currentProject?.color) {
-      switch (currentProject.color) {
-        case 'project-emerald': return palette[0];
-        case 'project-teal': return palette[1];
-        case 'project-sky': return palette[2];
-        case 'project-sapphire': return palette[3];
-        case 'project-indigo': return palette[4];
-        case 'project-violet': return palette[5];
-        case 'project-purple': return palette[6];
-        case 'project-orchid': return palette[7];
-        case 'project-magenta': return palette[8];
-        case 'project-rose': return palette[9];
-        case 'project-crimson': return palette[10];
-        case 'project-orange': return palette[11];
-        case 'project-burntorange': return palette[12];
-        case 'project-amber': return palette[13];
-        case 'project-olive': return palette[14];
-      }
-    }
-
-    // Stable fallback based on ID hash if no color is set
-    if (currentProject?.id) {
-      const id = currentProject.id;
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      return palette[Math.abs(hash) % palette.length];
-    }
-
-    return palette[0];
-  };
+  const theme = getProjectTheme(currentProject?.color, currentProject?.id);
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 pb-0 lg:pb-0 w-full min-w-0 lg:h-full">
@@ -188,53 +138,63 @@ export default function Dashboard({
       <div className="lg:col-span-4 space-y-4 flex flex-col min-w-0 min-h-0 h-auto lg:h-full flex-shrink-0">
         {/* Project Card (Dynamic Color) */}
         <div
-          className="rounded-xl p-4 text-white transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px]"
-          style={{ backgroundColor: getProjectBgColor() }}
+          className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
+          style={{ backgroundColor: theme.bgColor, borderColor: theme.borderColor }}
         >
+          {/* Overlay */}
+          <div className={cn(
+            "absolute inset-0 pointer-events-none transition-opacity duration-300",
+            theme.overlay || "bg-gradient-to-br from-white/5 to-transparent opacity-30"
+          )} />
+
           {/* Header Row: Icon + Title + Users Button */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between relative z-10">
             <div className="flex items-center gap-3">
-              <span className="text-4xl">{currentProject?.icon}</span>
-              <h2 className="font-serif text-2xl tracking-tight leading-none text-white mt-1">
+              <span className="text-4xl filter drop-shadow-sm">{currentProject?.icon}</span>
+              <h2
+                className="font-serif text-2xl tracking-tight leading-none mt-1"
+                style={{ color: theme.textColor }}
+              >
                 {(currentProject?.name || '').charAt(0).toUpperCase() + (currentProject?.name || '').slice(1).toLowerCase()}
               </h2>
             </div>
 
             <button
               onClick={(e) => { e.stopPropagation(); onNavigateToMembers(); }}
-              className="text-white/90 font-medium text-sm flex items-center gap-2 hover:text-white transition-colors"
+              className="font-medium text-sm flex items-center gap-2 transition-colors hover:opacity-80"
+              style={{ color: theme.mutedTextColor }}
             >
               Detalles <ArrowRight size={18} weight="bold" />
             </button>
           </div>
 
           {/* TOTAL GASTO SECTION (Moved) */}
-          <div className="mt-4">
-            <p className="text-white/80 text-sm font-medium mb-1">
+          <div className="mt-4 relative z-10">
+            <p className="text-sm font-medium mb-1" style={{ color: theme.mutedTextColor }}>
               Gasto total
             </p>
             {currencies.length > 0 ? (
               currencies.map(([curr, amount]) => (
-                <h3 key={curr} className="font-serif tracking-tighter text-white leading-none" style={{ fontSize: '32px' }}>
-                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans text-white/60 ml-1 tracking-wide">{curr}</span>
+                <h3 key={curr} className="font-serif tracking-tighter leading-none" style={{ fontSize: '32px', color: theme.textColor }}>
+                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans ml-1 tracking-wide" style={{ color: theme.mutedTextColor }}>{curr}</span>
                 </h3>
               ))
             ) : (
-              <h3 className="font-serif text-4xl tracking-tighter text-white/40">$ 0</h3>
+              <h3 className="font-serif text-4xl tracking-tighter" style={{ color: theme.mutedTextColor, opacity: 0.5 }}>$ 0</h3>
             )}
           </div>
 
           {/* Footer Row: Count + Avatars */}
-          <div className="flex items-end justify-between mt-6">
-            <p className="text-white/90 pb-1">
+          <div className="flex items-end justify-between mt-6 relative z-10">
+            <p className="pb-1" style={{ color: theme.textColor }}>
               <span className="font-serif text-3xl tracking-tight">{members.length}</span>
-              <span className="ml-2 text-sm font-medium">Integrantes</span>
+              <span className="ml-2 text-sm font-medium" style={{ color: theme.mutedTextColor }}>Integrantes</span>
             </p>
             <div className="flex -space-x-3">
               {members.slice(0, 4).map((member) => {
                 const colors = getMemberAvatarColor(member);
                 return (
-                  <Avatar key={member.id} className="w-10 h-10 border-2 border-white/10 ring-2 ring-black/5">
+                  <Avatar key={member.id} className="w-10 h-10 border-2 border-white shadow-sm">
                     <AvatarImage src={member.avatar_url} />
                     <AvatarFallback
                       className="text-xs font-bold uppercase"
@@ -250,15 +210,11 @@ export default function Dashboard({
 
         </div>
 
-
-
-
       </div>
 
       {/* ===== MIDDLE COLUMN: ACTIVIDAD RECIENTE ===== */}
       <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
         <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col h-full">
-          {/* Header */}
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-[12px] border-b border-neutral-100">
             <div className="flex items-center gap-2 text-neutral-950 h-fit">
@@ -272,8 +228,6 @@ export default function Dashboard({
               Detalles <ArrowRight size={18} weight="bold" />
             </button>
           </div>
-
-
 
           {/* Search Bar */}
           <div className="px-4 pb-4 pt-4">
