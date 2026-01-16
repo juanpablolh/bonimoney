@@ -122,14 +122,29 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             // 3. Process Email Invitations
             const emailMembers = members.filter(m => m.type === 'email' && m.value.trim().length > 0);
 
-            for (const member of emailMembers) {
-                await sendProjectInvitation(
-                    newProject.id,
-                    member.value,
-                    user?.user_metadata?.full_name || 'Alguien',
-                    newProject.name,
-                    newProject.icon
-                );
+            if (emailMembers.length > 0) {
+                for (const member of emailMembers) {
+                    try {
+                        const result = await sendProjectInvitation(
+                            newProject.id,
+                            member.value,
+                            user?.user_metadata?.full_name || 'Alguien',
+                            newProject.name,
+                            newProject.icon
+                        );
+
+                        if (!result.success) {
+                            toast.error('Error al enviar invitación', {
+                                description: `No se pudo invitar a ${member.value}: ${result.error || 'Error desconocido'}`
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error sending invitation:', error);
+                        toast.error('Error al enviar invitación', {
+                            description: `No se pudo invitar a ${member.value}`
+                        });
+                    }
+                }
             }
 
             // 4. Reload projects to get updated member count
