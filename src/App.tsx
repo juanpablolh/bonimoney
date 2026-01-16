@@ -14,6 +14,7 @@ import { calculateBalancesByCurrency, optimizeTransactionsByCurrency } from './u
 import { ResponsiveModal } from './components/ui-custom/ResponsiveModal';
 import { ExpenseForm } from './components/expenses/ExpenseForm';
 import { CreateProjectModal } from './components/projects/CreateProjectModal';
+import { SettingsDrawer } from './components/settings/SettingsDrawer';
 import { Plus, House, SignOut, CaretLeft } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from './utils/avatarColors';
@@ -38,6 +39,7 @@ function HomeView() {
   const { projects, deleteProject } = useProject();
   const navigate = useNavigate();
   const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <>
@@ -50,7 +52,14 @@ function HomeView() {
         onDeleteProject={deleteProject}
         userName={user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuario"}
         userId={user?.id}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
+
+      <SettingsDrawer
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
+
       {!createProjectModalOpen && (
         <div className="fixed bottom-6 right-6 z-40">
           <Button
@@ -83,6 +92,7 @@ function ProjectView() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'members' | 'expenses'>('dashboard');
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Set current project based on URL parameter
   useEffect(() => {
@@ -136,6 +146,8 @@ function ProjectView() {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-100 lg:h-screen lg:overflow-hidden">
+      <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+
       {/* Header - Figma Design */}
       <header className="bg-white sticky top-0 z-40 border-b border-neutral-100 flex-shrink-0">
         <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
@@ -174,15 +186,20 @@ function ProjectView() {
               });
 
               return (
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback
-                    className="font-bold"
-                    style={{ backgroundColor: colors.bg, color: colors.text }}
-                  >
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <button
+                  onClick={() => setSettingsOpen(true)}
+                  className="rounded-full transition-transform hover:scale-105 active:scale-95 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900"
+                >
+                  <Avatar className="w-12 h-12 cursor-pointer shadow-sm border border-neutral-100">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback
+                      className="font-bold"
+                      style={{ backgroundColor: colors.bg, color: colors.text }}
+                    >
+                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
               );
             })()}
 

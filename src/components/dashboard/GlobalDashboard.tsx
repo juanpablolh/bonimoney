@@ -31,6 +31,7 @@ interface GlobalDashboardProps {
     onDeleteProject: (id: string) => Promise<void>;
     userName?: string;
     userId?: string;
+    onOpenSettings?: () => void;
 }
 
 export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
@@ -39,7 +40,8 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     onCreateProject,
     onDeleteProject,
     userName = "Usuario",
-    userId
+    userId,
+    onOpenSettings
 }) => {
     const [projectMembers, setProjectMembers] = useState<Record<string, Member[]>>({});
 
@@ -86,15 +88,20 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                         {(() => {
                             const colors = getMemberAvatarColor({ name: userName, user_id: userId });
                             return (
-                                <Avatar className="w-12 h-12">
-                                    <AvatarImage src="" />
-                                    <AvatarFallback
-                                        className="font-bold"
-                                        style={{ backgroundColor: colors.bg, color: colors.text }}
-                                    >
-                                        {userName.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <button
+                                    onClick={onOpenSettings}
+                                    className="rounded-full transition-transform hover:scale-105 active:scale-95 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900"
+                                >
+                                    <Avatar className="w-12 h-12 cursor-pointer shadow-sm border border-neutral-100">
+                                        <AvatarImage src="" />
+                                        <AvatarFallback
+                                            className="font-bold"
+                                            style={{ backgroundColor: colors.bg, color: colors.text }}
+                                        >
+                                            {userName.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </button>
                             );
                         })()}
 
