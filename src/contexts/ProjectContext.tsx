@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../utils/supabase';
 
@@ -207,6 +207,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
     }, [currentProject, user]);
 
+    // Keep a ref to the latest loadProjects function
+    const loadProjectsRef = useRef(loadProjects);
+    useEffect(() => {
+        loadProjectsRef.current = loadProjects;
+    }, [loadProjects]);
+
     // Subscribe to real-time changes for projects and project members
     useEffect(() => {
         if (!user) return;
@@ -221,7 +227,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     table: 'projects'
                 },
                 () => {
-                    loadProjects();
+                    loadProjectsRef.current();
                 }
             )
             .on(
@@ -232,7 +238,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     table: 'project_members'
                 },
                 () => {
-                    loadProjects();
+                    loadProjectsRef.current();
                 }
             )
             .subscribe();
@@ -240,7 +246,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]); // Removed loadProjects from dependencies
+    }, [user]);
 
     return (
         <ProjectContext.Provider

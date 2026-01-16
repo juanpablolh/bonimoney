@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { useProject } from './ProjectContext';
 import { supabase } from '../utils/supabase';
@@ -300,6 +300,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         loadExpenses();
     }, [loadExpenses]);
 
+    // Keep a ref to the latest loadExpenses function
+    const loadExpensesRef = useRef(loadExpenses);
+    useEffect(() => {
+        loadExpensesRef.current = loadExpenses;
+    }, [loadExpenses]);
+
     // Subscribe to real-time changes for expenses and splits
     useEffect(() => {
         if (!currentProject) return;
@@ -315,7 +321,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     filter: `project_id=eq.${currentProject.id}`
                 },
                 () => {
-                    loadExpenses();
+                    loadExpensesRef.current();
                 }
             )
             .on(
@@ -326,7 +332,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     table: 'splits'
                 },
                 () => {
-                    loadExpenses();
+                    loadExpensesRef.current();
                 }
             )
             .subscribe();
@@ -334,7 +340,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentProject]); // Removed loadExpenses from dependencies
+    }, [currentProject]);
 
     return (
         <ExpenseContext.Provider

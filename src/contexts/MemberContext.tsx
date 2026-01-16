@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { useProject } from './ProjectContext';
 import { supabase } from '../utils/supabase';
@@ -122,6 +122,12 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         loadMembers();
     }, [loadMembers]);
 
+    // Keep a ref to the latest loadMembers function
+    const loadMembersRef = useRef(loadMembers);
+    useEffect(() => {
+        loadMembersRef.current = loadMembers;
+    }, [loadMembers]);
+
     // Subscribe to real-time changes for project members
     useEffect(() => {
         if (!currentProject) return;
@@ -137,7 +143,7 @@ export function MemberProvider({ children }: { children: ReactNode }) {
                     filter: `project_id=eq.${currentProject.id}`
                 },
                 () => {
-                    loadMembers();
+                    loadMembersRef.current();
                 }
             )
             .subscribe();
@@ -145,7 +151,7 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentProject]); // Removed loadMembers from dependencies
+    }, [currentProject]);
 
     return (
         <MemberContext.Provider
