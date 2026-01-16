@@ -8,6 +8,7 @@ import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useProject } from '@/contexts/ProjectContext';
+import { useMembers } from '@/contexts/MemberContext';
 import { supabase } from '@/utils/supabase';
 import { toast } from 'sonner';
 import { User, SignOut, ShieldWarning, Moon, Sun, PencilSimple, Eye, EyeSlash, X } from '@phosphor-icons/react';
@@ -19,9 +20,10 @@ interface SettingsDrawerProps {
 }
 
 export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
-    const { user, signOut } = useAuth();
+    const { user, signOut, refreshUser } = useAuth();
     const { theme, setTheme } = useTheme();
     const { projects } = useProject();
+    const { loadMembers } = useMembers();
 
     // Profile state
     const [name, setName] = useState('');
@@ -107,6 +109,16 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
 
             if (updateError) throw updateError;
 
+            // 6. Sync avatar to all project_members records for this user
+            await supabase
+                .from('project_members')
+                .update({ avatar_url: publicUrl })
+                .eq('user_id', user.id);
+
+            // Refresh user state globally
+            await refreshUser();
+            // Refresh members list to show updated avatar
+            await loadMembers();
             toast.success('Avatar actualizado');
 
         } catch (error) {
@@ -128,6 +140,17 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
             });
 
             if (error) throw error;
+
+            // Sync removal to all project_members records for this user
+            await supabase
+                .from('project_members')
+                .update({ avatar_url: null })
+                .eq('user_id', user.id);
+
+            // Refresh user state globally
+            await refreshUser();
+            // Refresh members list
+            await loadMembers();
             toast.success('Avatar eliminado');
         } catch (error) {
             console.error('Error removing avatar:', error);

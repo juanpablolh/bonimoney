@@ -22,6 +22,7 @@ interface Member {
     name: string;
     project_id: string;
     user_id?: string;
+    avatar_url?: string;
 }
 
 interface GlobalDashboardProps {
@@ -31,6 +32,7 @@ interface GlobalDashboardProps {
     onDeleteProject: (id: string) => Promise<void>;
     userName?: string;
     userId?: string;
+    userAvatarUrl?: string;
     onOpenSettings?: () => void;
 }
 
@@ -41,6 +43,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     onDeleteProject,
     userName = "Usuario",
     userId,
+    userAvatarUrl,
     onOpenSettings
 }) => {
     const [projectMembers, setProjectMembers] = useState<Record<string, Member[]>>({});
@@ -55,7 +58,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
             for (const project of projects) {
                 const { data, error } = await supabase
                     .from('project_members')
-                    .select('id, name, project_id, user_id')
+                    .select('id, name, project_id, user_id, avatar_url')
                     .eq('project_id', project.id)
                     .eq('status', 'accepted')
                     .order('created_at', { ascending: true });
@@ -69,7 +72,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
         };
 
         fetchAllMembers();
-    }, [projects]);
+    }, [projects, userAvatarUrl]); // Re-fetch when user avatar changes
 
     return (
         <div className="min-h-screen bg-neutral-50 selection:bg-neutral-200">
@@ -93,7 +96,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                                     className="rounded-full transition-transform hover:scale-105 active:scale-95 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900"
                                 >
                                     <Avatar className="w-12 h-12 cursor-pointer shadow-sm border border-neutral-100">
-                                        <AvatarImage src="" />
+                                        <AvatarImage src={userAvatarUrl} className="object-cover" />
                                         <AvatarFallback
                                             className="font-bold"
                                             style={{ backgroundColor: colors.bg, color: colors.text }}

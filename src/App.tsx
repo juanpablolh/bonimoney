@@ -44,6 +44,7 @@ function HomeView() {
   return (
     <>
       <GlobalDashboard
+        key={`dashboard-${user?.user_metadata?.avatar_url || 'no-avatar'}`}
         projects={projects}
         onProjectClick={(id) => {
           navigate(`/project/${id}`);
@@ -52,6 +53,7 @@ function HomeView() {
         onDeleteProject={deleteProject}
         userName={user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuario"}
         userId={user?.id}
+        userAvatarUrl={user?.user_metadata?.avatar_url}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 

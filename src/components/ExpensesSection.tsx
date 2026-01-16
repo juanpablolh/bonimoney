@@ -6,8 +6,7 @@ import {
   CalendarBlank,
   User,
   MagnifyingGlass,
-  X,
-  CurrencyCircleDollar
+  X
 } from '@phosphor-icons/react';
 import { Member, Expense } from '../types';
 import { formatCurrency, formatDate } from '../utils/calculations';
@@ -154,7 +153,7 @@ export default function ExpensesSection({
                           colors.bg,
                           colors.text
                         )}>
-                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <CurrencyCircleDollar size={24} weight="regular" />}
+                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <Receipt size={24} weight="regular" />}
                         </div>
                       );
                     })()}

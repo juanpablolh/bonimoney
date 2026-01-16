@@ -1,7 +1,7 @@
 import React from 'react';
 import { CaretRight } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
 
 import { ProjectTheme } from '@/utils/projectTheme';
@@ -11,6 +11,7 @@ interface Member {
     name: string;
     project_id: string;
     user_id?: string;
+    avatar_url?: string;
 }
 
 interface ProjectCardProps {
@@ -115,6 +116,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                                     className="w-10 h-10 border-2 border-white shadow-sm"
                                     style={{ zIndex: 3 - i }}
                                 >
+                                    <AvatarImage src={member.avatar_url} className="object-cover" />
                                     <AvatarFallback
                                         className="text-sm font-bold"
                                         style={{ backgroundColor: colors.bg, color: colors.text }}

@@ -9,6 +9,7 @@ export interface Member {
     user_id?: string;
     email?: string;
     name: string;
+    avatar_url?: string;
     role: 'owner' | 'member';
     status: 'pending' | 'accepted';
     invited_by?: string;
