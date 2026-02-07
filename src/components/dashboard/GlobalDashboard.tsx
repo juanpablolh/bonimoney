@@ -72,7 +72,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
         };
 
         fetchAllMembers();
-    }, [projects, userAvatarUrl]); // Re-fetch when user avatar changes
+    }, [projects]); // Solo recargar cuando cambian los proyectos
 
     return (
         <div className="min-h-screen bg-neutral-50 selection:bg-neutral-200">

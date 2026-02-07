@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ArrowRight,
   TrendDown,
@@ -97,36 +97,45 @@ export default function Dashboard({
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // Calculate total expenses by currency (excluding settlements)
-  const totalByCurrency = new Map<Currency, number>();
-  expenses.forEach((expense) => {
-    // Skip settlement transactions from total
-    if (expense.expense_type === 'settlement' || expense.expense_type === 'payment') return;
-    const current = totalByCurrency.get(expense.currency) || 0;
-    totalByCurrency.set(expense.currency, current + expense.amount);
-  });
+  // Calculate total expenses by currency (excluding settlements) - memoized
+  const totalByCurrency = useMemo(() => {
+    const map = new Map<Currency, number>();
+    expenses.forEach((expense) => {
+      // Skip settlement transactions from total
+      if (expense.expense_type === 'settlement' || expense.expense_type === 'payment') return;
+      const current = map.get(expense.currency) || 0;
+      map.set(expense.currency, current + expense.amount);
+    });
+    return map;
+  }, [expenses]);
 
-  const currencies = Array.from(totalByCurrency.entries());
+  const currencies = useMemo(() => Array.from(totalByCurrency.entries()), [totalByCurrency]);
 
-  const sortedExpenses = [...expenses].sort((a, b) => {
-    // Compare dates at midnight to ignore time differences (like 00:00 vs 05:00)
-    const dateA = new Date(a.date);
-    dateA.setHours(0, 0, 0, 0);
-    const dateB = new Date(b.date);
-    dateB.setHours(0, 0, 0, 0);
+  const sortedExpenses = useMemo(() =>
+    [...expenses].sort((a, b) => {
+      // Compare dates at midnight to ignore time differences (like 00:00 vs 05:00)
+      const dateA = new Date(a.date);
+      dateA.setHours(0, 0, 0, 0);
+      const dateB = new Date(b.date);
+      dateB.setHours(0, 0, 0, 0);
 
-    const diff = dateB.getTime() - dateA.getTime();
-    if (diff !== 0) return diff;
+      const diff = dateB.getTime() - dateA.getTime();
+      if (diff !== 0) return diff;
 
-    // Fallback to creation time for same-day expenses
-    const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      // Fallback to creation time for same-day expenses
+      const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
 
-    return createdB - createdA;
-  });
+      return createdB - createdA;
+    }),
+    [expenses]
+  );
 
-  const filteredExpenses = sortedExpenses.filter(e =>
-    e.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredExpenses = useMemo(() =>
+    sortedExpenses.filter(e =>
+      e.description.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+    [sortedExpenses, searchQuery]
   );
 
   const theme = getProjectTheme(currentProject?.color, currentProject?.id);

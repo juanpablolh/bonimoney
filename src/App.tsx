@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useProject } from './contexts/ProjectContext';
@@ -128,11 +128,17 @@ function ProjectView() {
   };
 
 
-  // Adapters for compatibility
-  const members = adaptMembers(contextMembers);
-  const expenses = adaptExpenses(contextExpenses);
-  const balancesByCurrency = calculateBalancesByCurrency(members, expenses);
-  const transactionsByCurrency = optimizeTransactionsByCurrency(balancesByCurrency);
+  // Adapters for compatibility (memoized for performance)
+  const members = useMemo(() => adaptMembers(contextMembers), [contextMembers]);
+  const expenses = useMemo(() => adaptExpenses(contextExpenses), [contextExpenses]);
+  const balancesByCurrency = useMemo(
+    () => calculateBalancesByCurrency(members, expenses),
+    [members, expenses]
+  );
+  const transactionsByCurrency = useMemo(
+    () => optimizeTransactionsByCurrency(balancesByCurrency),
+    [balancesByCurrency]
+  );
 
   // Show loading while project is being set
   if (!currentProject) {
