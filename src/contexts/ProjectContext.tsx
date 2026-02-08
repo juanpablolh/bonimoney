@@ -148,15 +148,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         if (userProjectError) throw userProjectError;
 
         // Update local state
-        setProjects(prev => [newProject, ...prev]);
+        setProjects(prev => {
+            if (prev.some(p => p.id === newProject.id)) return prev;
+            return [newProject, ...prev];
+        });
         setCurrentProject(newProject);
         localStorage.setItem('currentProjectId', newProject.id);
-
-        // Skip realtime reloads for a short period to avoid duplicate entries
-        skipRealtimeReloadRef.current = true;
-        setTimeout(() => {
-            skipRealtimeReloadRef.current = false;
-        }, 2000); // 2 seconds grace period
 
         return newProject;
     };
@@ -182,9 +179,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     // Delete project (soft delete - archive)
     const deleteProject = async (id: string) => {
-        // Skip realtime reloads for a short period to avoid unnecessary reloads
-        skipRealtimeReloadRef.current = true;
-
         const { error } = await supabase
             .from('projects')
             .update({
@@ -194,7 +188,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             .eq('id', id);
 
         if (error) {
-            skipRealtimeReloadRef.current = false;
             throw error;
         }
 
@@ -205,11 +198,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             setCurrentProject(null);
             localStorage.removeItem('currentProjectId');
         }
-
-        // Reset skip flag after grace period
-        setTimeout(() => {
-            skipRealtimeReloadRef.current = false;
-        }, 2000);
     };
 
     // Load projects when user changes
@@ -251,31 +239,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }
     }, [currentProject, user]);
 
-    // Keep a ref to the latest loadProjects function
-    const loadProjectsRef = useRef(loadProjects);
-    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const skipRealtimeReloadRef = useRef(false);
-
-    useEffect(() => {
-        loadProjectsRef.current = loadProjects;
-    }, [loadProjects]);
-
-    // Debounced reload function to avoid multiple rapid reloads
-    const debouncedReload = useCallback(() => {
-        // Skip if a local operation just happened
-        if (skipRealtimeReloadRef.current) {
-            return;
-        }
-        if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-        }
-        debounceTimerRef.current = setTimeout(() => {
-            loadProjectsRef.current();
-        }, 300); // 300ms debounce
-    }, []);
-
-    // Subscribe to real-time changes for projects only
-    // Note: project_members changes are handled by MemberContext per-project
+    // Real-time subscription
     useEffect(() => {
         if (!user) return;
 
@@ -288,8 +252,34 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     schema: 'public',
                     table: 'projects'
                 },
-                () => {
-                    debouncedReload();
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        const newProject = payload.new as Project;
+                        // Only add if not already in state (avoids duplicates from optimistic updates)
+                        setProjects(prev => {
+                            if (prev.some(p => p.id === newProject.id)) return prev;
+                            return [newProject, ...prev];
+                        });
+                    } else if (payload.eventType === 'UPDATE') {
+                        const updatedProject = payload.new as Project;
+                        setProjects(prev => prev.map(p =>
+                            p.id === updatedProject.id ? { ...p, ...updatedProject } : p
+                        ));
+
+                        // Also update currentProject if it's the one being edited
+                        if (currentProject?.id === updatedProject.id) {
+                            setCurrentProject(prev => prev ? { ...prev, ...updatedProject } : null);
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        const deletedProject = payload.old as { id: string };
+                        setProjects(prev => prev.filter(p => p.id !== deletedProject.id));
+
+                        // If current project was deleted, clear selection
+                        if (currentProject?.id === deletedProject.id) {
+                            setCurrentProject(null);
+                            localStorage.removeItem('currentProjectId');
+                        }
+                    }
                 }
             )
             .subscribe();
@@ -297,7 +287,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, debouncedReload]);
+    }, [user, currentProject]);
 
     return (
         <ProjectContext.Provider

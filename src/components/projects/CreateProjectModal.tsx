@@ -26,17 +26,46 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
     const { user } = useAuth();
     const adminColors = getMemberAvatarColor({ name: user?.user_metadata?.full_name || user?.email || 'U' });
     const { keyboardHeight } = useContext(KeyboardViewportContext);
-    const [step, setStep] = useState(1);
-    const [name, setName] = useState('');
-    const [icon, setIcon] = useState('🏠');
-    const [currency, setCurrency] = useState('CLP');
+
+    // Load saved state or default
+    const getSavedState = () => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const saved = sessionStorage.getItem('boni_create_project_data');
+            return saved ? JSON.parse(saved) : null;
+        } catch { return null; }
+    };
+
+    const savedState = getSavedState();
+
+    const [step, setStep] = useState(savedState?.step || 1);
+    const [name, setName] = useState(savedState?.name || '');
+    const [icon, setIcon] = useState(savedState?.icon || '🏠');
+    const [currency, setCurrency] = useState(savedState?.currency || 'CLP');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [showPicker, setShowPicker] = useState(false);
     const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-    const [members, setMembers] = useState<{ type: 'name' | 'email', value: string }[]>([]);
-    const [addMode, setAddMode] = useState<'name' | 'email'>('name');
-    const [inputValue, setInputValue] = useState('');
+    const [members, setMembers] = useState<{ type: 'name' | 'email', value: string }[]>(savedState?.members || []);
+    const [addMode, setAddMode] = useState<'name' | 'email'>(savedState?.addMode || 'name');
+    const [inputValue, setInputValue] = useState(savedState?.inputValue || '');
     const [showError, setShowError] = useState(false);
+
+    // Persist state changes
+    useEffect(() => {
+        // Only save if open (to avoid saving cleared state during closing animation)
+        if (open) {
+            const data = {
+                step,
+                name,
+                icon,
+                currency,
+                members,
+                addMode,
+                inputValue
+            };
+            sessionStorage.setItem('boni_create_project_data', JSON.stringify(data));
+        }
+    }, [open, step, name, icon, currency, members, addMode, inputValue]);
 
     const CURRENCIES = [
         { code: 'CLP', name: 'Peso chileno', flag: '🇨🇱' },
@@ -52,6 +81,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
     // Reset state when modal closes
     useEffect(() => {
         if (!open) {
+            // Clear session storage immediately
+            sessionStorage.removeItem('boni_create_project_data');
+
             const timer = setTimeout(() => {
                 setStep(1);
                 setName('');
