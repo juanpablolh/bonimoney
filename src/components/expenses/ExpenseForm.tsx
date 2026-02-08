@@ -178,7 +178,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         }
     };
 
-    const getSplitPlaceholder = (mode: 'percentage' | 'amount') => {
+    const getSplitPlaceholder = () => {
         return '0';
     };
 
@@ -414,7 +414,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                                             inputMode="decimal"
                                                             value={splitValues[member.id] || ''}
                                                             onChange={(e) => handleSplitValueChange(member.id, e.target.value)}
-                                                            placeholder={getSplitPlaceholder(splitMode as 'percentage' | 'amount')}
+                                                            placeholder={getSplitPlaceholder()}
                                                             className="flex-1 min-w-0 text-right bg-transparent border-none p-0 text-sm font-medium placeholder:text-neutral-500 focus:ring-0 outline-none text-neutral-800"
                                                         />
                                                         {splitMode === 'percentage' && <span className="text-neutral-600 text-xs shrink-0">%</span>}
