@@ -5,7 +5,7 @@ import { ResponsiveModal, KeyboardViewportContext } from '@/components/ui-custom
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { capitalizeName } from '@/utils/calculations';
+import { capitalizeName, formatCurrency } from '@/utils/calculations';
 import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { cn } from '@/lib/utils';
 import type { Member } from '@/types';
@@ -59,7 +59,7 @@ export function SettlementDrawer({
         }
 
         if (num > totalDebt) {
-            setError(`El monto excede tu deuda de $ ${totalDebt.toLocaleString('es-CL')}`);
+            setError(`El monto excede tu deuda de ${formatCurrency(totalDebt, transaction.currency)}`);
         } else if (num <= 0) {
             setError('El monto debe ser mayor a 0');
         }
@@ -170,7 +170,7 @@ export function SettlementDrawer({
                         <section className="space-y-3">
                             <label className="block text-sm font-semibold text-neutral-900">Deuda total</label>
                             <p className="text-2xl font-bold text-neutral-900">
-                                $ {totalDebt.toLocaleString('es-CL')} {transaction.currency}
+                                {formatCurrency(totalDebt, transaction.currency)}
                             </p>
                         </section>
 

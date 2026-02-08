@@ -1,20 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Receipt,
-  Trash,
   PencilSimple,
-  CalendarBlank,
-  User,
   MagnifyingGlass,
-  X
+  X,
+  Receipt,
+  CaretDown,
+  CaretUp
 } from '@phosphor-icons/react';
 import { Member, Expense } from '../types';
-import { formatCurrency, formatDate } from '../utils/calculations';
+import { formatCurrency, formatDate, capitalizeName } from '../utils/calculations';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { getExpenseColor } from '../utils/expenseIcons';
 import { getMemberAvatarColor } from '../utils/avatarColors';
 
 import {
@@ -62,27 +60,20 @@ export default function ExpensesSection({
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Handle click outside to close expanded expense
+  // No longer using click outside to allow for better accordion behavior without event conflicts
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (expandedRef.current && !expandedRef.current.contains(event.target as Node)) {
-        setExpandedId(null);
-      }
-    };
-
-    if (expandedId) {
-      document.addEventListener('mousedown', handleClickOutside);
+    // Scroll to the expanded element if needed
+    if (expandedId && expandedRef.current) {
+      // Small timeout to allow for animation
+      setTimeout(() => {
+        expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 300);
     }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
   }, [expandedId]);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* 1. SEARCH & HEADER */}
-      <section className="space-y-4 px-2">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <section className="px-2">
         <div className="flex justify-between items-end">
           <div>
             <h2 style={{
@@ -96,28 +87,10 @@ export default function ExpensesSection({
             }}>Gastos</h2>
           </div>
         </div>
-
-        <div className="relative group">
-          <MagnifyingGlass size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-neutral-900 transition-colors" />
-          <Input
-            placeholder="Buscar por descripción..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-12 bg-neutral-50 border-neutral-100 rounded-lg"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
       </section>
 
       {/* 2. EXPENSES TIMELINE */}
-      <section className="space-y-3">
+      <section>
         {filteredExpenses.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center gap-3 bg-white rounded-[1rem] border border-neutral-100 shadow-sm">
             <div className="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-300">
@@ -126,137 +99,133 @@ export default function ExpensesSection({
             <p className="text-neutral-400 text-sm">No hay gastos aún</p>
           </div>
         ) : (
-          filteredExpenses.map((expense) => {
-            const isExpanded = expandedId === expense.id;
-            const paidBy = members.find(m => m.id === expense.paidBy);
-
-            return (
-              <div
-                key={expense.id}
-                ref={isExpanded ? expandedRef : null}
-                className={cn(
-                  "bg-white rounded-[1rem] transition-all duration-300 overflow-hidden",
-                  isExpanded ? "shadow-2xl shadow-neutral-200 scale-[1.02] z-10" : "shadow-sm"
-                )}
-              >
-                {/* Main Card */}
-                <div
-                  onClick={() => toggleExpand(expense.id)}
-                  className="p-4 flex items-center justify-between cursor-pointer active:bg-neutral-50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    {(() => {
-                      const colors = getExpenseColor(expense.id);
-                      return (
-                        <div className={cn(
-                          "w-12 h-12 rounded-full flex items-center justify-center transition-colors group",
-                          colors.bg,
-                          colors.text
-                        )}>
-                          {expense.icon ? <span className="text-2xl">{expense.icon}</span> : <Receipt size={24} weight="regular" />}
-                        </div>
-                      );
-                    })()}
-                    <div>
-                      <p className="mb-1 font-sans text-sm font-medium text-neutral-900 tracking-[0.00438rem]">
-                        {expense.description.charAt(0).toUpperCase() + expense.description.slice(1)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right space-y-1">
-                    <p className="font-sans font-semibold text-neutral-950 text-sm">
-                      {formatCurrency(expense.amount, expense.currency)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Expanded Details */}
-                {isExpanded && (
-                  <div className="px-4 pb-5 pt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid grid-cols-2 gap-2 border-t border-neutral-200 pt-3">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-neutral-400 tracking-tight flex items-center gap-1.5">
-                          <User size={12} weight="bold" /> Pagado por
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const payer = members.find(m => m.id === expense.paidBy);
-                            const colors = payer ? getMemberAvatarColor(payer) : { bg: 'var(--neutral-100)', text: 'var(--neutral-900)' };
-                            return (
-                              <Avatar className="w-6 h-6">
-                                <AvatarFallback
-                                  className="text-[10px] font-black"
-                                  style={{ backgroundColor: colors.bg, color: colors.text }}
-                                >
-                                  {(paidBy?.name || '?').charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                            );
-                          })()}
-                          <p className="text-sm font-semibold text-neutral-700">{paidBy?.name || 'Desconocido'}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-neutral-400 tracking-tight flex items-center gap-1.5">
-                          <CalendarBlank size={12} weight="bold" /> Fecha
-                        </p>
-                        <p className="text-sm font-semibold text-neutral-700">{formatDate(expense.date)}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pt-3 border-t border-neutral-200">
-                      <p className="text-sm font-medium text-neutral-400 tracking-tight">Dividido entre</p>
-                      <div className="flex flex-wrap gap-2">
-                        {expense.splitBetween.map(id => {
-                          const m = members.find(mbr => mbr.id === id);
-                          const colors = m ? getMemberAvatarColor(m) : { bg: 'var(--background)', text: 'var(--neutral-900)' };
-                          return (
-                            <div key={id} className="bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-100 flex items-center gap-2">
-                              <Avatar className="w-5 h-5">
-                                <AvatarFallback
-                                  className="text-[8px] font-black"
-                                  style={{ backgroundColor: colors.bg, color: colors.text }}
-                                >
-                                  {(m?.name || '?').charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-[12px] font-medium text-neutral-600">{(m?.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (m?.name || 'Alguien').split(' ')[0].slice(1)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="secondary"
-                        className="flex-1 h-12 rounded-2xl flex gap-2 font-semibold"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          _onEditExpense(expense);
-                        }}
-                      >
-                        <PencilSimple size={14} weight="bold" /> Editar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-12 h-12 rounded-2xl border-neutral-100 text-neutral-400 hover:text-orange-600 hover:border-orange-100 hover:bg-orange-50 transition-all p-0 bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpenseToDelete(expense);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash size={18} weight="bold" className="text-red-400" />
-                      </Button>
-                    </div>
-                  </div>
+          <div className="bg-white rounded-lg border border-neutral-100 shadow-sm overflow-hidden divide-y divide-neutral-100">
+            {/* Main Card Header with Search */}
+            <div className="p-4 bg-neutral-50/30 border-b border-neutral-100">
+              <div className="relative group">
+                <MagnifyingGlass size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-neutral-900 transition-colors" />
+                <Input
+                  placeholder="Buscar gastos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-11 h-11 bg-white border-neutral-200 rounded-md text-base border-1 focus:ring-1"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
+                  >
+                    <X size={16} />
+                  </button>
                 )}
               </div>
-            );
-          })
+            </div>
+            {filteredExpenses.map((expense) => {
+              const isExpanded = expandedId === expense.id;
+
+              return (
+                <div
+                  key={expense.id}
+                  ref={isExpanded ? expandedRef : null}
+                  className={cn(
+                    "transition-all duration-300",
+                    isExpanded ? "bg-neutral-50/50 z-10" : ""
+                  )}
+                >
+                  {/* Main Card */}
+                  <div
+                    onClick={() => toggleExpand(expense.id)}
+                    className="px-4 py-3 flex flex-col gap-0.5 cursor-pointer active:bg-neutral-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <p className="font-sans text-base font-semibold text-neutral-900 tracking-tight">
+                        {expense.description.charAt(0).toUpperCase() + expense.description.slice(1)}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-sans font-regular text-neutral-950 text-sm">
+                          {formatCurrency(expense.amount, expense.currency)}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          className="text-neutral-400 hover:text-neutral-900 h-8 w-8 rounded-sm"
+                          asChild
+                        >
+                          <div>
+                            {isExpanded ? (
+                              <CaretUp size={16} weight="bold" />
+                            ) : (
+                              <CaretDown size={16} weight="bold" />
+                            )}
+                          </div>
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-neutral-400 font-medium tracking-normal">
+                      Por {capitalizeName(members.find(m => m.id === expense.paidBy)?.name) || 'Desconocido'}
+                    </p>
+                  </div>
+
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="px-2 pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-3 space-y-3">
+                        {/* Date Info */}
+                        <div className="flex items-center justify-between pb-3">
+                          <span className="text-sm font-medium text-neutral-500 tracking-tight">Fecha</span>
+                          <span className="text-sm font-medium text-neutral-600">{formatDate(expense.date)}</span>
+                        </div>
+
+                        <div className="flex flex-wrap items-start justify-between gap-y-3">
+                          <p className="text-sm font-medium text-neutral-500 tracking-normal shrink-0">Dividido entre</p>
+                          <div className="flex flex-col gap-1 justify-end">
+                            {expense.splitBetween.map(id => {
+                              const m = members.find(mbr => mbr.id === id);
+                              const colors = m ? getMemberAvatarColor(m) : { bg: 'var(--background)', text: 'var(--neutral-900)' };
+                              return (
+                                <div
+                                  key={id}
+                                  className="px-2 py-1 rounded-sm text-xs font-medium w-fit border border-blue-900/10"
+                                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                                >
+                                  {capitalizeName(m?.name)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 justify-between">
+                          <Button
+                            variant="link"
+                            className="text-red-400/70 hover:text-red-700 font-medium px-0 h-auto underline-offset-4"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpenseToDelete(expense);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            Eliminar gasto
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon-xl"
+                            className="rounded-lg border border-neutral-200 text-neutral-400 hover:text-neutral-900 bg-neutral-50/50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              _onEditExpense(expense);
+                            }}
+                          >
+                            <PencilSimple size={16} weight="regular" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </section>
 

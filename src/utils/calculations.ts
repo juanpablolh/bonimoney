@@ -285,10 +285,18 @@ const localeMap: Record<Currency, string> = {
  */
 const getFormatter = (currency: Currency): Intl.NumberFormat => {
   if (!formatters.has(currency)) {
-    formatters.set(currency, new Intl.NumberFormat(localeMap[currency], {
+    const options: Intl.NumberFormatOptions = {
       style: 'currency',
       currency: currency,
-    }));
+    };
+
+    // CLP doesn't use decimals in Chile
+    if (currency === 'CLP') {
+      options.minimumFractionDigits = 0;
+      options.maximumFractionDigits = 0;
+    }
+
+    formatters.set(currency, new Intl.NumberFormat(localeMap[currency], options));
   }
   return formatters.get(currency)!;
 };
@@ -297,7 +305,8 @@ const getFormatter = (currency: Currency): Intl.NumberFormat => {
  * Format currency amount (cached formatter for performance)
  */
 export const formatCurrency = (amount: number, currency: Currency = 'CLP'): string => {
-  return getFormatter(currency).format(amount);
+  const value = currency === 'CLP' ? Math.round(amount) : amount;
+  return getFormatter(currency).format(value);
 };
 
 /**

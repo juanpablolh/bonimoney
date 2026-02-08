@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ResponsiveModal, KeyboardViewportContext } from '../ui-custom/ResponsiveModal';
-import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
 import { Plus, Trash, X, CaretDown, Check, PaperPlaneRight, Spinner } from '@phosphor-icons/react';
@@ -19,7 +18,7 @@ interface CreateProjectModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-const EMOJIS = ['🏠', '✈️', '🛒', '🎉'];
+
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
     const { createProject } = useProject();
@@ -37,6 +36,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
     const [members, setMembers] = useState<{ type: 'name' | 'email', value: string }[]>([]);
     const [addMode, setAddMode] = useState<'name' | 'email'>('name');
     const [inputValue, setInputValue] = useState('');
+    const [showError, setShowError] = useState(false);
 
     const CURRENCIES = [
         { code: 'CLP', name: 'Peso chileno', flag: '🇨🇱' },
@@ -73,7 +73,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
     // const [loading, setLoading] = useState(false); 
 
     const handleNext = () => {
-        if (!name.trim()) return;
+        if (!name.trim()) {
+            setShowError(true);
+            return;
+        }
+        setShowError(false);
         setStep(2);
     };
 
@@ -226,82 +230,84 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar min-h-[300px]">
-                    <div className="px-6 py-6 space-y-6">
+                    {/* Progress Bar */}
+                    <div className="px-6 pt-6">
+                        <div className="flex justify-between items-end mb-2">
+                            <span className="text-xs font-medium text-neutral-400">Paso {step} de 2</span>
+                            <span className="text-xs font-bold text-neutral-900">{step === 1 ? '50%' : '100%'}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-neutral-200 rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-neutral-900 rounded-full"
+                                initial={{ width: "50%" }}
+                                animate={{ width: step === 1 ? "50%" : "100%" }}
+                                transition={{ duration: 0.3 }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="px-6 py-10 space-y-8">
                         {step === 1 ? (
                             <>
-                                <p className="text-neutral-500 font-medium text-base leading-relaxed">
-                                    Dale un nombre a tu nuevo grupo para empezar a dividir gastos.
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {EMOJIS.map(e => (
-                                        <button
-                                            key={e}
-                                            type="button"
-                                            onClick={() => {
-                                                setIcon(e);
-                                                setShowPicker(false);
-                                            }}
-                                            className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-all ${icon === e
-                                                ? 'bg-neutral-900 shadow-lg scale-105'
-                                                : 'bg-neutral-200 hover:bg-neutral-300'
-                                                }`}
-                                        >
-                                            {e}
-                                        </button>
-                                    ))}
-                                    {!EMOJIS.includes(icon) ? (
-                                        <button
-                                            key="custom-emoji"
-                                            type="button"
-                                            onClick={() => setShowPicker(true)}
-                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-neutral-900 shadow-lg scale-105 transition-all"
-                                        >
-                                            {icon}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            key="plus-button"
-                                            type="button"
-                                            onClick={() => setShowPicker(true)}
-                                            className="w-14 h-14 rounded-xl flex items-center justify-center text-neutral-600 bg-neutral-100 hover:bg-neutral-200 transition-all"
-                                        >
-                                            <Plus size={24} weight="bold" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-3">
-                                    <label className="block text-sm font-semibold text-neutral-900">Nombre del grupo</label>
-                                    <Input
-                                        placeholder="Ej. Viaje a la playa, Casa"
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium text-neutral-400 tracking-normal">Nombre del grupo</label>
+                                    <input
+                                        placeholder="Ej. Viaje a la playa"
                                         value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="h-14 bg-neutral-50 border-neutral-200 rounded-xl text-base font-normal focus-visible:ring-0 focus-visible:border-neutral-300 placeholder:text-neutral-400 px-4"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const sentenceCaseVal = val.charAt(0).toUpperCase() + val.slice(1);
+                                            setName(sentenceCaseVal);
+                                            if (sentenceCaseVal.trim()) setShowError(false);
+                                        }}
+                                        autoFocus
+                                        className={cn(
+                                            "w-full text-2xl tracking-tight font-sans text-neutral-900 placeholder:text-neutral-200 bg-transparent border-b-1 transition-colors py-4 focus:outline-none",
+                                            showError
+                                                ? "border-red-500"
+                                                : name.trim()
+                                                    ? "border-green-500"
+                                                    : "border-neutral-100 focus:border-neutral-900"
+                                        )}
                                     />
                                 </div>
-                                <div className="space-y-3">
-                                    <label className="block text-sm font-semibold text-neutral-900">Moneda predeterminada</label>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Emoji Selector Card */}
                                     <button
-                                        type="button"
-                                        onClick={() => setShowCurrencyPicker(true)}
-                                        className="w-full h-14 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-xl px-4 flex items-center justify-between transition-colors text-left"
+                                        onClick={() => setShowPicker(true)}
+                                        className="bg-white border border-neutral-200 rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center text-2xl shrink-0">
-                                                {selectedCurrencyInfo.flag}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-neutral-900 leading-tight">{selectedCurrencyInfo.name}</p>
-                                                <p className="text-xs text-neutral-500 font-medium uppercase tracking-wider">{selectedCurrencyInfo.code}</p>
-                                            </div>
+                                        <div className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                            {icon}
                                         </div>
-                                        <CaretDown size={20} className="text-neutral-400" />
+                                        <CaretDown size={14} className="absolute right-5 top-6 text-neutral-300" />
+                                        <div className="mt-auto">
+                                            <p className="text-sm font-medium text-neutral-400 leading-tight">Selecciona</p>
+                                            <p className="text-sm font-medium text-neutral-400">un emoji</p>
+                                        </div>
+                                    </button>
+
+                                    {/* Currency Selector Card */}
+                                    <button
+                                        onClick={() => setShowCurrencyPicker(true)}
+                                        className="bg-white border border-neutral-200 rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative"
+                                    >
+                                        <div className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                            {selectedCurrencyInfo.flag}
+                                        </div>
+                                        <CaretDown size={14} className="absolute right-5 top-6 text-neutral-300" />
+                                        <div className="mt-auto">
+                                            <p className="text-sm font-medium text-neutral-400 leading-tight">Selecciona</p>
+                                            <p className="text-sm font-medium text-neutral-400">la moneda</p>
+                                        </div>
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <section
-                                    className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
+                                    className="rounded-xl p-4 transition-all border border-neutral-200 overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
                                     style={{ backgroundColor: inviteCardTheme.bgColor, borderColor: inviteCardTheme.borderColor }}
                                 >
                                     <div className={cn(
@@ -310,11 +316,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     )} />
                                     <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
                                         <div className="space-y-2">
-                                            <h3 className="text-[18px] font-serif font-medium tracking-tight leading-none" style={{ color: inviteCardTheme.textColor }}>
-                                                Agranda tu círculo
+                                            <h3 className="text-lg font-serif font-medium tracking-tight leading-none" style={{ color: inviteCardTheme.textColor }}>
+                                                Agrega integrantes
                                             </h3>
                                             <p className="text-sm font-medium max-w-sm leading-relaxed" style={{ color: inviteCardTheme.mutedTextColor }}>
-                                                Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
+                                                Suma a todas las personas que compartirán gastos en este grupo.
                                             </p>
                                         </div>
                                         <div className="flex gap-2 mb-2">
@@ -430,15 +436,15 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                     style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 24}px` : 'max(1.5rem, env(safe-area-inset-bottom))' }}
                 >
                     <div className="flex gap-3">
-                        {step === 2 && status !== 'success' && (
+                        {status !== 'success' && (
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setStep(1)}
+                                onClick={() => step === 1 ? onOpenChange(false) : setStep(1)}
                                 disabled={status === 'loading'}
                                 className="flex-1 h-14 rounded-xl text-base font-semibold bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-900"
                             >
-                                Volver
+                                {step === 1 ? 'Atrás' : 'Volver'}
                             </Button>
                         )}
                         <Button

@@ -171,7 +171,7 @@ export default function MembersSection({
         {/* 1. ADD MEMBER HERO CARD (Styled like Dashboard Project Card) */}
         <div className="lg:sticky lg:top-4">
           <section
-            className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
+            className="rounded-xl p-4 transition-all shadow-md overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
             style={{ backgroundColor: theme.bgColor, borderColor: theme.borderColor }}
           >
             {/* Overlay */}

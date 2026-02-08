@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { useMembers } from '@/contexts/MemberContext';
 import { supabase } from '@/utils/supabase';
 import { toast } from 'sonner';
-import { User, SignOut, ShieldWarning, Moon, Sun, PencilSimple, Eye, EyeSlash, X } from '@phosphor-icons/react';
+import { User, SignOut, ShieldWarning, PencilSimple, Eye, EyeSlash, X } from '@phosphor-icons/react';
 import { compressImage } from '@/utils/imageCompression';
 
 interface SettingsDrawerProps {
@@ -21,7 +20,6 @@ interface SettingsDrawerProps {
 
 export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
     const { user, signOut, refreshUser } = useAuth();
-    const { theme, setTheme } = useTheme();
     const { projects } = useProject();
     const { loadMembers } = useMembers();
 
@@ -316,42 +314,17 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
                             </Button>
                         </section>
 
-                        {/* Appearance Section */}
-                        <section className="space-y-4">
-                            <h3 className="font-medium text-base text-neutral-500 flex items-center gap-2">
-                                <Moon size={16} /> Apariencia
-                            </h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setTheme("light")}
-                                    className={`h-20 flex flex-col gap-2 ${theme === 'light' ? 'border-neutral-900 ring-1 ring-neutral-900 bg-neutral-50' : 'border-neutral-200'}`}
-                                >
-                                    <Sun size={24} weight={theme === 'light' ? 'fill' : 'regular'} />
-                                    <span className="text-xs">Claro</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    disabled={true}
-                                    className="h-20 flex flex-col gap-2 border-neutral-200 opacity-50 cursor-not-allowed"
-                                >
-                                    <Moon size={24} />
-                                    <span className="text-xs">Oscuro</span>
-                                </Button>
-                            </div>
-                        </section>
-
                         {/* Accordion Zone (Security & Danger) */}
                         <Accordion type="multiple" className="w-full">
                             {/* Security Section */}
                             <AccordionItem value="security" className="border-b-0">
                                 <AccordionTrigger className="hover:no-underline py-4">
                                     <h3 className="font-medium text-base text-neutral-500 flex items-center gap-2">
-                                        <ShieldWarning size={16} /> Seguridad
+                                        <ShieldWarning size={16} /> Cambiar contraseña
                                     </h3>
                                 </AccordionTrigger>
-                                <AccordionContent className="px-1 pb-1">
-                                    <div className="flex flex-col gap-4 pt-2">
+                                <AccordionContent className="px-1 pb-2">
+                                    <div className="flex flex-col gap-4 pb-2">
                                         <div className="flex flex-col gap-1">
                                             <label className="text-sm font-medium text-neutral-700">Nueva contraseña</label>
                                             <div className="relative">
@@ -434,9 +407,9 @@ export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
 
                     </div>
 
-                    <DrawerFooter className="flex-shrink-0 border-t border-neutral-100 p-6 bg-neutral-50">
+                    <DrawerFooter className="flex-shrink-0 border-t border-neutral-100 p-6 bg-white">
                         <p className="text-xs text-center text-neutral-400">
-                            Bonimoney v1.0 • Hecho con ❤️
+                            Bonimoney v1.0
                         </p>
                     </DrawerFooter>
                     <div className="absolute bottom-6 right-6 z-40">

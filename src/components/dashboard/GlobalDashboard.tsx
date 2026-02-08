@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
 import { supabase } from '../../utils/supabase';
+import { capitalizeName } from '../../utils/calculations';
 
 interface Project {
     id: string;
@@ -111,7 +112,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     return (
         <div className="min-h-screen bg-neutral-50 selection:bg-neutral-200">
             {/* Figma-aligned Header / Breadcrumb */}
-            <header className="bg-white sticky top-0 z-40 border-b border-neutral-100 flex-shrink-0">
+            <header className="bg-neutral-50 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
                     {/* Left: Title */}
                     <div className="flex items-center gap-2">
@@ -129,7 +130,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                                     onClick={onOpenSettings}
                                     className="rounded-full transition-transform hover:scale-105 active:scale-95 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900"
                                 >
-                                    <Avatar className="w-12 h-12 cursor-pointer shadow-sm border border-neutral-100">
+                                    <Avatar className="w-10 h-10 cursor-pointer border border-neutral-100">
                                         <AvatarImage src={userAvatarUrl} className="object-cover" />
                                         <AvatarFallback
                                             className="font-bold"
@@ -142,12 +143,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                             );
                         })()}
 
-                        <button
-                            onClick={onCreateProject}
-                            className="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors shadow-lg"
-                        >
-                            <Plus size={20} weight="bold" />
-                        </button>
+
                     </div>
                 </div>
             </header>
@@ -164,7 +160,7 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                         className="font-serif text-[56px] text-neutral-900 tracking-tighter leading-[0.9]"
                     >
                         Hola<br />
-                        <span className="text-neutral-400">{userName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}.</span>
+                        <span className="text-neutral-400">{capitalizeName(userName)}.</span>
                     </motion.h1>
                 </section>
 
@@ -204,6 +200,22 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                     )}
                 </div>
             </main>
+
+            {/* Floating Action Button - Mobile */}
+            <button
+                onClick={onCreateProject}
+                className="fixed bottom-8 right-5 w-14 h-14 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50 sm:hidden"
+            >
+                <Plus size={24} weight="bold" />
+            </button>
+
+            {/* Floating Action Button - Desktop */}
+            <button
+                onClick={onCreateProject}
+                className="hidden sm:flex fixed bottom-10 right-10 w-16 h-16 rounded-2xl bg-neutral-900 text-white items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50"
+            >
+                <Plus size={28} weight="bold" />
+            </button>
         </div>
     );
 };

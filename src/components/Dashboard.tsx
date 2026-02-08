@@ -1,23 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   ArrowRight,
-  TrendDown,
   Clock,
   ArrowsLeftRight,
-  MagnifyingGlass,
-  X,
   Sparkle,
-  Receipt,
   Trash,
-  HandCoins
+  Receipt
 } from '@phosphor-icons/react';
 import { Member, Expense, Balance, Transaction, Currency } from '../types';
 import { Project } from '../contexts/ProjectContext';
-import { capitalizeName } from '../utils/calculations';
+import { capitalizeName, formatCurrency } from '../utils/calculations';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { getExpenseColor } from '../utils/expenseIcons';
 import { getMemberAvatarColor } from '../utils/avatarColors';
 import { getProjectTheme } from '@/utils/projectTheme';
 import {
@@ -54,7 +48,6 @@ export default function Dashboard({
   onSettleUp,
   onDeleteProject
 }: DashboardProps) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [isDesktop, setIsDesktop] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [settlementDrawerOpen, setSettlementDrawerOpen] = useState(false);
@@ -131,13 +124,6 @@ export default function Dashboard({
     [expenses]
   );
 
-  const filteredExpenses = useMemo(() =>
-    sortedExpenses.filter(e =>
-      e.description.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    [sortedExpenses, searchQuery]
-  );
-
   const theme = getProjectTheme(currentProject?.color, currentProject?.id);
 
   return (
@@ -147,7 +133,7 @@ export default function Dashboard({
       <div className="lg:col-span-4 space-y-4 flex flex-col min-w-0 min-h-0 h-auto lg:h-full flex-shrink-0">
         {/* Project Card (Dynamic Color) */}
         <div
-          className="rounded-xl p-4 transition-all shadow-lg overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
+          className="rounded-xl p-4 transition-all shadow-md overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
           style={{ backgroundColor: theme.bgColor, borderColor: theme.borderColor }}
         >
           {/* Overlay */}
@@ -184,12 +170,12 @@ export default function Dashboard({
             </p>
             {currencies.length > 0 ? (
               currencies.map(([curr, amount]) => (
-                <h3 key={curr} className="font-serif tracking-tighter leading-none" style={{ fontSize: '32px', color: theme.textColor }}>
-                  $ {amount.toLocaleString('es-CL')} <span className="text-xl font-sans ml-1 tracking-wide" style={{ color: theme.mutedTextColor }}>{curr}</span>
+                <h3 key={curr} className="font-sans tracking-normal leading-none" style={{ fontSize: '24px', color: theme.textColor }}>
+                  {formatCurrency(amount, curr as Currency)}
                 </h3>
               ))
             ) : (
-              <h3 className="font-serif text-4xl tracking-tighter" style={{ color: theme.mutedTextColor, opacity: 0.5 }}>$ 0</h3>
+              <h3 className="font-sans text-2xl tracking-tight" style={{ color: theme.mutedTextColor, opacity: 0.5 }}>$ 0</h3>
             )}
           </div>
 
@@ -238,33 +224,11 @@ export default function Dashboard({
             </button>
           </div>
 
-          {/* Search Bar */}
-          <div className="px-4 pb-4 pt-4">
-            <div className="relative">
-              <MagnifyingGlass
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
-                size={18}
-              />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar gastos..."
-                className="pl-11 h-12 bg-neutral-50 border-neutral-100 rounded-lg"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-          </div>
+
 
           {/* Expense List */}
-          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-3 no-scrollbar pb-4 pr-1 scroll-smooth">
-            {filteredExpenses.length === 0 ? (
+          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-4 no-scrollbar p-4 scroll-smooth">
+            {sortedExpenses.length === 0 ? (
               <div className="p-12 text-center flex flex-col items-center gap-3">
                 <div className="w-14 h-14 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-300">
                   <Receipt size={28} />
@@ -272,39 +236,21 @@ export default function Dashboard({
                 <p className="text-neutral-400 text-sm">No hay gastos aún</p>
               </div>
             ) : (
-              (isDesktop ? filteredExpenses : filteredExpenses.slice(0, 6)).map((expense) => {
+              (isDesktop ? sortedExpenses : sortedExpenses.slice(0, 6)).map((expense) => {
                 const paidBy = members.find(m => m.id === expense.paidBy);
                 return (
-                  <div key={expense.id} className="px-4 py-0 flex items-start gap-4 hover:bg-neutral-50/50 transition-colors">
-                    {/* Icon Circle */}
-                    {(() => {
-                      const isSettlement = (expense as any).expense_type === 'settlement';
-                      const colors = getExpenseColor(expense.id);
-                      return (
-                        <div className={cn(
-                          "w-11 h-11 aspect-square self-start rounded-full flex items-center justify-center flex-shrink-0",
-                          isSettlement ? "bg-emerald-100 text-emerald-600" : `${colors.bg} ${colors.text}`
-                        )}>
-                          {isSettlement ? (
-                            <HandCoins size={24} weight="light" />
-                          ) : expense.icon ? (
-                            <span className="text-xl leading-none block">{expense.icon}</span>
-                          ) : (
-                            <Receipt size={24} weight="light" />
-                          )}
-                        </div>
-                      );
-                    })()}
+                  <div key={expense.id} className="flex items-start gap-4 hover:bg-neutral-50/50 transition-colors">
+
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-neutral-900 text-base leading-tight truncate">
+                      <p className="font-medium text-neutral-900 text-base leading-tight truncate pb-1">
                         {(expense as any).expense_type === 'settlement' && (
                           <span className="text-emerald-600 mr-1">💸</span>
                         )}
                         {expense.description ? (expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()) : 'Sin descripción'}
                       </p>
-                      <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center justify-between pt-1">
                         <p className="text-sm text-neutral-400">
                           Por {paidBy?.name || 'Alguien'}
                           {((expense as any).expense_type === 'settlement' || (expense as any).expense_type === 'payment') && expense.splits && expense.splits.length > 0 && (() => {
@@ -312,8 +258,8 @@ export default function Dashboard({
                             return toMember ? ` a ${toMember.name}` : '';
                           })()}
                         </p>
-                        <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
-                          $ {expense.amount.toLocaleString('es-CL')} <span className="ml-1 text-neutral-500 font-medium uppercase text-xs">{expense.currency}</span>
+                        <p className="font-sans font-regular text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
+                          {formatCurrency(expense.amount, expense.currency)}
                         </p>
                       </div>
                     </div>
@@ -325,7 +271,7 @@ export default function Dashboard({
 
           {/* Footer */}
           <div className="p-5 pt-3">
-            <span className="text-sm text-neutral-500">{expenses.length} Gastos en total</span>
+            <span className="text-sm text-neutral-500">{expenses.length} Últimos gastos</span>
           </div>
         </div>
       </section >
@@ -342,7 +288,7 @@ export default function Dashboard({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6 min-h-0 p-4">
+          <div className="flex-1 overflow-y-auto space-y-6 min-h-0 p-3">
 
             {/* Deudas y cobros List */}
             <div>
@@ -371,8 +317,8 @@ export default function Dashboard({
                                 />
                               );
                             })()}
-                            <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
-                              {capitalizeName((t.fromName || '').split(' ')[0])}
+                            <span className="text-sm font-medium text-neutral-600 truncate max-w-[120px]">
+                              {capitalizeName(t.fromName)}
                             </span>
                           </div>
                           <ArrowRight size={12} className="text-neutral-600" />
@@ -387,13 +333,13 @@ export default function Dashboard({
                                 />
                               );
                             })()}
-                            <span className="text-xs font-medium text-neutral-600 truncate max-w-[80px]">
-                              {capitalizeName((t.toName || '').split(' ')[0])}
+                            <span className="text-sm font-medium text-neutral-600 truncate max-w-[120px]">
+                              {capitalizeName(t.toName)}
                             </span>
                           </div>
                         </div>
                         <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
-                          $ {t.amount.toLocaleString('es-CL')} <span className="text-neutral-500 font-medium uppercase ml-1 text-xs">{t.currency}</span>
+                          {formatCurrency(t.amount, t.currency)}
                         </p>
                       </div>
 
@@ -445,12 +391,12 @@ export default function Dashboard({
                           {capitalizeName(b.memberName) || 'Alguien'}
                         </span>
                         <div className="flex items-center gap-1">
-                          {isNegative && <TrendDown size={16} weight="bold" className="text-rose-500" />}
                           <span className={cn(
                             "font-bold",
                             isNegative ? "text-rose-600" : "text-neutral-900"
                           )}>
-                            {currency} {Math.abs(b.balance).toLocaleString('es-CL')}
+                            {isNegative && "- "}
+                            {formatCurrency(Math.abs(b.balance), currency)}
                           </span>
                         </div>
                       </div>

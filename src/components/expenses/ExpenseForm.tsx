@@ -11,6 +11,7 @@ import {
 } from '@phosphor-icons/react';
 import { getMemberAvatarColor } from '../../utils/avatarColors';
 import { AnimatePresence, motion } from 'framer-motion';
+import { capitalizeName } from '../../utils/calculations';
 
 interface Member {
     id: string;
@@ -262,7 +263,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                                 {(member.name || '?').charAt(0).toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <span className="text-sm font-semibold">{((member.name || 'Alguien').split(' ')[0].charAt(0).toUpperCase() + (member.name || 'Alguien').split(' ')[0].slice(1).toLowerCase())}</span>
+                                        <span className="text-sm font-semibold">{capitalizeName(member.name)}</span>
                                         {isSelected && <Check size={14} weight="bold" />}
                                     </button>
                                 );
@@ -279,9 +280,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Pagado por</p>
                                     <p className="text-base font-semibold text-neutral-900">
-                                        {currentMember?.name
-                                            ? currentMember.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
-                                            : 'Seleccionar...'}
+                                        {capitalizeName(currentMember?.name) || 'Seleccionar...'}
                                     </p>
                                 </div>
                             </div>
@@ -396,7 +395,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-base font-semibold truncate text-neutral-900">
-                                            {member.name ? member.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : 'Sin nombre'}
+                                            {capitalizeName(member.name) || 'Sin nombre'}
                                         </p>
                                     </div>
                                     {paidBy === member.id && <Check size={20} weight="bold" />}

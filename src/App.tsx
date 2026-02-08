@@ -8,14 +8,13 @@ import { AuthLanding, AuthLogin, AuthRegister, AuthForgotPassword } from './comp
 import { Toaster, toast } from 'sonner';
 
 import AuthModal from './components/auth/AuthModal';
-import { Button } from './components/ui/button';
 import { adaptMembers, adaptExpenses } from './utils/dataAdapters';
-import { calculateBalancesByCurrency, optimizeTransactionsByCurrency } from './utils/calculations';
+import { calculateBalancesByCurrency, optimizeTransactionsByCurrency, formatCurrency } from './utils/calculations';
 import { ResponsiveModal } from './components/ui-custom/ResponsiveModal';
 import { ExpenseForm } from './components/expenses/ExpenseForm';
 import { CreateProjectModal } from './components/projects/CreateProjectModal';
 import { SettingsDrawer } from './components/settings/SettingsDrawer';
-import { Plus, House, SignOut, CaretLeft } from '@phosphor-icons/react';
+import { Plus, House, CaretLeft } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from './utils/avatarColors';
 
@@ -35,7 +34,7 @@ const LoadingSpinner = () => (
 
 // Component for the home/groups view
 function HomeView() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { projects, deleteProject } = useProject();
   const navigate = useNavigate();
   const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
@@ -62,18 +61,6 @@ function HomeView() {
         onOpenChange={setSettingsOpen}
       />
 
-      {!createProjectModalOpen && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => signOut()}
-            className="rounded-full h-12 w-12 bg-white/80 backdrop-blur-md shadow-lg border-neutral-100 hover:bg-neutral-50 transition-all active:scale-90"
-          >
-            <SignOut size={20} weight="bold" />
-          </Button>
-        </div>
-      )}
       <CreateProjectModal
         open={createProjectModalOpen}
         onOpenChange={setCreateProjectModalOpen}
@@ -157,7 +144,7 @@ function ProjectView() {
       <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {/* Header - Figma Design */}
-      <header className="bg-white sticky top-0 z-40 border-b border-neutral-100 flex-shrink-0">
+      <header className="bg-neutral-50 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
         <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left: Breadcrumb with Home + Title */}
           <div className="flex items-center gap-2">
@@ -211,18 +198,13 @@ function ProjectView() {
               );
             })()}
 
-            <button
-              onClick={() => setExpenseModalOpen(true)}
-              className="w-12 h-12 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors shadow-lg"
-            >
-              <Plus size={20} weight="bold" />
-            </button>
+
           </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className={`flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 flex flex-col bg-neutral-100 ${activeTab === 'dashboard' ? 'lg:overflow-hidden' : 'lg:overflow-y-auto'}`}>
+      <main className={`flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 flex flex-col bg-neutral-50 ${activeTab === 'dashboard' ? 'lg:overflow-hidden' : 'lg:overflow-y-auto'}`}>
         {activeTab === 'dashboard' && (
           <Dashboard
             members={members}
@@ -295,6 +277,22 @@ function ProjectView() {
         )}
       </main>
 
+      {/* Floating Action Button - Mobile */}
+      <button
+        onClick={() => setExpenseModalOpen(true)}
+        className="fixed bottom-8 right-5 w-14 h-14 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50 sm:hidden"
+      >
+        <Plus size={24} weight="bold" />
+      </button>
+
+      {/* Floating Action Button - Desktop */}
+      <button
+        onClick={() => setExpenseModalOpen(true)}
+        className="hidden sm:flex fixed bottom-10 right-10 w-16 h-16 rounded-2xl bg-neutral-900 text-white items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50"
+      >
+        <Plus size={28} weight="bold" />
+      </button>
+
       <ResponsiveModal
         open={expenseModalOpen}
         onOpenChange={(open) => {
@@ -329,7 +327,7 @@ function ProjectView() {
                   split_method: 'equal',
                 });
                 toast.success('Gasto actualizado', {
-                  description: `${data.description} - $${data.amount.toLocaleString('es-CL')}`
+                  description: `${data.description} - ${formatCurrency(data.amount, data.currency)}`
                 });
               } else {
                 await addExpense({
@@ -337,7 +335,7 @@ function ProjectView() {
                   split_method: 'equal',
                 });
                 toast.success('Gasto guardado', {
-                  description: `${data.description} - $${data.amount.toLocaleString('es-CL')}`
+                  description: `${data.description} - ${formatCurrency(data.amount, data.currency)}`
                 });
               }
               // Don't close immediately to allow animation
