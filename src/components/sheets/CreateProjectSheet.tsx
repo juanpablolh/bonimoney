@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ResponsiveModal, KeyboardViewportContext } from '../ui-custom/ResponsiveModal';
 import { Button } from '../ui/button';
 import { useProject } from '@/contexts/ProjectContext';
-import { Plus, Trash, X, CaretDown, Check, PaperPlaneRight, Spinner } from '@phosphor-icons/react';
+import { Plus, Trash, X, CaretDown, Check, PaperPlaneRight, Spinner, MagnifyingGlass } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-import EmojiPicker from 'emoji-picker-react';
+// import EmojiPicker from 'emoji-picker-react'; // Removed external lib
 import { supabase } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendProjectInvitation } from '@/services/invitations';
 import { PROJECT_THEMES, getProjectTheme } from '@/utils/projectTheme';
+import { EMOJI_CATEGORIES } from '@/utils/emojis';
 import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -44,6 +45,7 @@ export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, on
     const [currency, setCurrency] = useState(savedState?.currency || null);
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [showPicker, setShowPicker] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
     const [members, setMembers] = useState<{ type: 'name' | 'email', value: string }[]>(savedState?.members || []);
     const [addMode, setAddMode] = useState<'name' | 'email'>(savedState?.addMode || 'name');
@@ -569,22 +571,76 @@ export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, on
                                 </button>
                             </header>
                         </div>
-                        <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
-                            <style>{`
-                                .epr-category-nav { display: none !important; }
-                                .epr-search-container input { font-size: 16px !important; }
-                            `}</style>
-                            <EmojiPicker
-                                onEmojiClick={(emojiData) => {
-                                    setIcon(emojiData.emoji);
-                                    setShowPicker(false);
-                                }}
-                                lazyLoadEmojis={true}
-                                skinTonesDisabled={true}
-                                searchPlaceholder="Buscar emoji..."
-                                width="100%"
-                                height="100%"
-                            />
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            {/* Search Bar */}
+                            <div className="px-6 pb-4">
+                                <div className="relative">
+                                    <MagnifyingGlass
+                                        size={18}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar emoji..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full h-10 pl-10 pr-4 bg-white border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all placeholder:text-neutral-400"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Emoji List */}
+                            <div className="flex-1 overflow-y-auto px-6 pb-6">
+                                {EMOJI_CATEGORIES.map(category => {
+                                    // Filter emojis based on search term
+                                    const filteredEmojis = category.emojis.filter(item => {
+                                        if (!searchTerm.trim()) return true;
+                                        const term = searchTerm.toLowerCase();
+                                        return (
+                                            item.label.toLowerCase().includes(term) ||
+                                            item.keywords.some(k => k.toLowerCase().includes(term))
+                                        );
+                                    });
+
+                                    if (filteredEmojis.length === 0) return null;
+
+                                    return (
+                                        <div key={category.id} className="mb-6">
+                                            <h3 className="text-sm font-sans font-medium text-neutral-800 tracking-normal mb-3 sticky top-0 bg-neutral-50 py-2 z-10">
+                                                {category.name}
+                                            </h3>
+                                            <div className="grid grid-cols-5 md:grid-cols-8 gap-2">
+                                                {filteredEmojis.map((item, idx) => (
+                                                    <button
+                                                        key={`${category.id}-${idx}`}
+                                                        onClick={() => {
+                                                            setIcon(item.emoji);
+                                                            setShowPicker(false);
+                                                            setSearchTerm(''); // Clear search on select
+                                                        }}
+                                                        className="aspect-square flex items-center justify-center text-4xl hover:bg-neutral-200 rounded-xl transition-colors active:scale-90"
+                                                        title={item.label}
+                                                    >
+                                                        {item.emoji}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Empty State for Search */}
+                                {searchTerm && EMOJI_CATEGORIES.every(cat =>
+                                    cat.emojis.filter(item =>
+                                        item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        item.keywords.some(k => k.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    ).length === 0
+                                ) && (
+                                        <div className="flex flex-col items-center justify-center h-40 text-neutral-400">
+                                            <p>No se encontraron emojis</p>
+                                        </div>
+                                    )}
+                            </div>
                         </div>
                     </div>
                 </ResponsiveModal>
