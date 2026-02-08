@@ -11,7 +11,7 @@ import { Member, Expense } from '../types';
 import { formatCurrency, formatDate, capitalizeName } from '../utils/calculations';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 import { Input } from '@/components/ui/input';
 import { getMemberAvatarColor } from '../utils/avatarColors';
 
