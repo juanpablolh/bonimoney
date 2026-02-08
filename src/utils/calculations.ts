@@ -264,50 +264,53 @@ export const optimizeTransactionsByCurrency = (
 };
 
 /**
- * Format currency amount
+ * Cache for Intl.NumberFormat instances to avoid recreation overhead
  */
-export const formatCurrency = (amount: number, currency: Currency = 'CLP'): string => {
-  const localeMap: Record<Currency, string> = {
-    CLP: 'es-CL',
-    USD: 'en-US',
-    BRL: 'pt-BR',
-    ARS: 'es-AR',
-    EUR: 'es-ES',
-    GBP: 'en-GB',
-    PEN: 'es-PE',
-    UYU: 'es-UY',
-  };
+const formatters = new Map<Currency, Intl.NumberFormat>();
+const symbolCache = new Map<Currency, string>();
 
-  return new Intl.NumberFormat(localeMap[currency], {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
+const localeMap: Record<Currency, string> = {
+  CLP: 'es-CL',
+  USD: 'en-US',
+  BRL: 'pt-BR',
+  ARS: 'es-AR',
+  EUR: 'es-ES',
+  GBP: 'en-GB',
+  PEN: 'es-PE',
+  UYU: 'es-UY',
 };
 
 /**
- * Get currency symbol
+ * Get or create cached formatter for a currency
+ */
+const getFormatter = (currency: Currency): Intl.NumberFormat => {
+  if (!formatters.has(currency)) {
+    formatters.set(currency, new Intl.NumberFormat(localeMap[currency], {
+      style: 'currency',
+      currency: currency,
+    }));
+  }
+  return formatters.get(currency)!;
+};
+
+/**
+ * Format currency amount (cached formatter for performance)
+ */
+export const formatCurrency = (amount: number, currency: Currency = 'CLP'): string => {
+  return getFormatter(currency).format(amount);
+};
+
+/**
+ * Get currency symbol (cached for performance)
  */
 export const getCurrencySymbol = (currency: Currency): string => {
-  const localeMap: Record<Currency, string> = {
-    CLP: 'es-CL',
-    USD: 'en-US',
-    BRL: 'pt-BR',
-    ARS: 'es-AR',
-    EUR: 'es-ES',
-    GBP: 'en-GB',
-    PEN: 'es-PE',
-    UYU: 'es-UY',
-  };
-
-  const formatter = new Intl.NumberFormat(localeMap[currency], {
-    style: 'currency',
-    currency: currency,
-  });
-
-  // Get the symbol by formatting 0 and extracting the symbol
-  const parts = formatter.formatToParts(0);
-  const symbolPart = parts.find(part => part.type === 'currency');
-  return symbolPart ? symbolPart.value : currency;
+  if (!symbolCache.has(currency)) {
+    const formatter = getFormatter(currency);
+    const parts = formatter.formatToParts(0);
+    const symbolPart = parts.find(part => part.type === 'currency');
+    symbolCache.set(currency, symbolPart ? symbolPart.value : currency);
+  }
+  return symbolCache.get(currency)!;
 };
 
 /**
