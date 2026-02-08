@@ -37,8 +37,23 @@ function HomeView() {
   const { user } = useAuth();
   const { projects, deleteProject } = useProject();
   const navigate = useNavigate();
-  const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
+  const [createProjectModalOpen, setCreateProjectModalOpen] = useState(() => {
+    // Restore open state from session storage (handles background refresh)
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('boni_create_project_open') === 'true';
+    }
+    return false;
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const handleCreateProjectOpenChange = (open: boolean) => {
+    setCreateProjectModalOpen(open);
+    if (open) {
+      sessionStorage.setItem('boni_create_project_open', 'true');
+    } else {
+      sessionStorage.removeItem('boni_create_project_open');
+    }
+  };
 
   return (
     <>
@@ -48,7 +63,7 @@ function HomeView() {
         onProjectClick={(id) => {
           navigate(`/project/${id}`);
         }}
-        onCreateProject={() => setCreateProjectModalOpen(true)}
+        onCreateProject={() => handleCreateProjectOpenChange(true)}
         onDeleteProject={deleteProject}
         userName={user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuario"}
         userId={user?.id}
@@ -63,7 +78,7 @@ function HomeView() {
 
       <CreateProjectModal
         open={createProjectModalOpen}
-        onOpenChange={setCreateProjectModalOpen}
+        onOpenChange={handleCreateProjectOpenChange}
       />
     </>
   );
