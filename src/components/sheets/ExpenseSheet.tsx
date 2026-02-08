@@ -5,6 +5,8 @@ import { adaptMember } from '@/utils/dataAdapters'; // Ensure this utility is av
 import { useMembers } from '@/contexts/MemberContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useExpenses } from '@/contexts/ExpenseContext';
+import { useProject } from '@/contexts/ProjectContext';
+import { Currency } from '@/types';
 
 interface ExpenseSheetProps {
     open: boolean;
@@ -20,6 +22,8 @@ export function ExpenseSheet({
     const { members } = useMembers();
     const { user } = useAuth();
     const { addExpense, updateExpense } = useExpenses();
+    const { currentProject } = useProject();
+    const currency = (currentProject?.currency as Currency) || 'CLP';
 
     const handleSave = async (data: any) => {
         if (expenseToEdit) {
@@ -49,6 +53,7 @@ export function ExpenseSheet({
                     } : undefined}
                     members={members.map(adaptMember)}
                     currentUserId={user?.id}
+                    currency={currency}
                     onClose={() => onOpenChange(false)}
                     onSave={handleSave}
                 />

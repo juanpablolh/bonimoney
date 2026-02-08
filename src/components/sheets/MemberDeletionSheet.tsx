@@ -190,7 +190,7 @@ export function MemberDeletionSheet({
                                         <Trash size={20} className={resolutionType === 'purge' ? "text-rose-600" : "text-neutral-400"} />
                                     </div>
                                     <p className="text-sm text-neutral-500 font-medium leading-normal">
-                                        Borra permanentemente todos los gastos pagados por <span className="font-bold">{member.name}</span>. Los balances de los demás cambiarán.
+                                        Borra permanentemente todos los gastos de <span className="font-bold">{member.name}</span>. El dinero que debía se dividirá entre los demás integrantes.
                                     </p>
                                 </div>
                             </button>

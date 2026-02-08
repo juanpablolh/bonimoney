@@ -79,10 +79,10 @@ export default function ProjectSettings() {
                 - Press Enter to save, Escape to cancel
                 - Save button disabled if name is empty
             ======================================== */}
-            <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4 space-y-4">
                 <div>
-                    <h2 className="text-xl font-medium text-neutral-900 mb-3">
-                        Información del proyecto
+                    <h2 className="text-xl font-medium text-neutral-900 mb-6">
+                        Información del grupo
                     </h2>
                     <div className="flex flex-col items-center gap-4">
                         <span className="text-5xl">{currentProject?.icon}</span>
@@ -162,13 +162,13 @@ export default function ProjectSettings() {
             <div className="bg-red-50 rounded-2xl border border-red-200 shadow-sm p-6 space-y-2">
                 <div>
                     <h3 className="text-lg font-medium text-neutral-900 mb-1">
-                        Cerrar proyecto
+                        Cerrar grupo
                     </h3>
                 </div>
 
                 <div className="flex flex-col gap-4 items-center justify-between">
                     <p className="text-sm text-neutral-500">
-                        Elimina permanentemente este proyecto y todos sus datos
+                        Elimina permanentemente este grupo y todos sus datos
                     </p>
                     <Button
                         variant="destructive"
@@ -177,7 +177,7 @@ export default function ProjectSettings() {
                         onClick={() => setDeleteDialogOpen(true)}
                     >
                         <Trash size={16} />
-                        Cerrar proyecto
+                        Cerrar grupo
                     </Button>
                 </div>
             </div>

@@ -11,6 +11,7 @@ import { Transaction, Currency } from '../types';
 import { useProject } from '../contexts/ProjectContext';
 import { useMembers } from '../contexts/MemberContext';
 import { useExpenses } from '../contexts/ExpenseContext';
+import { useAuth } from '../contexts/AuthContext';
 import { capitalizeName, formatCurrency, calculateBalancesByCurrency, optimizeTransactionsByCurrency } from '../utils/calculations';
 import { adaptMembers, adaptExpenses } from '../utils/dataAdapters';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,7 @@ export default function ProjectOverview() {
   const { currentProject, deleteProject } = useProject();
   const { members: contextMembers } = useMembers();
   const { expenses: contextExpenses, addExpense } = useExpenses();
+  const { user } = useAuth();
 
   // Adapt data from contexts
   const members = useMemo(() => adaptMembers(contextMembers), [contextMembers]);
@@ -77,11 +79,19 @@ export default function ProjectOverview() {
   const [settlementDrawerOpen, setSettlementDrawerOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-  // Helper to check if current user is the debtor in a transaction
-  const isCurrentUserDebtor = (transaction: Transaction) => {
-    // Find current user's member record
-    const currentMember = members.find(m => m.name === transaction.fromName);
-    return !!currentMember;
+  // Check if current user can settle a transaction (Debtor or Admin)
+  const canSettleTransaction = (transaction: Transaction) => {
+    if (!user || !currentProject) return false;
+
+    // Is Admin?
+    const isAdmin = currentProject.owner_id === user.id;
+
+    // Is Debtor?
+    const debtorMember = members.find(m => m.id === transaction.from);
+    // Support linking via user_id
+    const isDebtor = debtorMember?.user_id === user.id;
+
+    return isAdmin || isDebtor;
   };
 
   // Handle settlement confirmation
@@ -356,7 +366,7 @@ export default function ProjectOverview() {
           <div className="flex items-center justify-between p-5 border-b border-neutral-100">
             <div className="flex items-center gap-2 text-neutral-950">
               <ArrowsLeftRight size={20} weight="regular" />
-              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Deudas y cobros</p>
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Deudas</p>
             </div>
           </div>
 
@@ -414,8 +424,8 @@ export default function ProjectOverview() {
                         </p>
                       </div>
 
-                      {/* Botón Saldar - solo visible para deudores */}
-                      {isCurrentUserDebtor(t) && (
+                      {/* Botón Saldar - solo visible para deudores o admin */}
+                      {canSettleTransaction(t) && (
                         <UIButton
                           variant="secondary"
                           size="sm"

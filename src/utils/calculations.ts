@@ -339,7 +339,7 @@ export const formatDate = (date: Date | string): string => {
  */
 export const getDecimalSeparator = (currency: Currency): string => {
   const decimalSeparator: Record<Currency, string> = {
-    CLP: '.',
+    CLP: ',',
     USD: '.',
     BRL: ',',
     ARS: ',',
@@ -357,7 +357,7 @@ export const getDecimalSeparator = (currency: Currency): string => {
 export const getThousandsSeparator = (currency: Currency): string => {
   // For most currencies, thousands separator is opposite of decimal separator
   const decimalSep = getDecimalSeparator(currency);
-  return decimalSep === '.' ? '.' : '.';
+  return decimalSep === '.' ? ',' : '.';
 };
 
 /**
@@ -388,7 +388,7 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
 
   const MAX_VALUE = 99000000;
   const decimalSeparator = getDecimalSeparator(currency);
-  const thousandsSeparator = '.';
+  const thousandsSeparator = getThousandsSeparator(currency);
 
   // Remove all non-digit characters except dots and commas
   const cleaned = value.replace(/[^\d.,]/g, '');
@@ -399,6 +399,10 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
     const lastCommaIndex = cleaned.lastIndexOf(',');
 
     if (lastCommaIndex !== -1) {
+      if (currency === 'CLP') {
+        // CLP doesn't have decimals, treat comma as thousands separator or just remove it
+        return cleaned.replace(/[,.]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
+      }
       // Has decimal part (or just the comma separator)
       const integerPart = cleaned.substring(0, lastCommaIndex).replace(/[,.]/g, '');
       const decimalPart = cleaned.substring(lastCommaIndex + 1).replace(/[,.]/g, '');
@@ -510,4 +514,28 @@ export const formatAmountInput = (value: string, currency: Currency): string => 
 
     return formattedInteger;
   }
+};
+
+/**
+ * Parse a formatted amount string back to a number
+ */
+export const parseFormattedAmount = (value: string, currency: Currency): number => {
+  if (!value) return 0;
+
+  const decimalSep = getDecimalSeparator(currency);
+  const thousandsSep = getThousandsSeparator(currency);
+
+  // Remove all thousands separators
+  let cleaned = value.split(thousandsSep).join('');
+
+  // Normalize decimal separator to '.'
+  if (decimalSep === ',') {
+    cleaned = cleaned.replace(/,/g, '.');
+  }
+
+  // Remove any remaining non-numeric characters (like currency symbols)
+  cleaned = cleaned.replace(/[^\d.-]/g, '');
+
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
 };

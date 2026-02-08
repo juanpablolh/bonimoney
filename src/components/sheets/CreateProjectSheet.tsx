@@ -294,7 +294,6 @@ export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, on
                                             setName(sentenceCaseVal);
                                             if (sentenceCaseVal.trim()) setShowError(false);
                                         }}
-                                        autoFocus
                                         className={cn(
                                             "w-full text-2xl tracking-tight font-sans text-neutral-900 placeholder:text-neutral-300 bg-transparent border-b-1 transition-colors py-4 focus:outline-none",
                                             showError
@@ -367,7 +366,7 @@ export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, on
                                     <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
                                         <div className="space-y-2">
                                             <h3 className="text-lg font-serif font-medium tracking-tight leading-none" style={{ color: inviteCardTheme.textColor }}>
-                                                Agrega integrantes
+                                                Agregar integrantes
                                             </h3>
                                             <p className="text-sm font-medium max-w-sm leading-relaxed" style={{ color: inviteCardTheme.mutedTextColor }}>
                                                 Suma a todas las personas que compartirán gastos en este grupo.

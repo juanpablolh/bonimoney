@@ -250,7 +250,7 @@ export default function ProjectMembers() {
               <div className="space-y-2">
                 <h3 className="text-xl font-serif tracking-tight leading-none flex items-center gap-3" style={{ color: theme.textColor }}>
                   <span className="text-2xl filter drop-shadow-sm">{currentProject?.icon || <UsersThree size={32} weight="fill" />}</span>
-                  Agrega integrantes
+                  Agregar integrantes
                 </h3>
                 <p className="text-sm font-medium leading-normal max-w-sm" style={{ color: theme.mutedTextColor }}>
                   Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
