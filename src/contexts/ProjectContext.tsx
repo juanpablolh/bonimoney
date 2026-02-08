@@ -217,16 +217,37 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         loadProjects();
     }, [loadProjects]);
 
-    // Update last_accessed_at when currentProject changes
+    // Throttle last_accessed_at updates (only update every 5 minutes to reduce DB load)
+    const lastAccessUpdateRef = useRef<{ projectId: string; timestamp: number } | null>(null);
+    const THROTTLE_MINUTES = 5;
+
     useEffect(() => {
         if (currentProject && user) {
-            // Update last_accessed_at in background (no localStorage)
-            supabase
-                .from('user_projects')
-                .update({ last_accessed_at: new Date().toISOString() })
-                .eq('user_id', user.id)
-                .eq('project_id', currentProject.id)
-                .then(() => { /* Silent update */ });
+            const now = Date.now();
+            const lastUpdate = lastAccessUpdateRef.current;
+
+            // Only update if:
+            // 1. Never updated before, OR
+            // 2. Different project, OR
+            // 3. More than 5 minutes since last update
+            const shouldUpdate = !lastUpdate ||
+                lastUpdate.projectId !== currentProject.id ||
+                (now - lastUpdate.timestamp) > THROTTLE_MINUTES * 60 * 1000;
+
+            if (shouldUpdate) {
+                lastAccessUpdateRef.current = {
+                    projectId: currentProject.id,
+                    timestamp: now
+                };
+
+                // Update last_accessed_at in background (throttled)
+                supabase
+                    .from('user_projects')
+                    .update({ last_accessed_at: new Date().toISOString() })
+                    .eq('user_id', user.id)
+                    .eq('project_id', currentProject.id)
+                    .then(() => { /* Silent update */ });
+            }
         }
     }, [currentProject, user]);
 
