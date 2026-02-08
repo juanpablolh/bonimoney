@@ -48,27 +48,61 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
 }) => {
     const [projectMembers, setProjectMembers] = useState<Record<string, Member[]>>({});
 
-    // Fetch members for all projects
+    // Fetch members for all projects (optimized with RPC function + fallback)
     useEffect(() => {
         const fetchAllMembers = async () => {
-            if (projects.length === 0) return;
-
-            const membersMap: Record<string, Member[]> = {};
-
-            for (const project of projects) {
-                const { data, error } = await supabase
-                    .from('project_members')
-                    .select('id, name, project_id, user_id, avatar_url')
-                    .eq('project_id', project.id)
-                    .eq('status', 'accepted')
-                    .order('created_at', { ascending: true });
-
-                if (!error && data) {
-                    membersMap[project.id] = data;
-                }
+            if (projects.length === 0) {
+                setProjectMembers({});
+                return;
             }
 
-            setProjectMembers(membersMap);
+            try {
+                // Try RPC function first for parallel fetching (1 query instead of N)
+                const projectIds = projects.map(p => p.id);
+
+                const { data, error } = await supabase
+                    .rpc('get_all_project_members', { project_ids: projectIds });
+
+                // If RPC function doesn't exist yet (PGRST202), fallback to sequential queries
+                if (error?.code === 'PGRST202') {
+                    console.warn('RPC function not found, using fallback method. Execute supabase/migrations/create_get_all_project_members.sql for better performance');
+
+                    // Fallback: sequential queries (old method)
+                    const membersMap: Record<string, Member[]> = {};
+                    for (const project of projects) {
+                        const { data: memberData, error: memberError } = await supabase
+                            .from('project_members')
+                            .select('id, name, project_id, user_id, avatar_url')
+                            .eq('project_id', project.id)
+                            .eq('status', 'accepted')
+                            .order('created_at', { ascending: true });
+
+                        if (!memberError && memberData) {
+                            membersMap[project.id] = memberData;
+                        }
+                    }
+                    setProjectMembers(membersMap);
+                    return;
+                }
+
+                if (error) {
+                    console.error('Error fetching project members:', error);
+                    return;
+                }
+
+                // Group members by project_id
+                const membersMap: Record<string, Member[]> = {};
+                data?.forEach((member: Member) => {
+                    if (!membersMap[member.project_id]) {
+                        membersMap[member.project_id] = [];
+                    }
+                    membersMap[member.project_id].push(member);
+                });
+
+                setProjectMembers(membersMap);
+            } catch (error) {
+                console.error('Error in fetchAllMembers:', error);
+            }
         };
 
         fetchAllMembers();
