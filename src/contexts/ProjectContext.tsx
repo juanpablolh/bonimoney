@@ -40,9 +40,24 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
-    const [currentProject, setCurrentProject] = useState<Project | null>(null);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [projects, setProjects] = useState<Project[]>(() => {
+        const saved = localStorage.getItem('boni_projects');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [currentProject, setCurrentProject] = useState<Project | null>(() => {
+        const savedId = localStorage.getItem('currentProjectId');
+        const savedProjects = localStorage.getItem('boni_projects');
+        if (savedId && savedProjects) {
+            const projects = JSON.parse(savedProjects) as Project[];
+            return projects.find(p => p.id === savedId) || null;
+        }
+        return null;
+    });
+    const [loading, setLoading] = useState(() => {
+        // Only show initial loader if we don't have cached projects
+        const saved = localStorage.getItem('boni_projects');
+        return !saved || JSON.parse(saved).length === 0;
+    });
 
     // Load user's projects from Supabase
     const loadProjects = useCallback(async () => {
@@ -50,44 +65,55 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             setProjects([]);
             setCurrentProject(null);
             setLoading(false);
+            localStorage.removeItem('boni_projects');
             return;
         }
 
         try {
-            setLoading(true);
+            // Only set loading true if we have no data (Soft Loading)
+            if (projects.length === 0) {
+                setLoading(true);
+            }
 
             // Use RPC function to get projects (bypasses RLS issues)
             const { data: projectsData, error } = await supabase.rpc('get_my_projects');
 
             if (error) {
-                setProjects([]);
+                // If RPC fails, don't clear state if we have cached data
                 return;
             }
 
             if (!projectsData || projectsData.length === 0) {
                 setProjects([]);
+                localStorage.setItem('boni_projects', JSON.stringify([]));
                 return;
             }
 
             // Map RPC result to Project type
-            const userProjects = projectsData.map((p: any) => ({
+            const fetchedProjects = projectsData.map((p: any) => ({
                 ...p,
                 memberCount: p.member_count || 1
             }));
 
-            // Deduplicate projects to prevent race conditions with local state
+            // Data Stability Check: Only update state and localStorage if data changed
             setProjects(prev => {
-                const newProjectIds = new Set(userProjects.map((p: Project) => p.id));
+                const newProjectIds = new Set(fetchedProjects.map((p: Project) => p.id));
                 const existingNotInNew = prev.filter(p => !newProjectIds.has(p.id));
-                // Prefer the fetched data but keep any locally-added projects not yet in DB
-                return [...userProjects, ...existingNotInNew];
+                const finalProjects = [...fetchedProjects, ...existingNotInNew];
+
+                // Simple stringify comparison for deep diff
+                if (JSON.stringify(prev) !== JSON.stringify(finalProjects)) {
+                    localStorage.setItem('boni_projects', JSON.stringify(finalProjects));
+                    return finalProjects;
+                }
+                return prev;
             });
         } catch {
-            setProjects([]);
+            // Silent error to keep cached data visible
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, projects.length]);
 
     // Create new project
     const createProject = async (data: CreateProjectData): Promise<Project> => {

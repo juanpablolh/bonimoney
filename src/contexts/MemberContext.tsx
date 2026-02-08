@@ -50,7 +50,10 @@ export function MemberProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            setLoading(true);
+            // Soft Loading: Only set loading true if we have no data
+            if (members.length === 0) {
+                setLoading(true);
+            }
 
             const { data, error } = await supabase
                 .from('project_members')
@@ -60,13 +63,21 @@ export function MemberProvider({ children }: { children: ReactNode }) {
 
             if (error) throw error;
 
-            setMembers(data || []);
+            const fetchedMembers = data || [];
+
+            // Data Stability Check: Only update state if data changed
+            setMembers(prev => {
+                if (JSON.stringify(prev) !== JSON.stringify(fetchedMembers)) {
+                    return fetchedMembers;
+                }
+                return prev;
+            });
         } catch {
             // Silent fail
         } finally {
             setLoading(false);
         }
-    }, [currentProject]);
+    }, [currentProject, members.length]);
 
     // Add member (ghost or invited)
     const addMember = async (data: AddMemberData): Promise<Member> => {

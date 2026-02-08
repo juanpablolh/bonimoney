@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useProject } from './contexts/ProjectContext';
@@ -18,19 +18,12 @@ import { Plus, House, CaretLeft } from '@phosphor-icons/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from './utils/avatarColors';
 
-// Lazy load heavy components
-const GlobalDashboard = lazy(() => import('./components/dashboard/GlobalDashboard').then(m => ({ default: m.GlobalDashboard })));
-const InviteAcceptPage = lazy(() => import('./components/invite/InviteAcceptPage'));
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const MembersSection = lazy(() => import('./components/MembersSection'));
-const ExpensesSection = lazy(() => import('./components/ExpensesSection'));
-
-// Loading fallback component
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
-  </div>
-);
+// Statically import core components to avoid Suspense flickers
+import { GlobalDashboard } from './components/dashboard/GlobalDashboard';
+import InviteAcceptPage from './components/invite/InviteAcceptPage';
+import Dashboard from './components/Dashboard';
+import MembersSection from './components/MembersSection';
+import ExpensesSection from './components/ExpensesSection';
 
 // Component for the home/groups view
 function HomeView() {
@@ -372,11 +365,13 @@ function ProjectView() {
 
 function App() {
   const { user, loading: authLoading } = useAuth();
-  const { loading: projectsLoading } = useProject();
+  const { projects, loading: projectsLoading } = useProject();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  // Show loading state
-  if (authLoading || projectsLoading) {
+  // Soft Loading Check: Only show full-page loader if we have NO data in state
+  const isHardLoading = (authLoading || projectsLoading) && projects.length === 0;
+
+  if (isHardLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-4">
@@ -390,24 +385,22 @@ function App() {
   // Not logged in - show auth routes
   if (!user) {
     return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          <Route path="/" element={<AuthLanding />} />
-          <Route path="/login" element={<AuthLogin />} />
-          <Route path="/register" element={<AuthRegister />} />
-          <Route path="/forgot-password" element={<AuthForgotPassword />} />
-          {/* Invitation accept page - accessible without login */}
-          <Route path="/invite/:token" element={<InviteAcceptPage />} />
-          {/* Redirect any other route to landing */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/" element={<AuthLanding />} />
+        <Route path="/login" element={<AuthLogin />} />
+        <Route path="/register" element={<AuthRegister />} />
+        <Route path="/forgot-password" element={<AuthForgotPassword />} />
+        {/* Invitation accept page - accessible without login */}
+        <Route path="/invite/:token" element={<InviteAcceptPage />} />
+        {/* Redirect any other route to landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     );
   }
 
   // Logged in - show app routes
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <>
       <Toaster richColors position="top-center" theme="light" />
       <Routes>
         <Route path="/" element={<HomeView />} />
@@ -422,7 +415,7 @@ function App() {
 
       {/* Common Modals hoisted to top level */}
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-    </Suspense>
+    </>
   );
 }
 

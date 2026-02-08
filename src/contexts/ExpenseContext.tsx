@@ -90,7 +90,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            setLoading(true);
+            // Soft Loading: Only set loading true if we have no data
+            if (expenses.length === 0) {
+                setLoading(true);
+            }
 
             const { data, error } = await supabase
                 .from('expenses')
@@ -104,14 +107,21 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
             if (error) throw error;
 
-            // Cast to ExpenseWithSplits[]
-            setExpenses((data || []) as ExpenseWithSplits[]);
+            const fetchedExpenses = (data || []) as ExpenseWithSplits[];
+
+            // Data Stability Check: Only update state if data changed
+            setExpenses(prev => {
+                if (JSON.stringify(prev) !== JSON.stringify(fetchedExpenses)) {
+                    return fetchedExpenses;
+                }
+                return prev;
+            });
         } catch {
             // Silent fail
         } finally {
             setLoading(false);
         }
-    }, [currentProject]);
+    }, [currentProject, expenses.length]);
 
     // Helper to calculate split amounts based on method
     const calculateSplitAmounts = (
