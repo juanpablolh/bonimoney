@@ -3,11 +3,9 @@ import {
   UserPlus,
   PencilSimple,
   Trash,
-  ShareNetwork,
   Check,
   X,
   UsersThree,
-  Info,
   EnvelopeSimple,
   User,
   PaperPlaneTilt,
@@ -16,7 +14,7 @@ import {
   Crown,
   CheckCircle
 } from '@phosphor-icons/react';
-import { DeletionResolutionDialog } from './members/DeletionResolutionDialog';
+import { DeletionResolutionDialog } from '../components/members/DeletionResolutionDialog';
 import { useMembers } from '@/contexts/MemberContext';
 import { useExpenses } from '@/contexts/ExpenseContext';
 import { Member } from '../types';
@@ -38,38 +36,50 @@ import {
 import { sendProjectInvitation, resendInvitation } from '@/services/invitations';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface MembersSectionProps {
-  members: (Member | ContextMember)[];
-  onAddMember: (name: string) => void;
-  onEditMember: (id: string, newName: string) => void;
-  onDeleteMember: (id: string) => Promise<void>;
-  onShareGroup: () => void;
-  onDeleteProject: () => void;
-  onMembersRefresh?: () => void;
-  balancesByCurrency?: Map<any, any[]>;
-}
-
 import { useProject } from '@/contexts/ProjectContext';
 import { getProjectTheme } from '@/utils/projectTheme';
+import { useMemo } from 'react';
+import { adaptMembers, adaptExpenses } from '../utils/dataAdapters';
+import { calculateBalancesByCurrency } from '../utils/calculations';
 
-export default function MembersSection({
-  members,
-  onAddMember,
-  onEditMember,
-  onDeleteMember,
-  onShareGroup,
-  onDeleteProject,
-  onMembersRefresh,
-  balancesByCurrency
-}: MembersSectionProps) {
-  const { resolveMemberDeletion } = useMembers();
-  const { loadExpenses } = useExpenses();
+
+/**
+ * ProjectMembers Component
+ * 
+ * Manages all member-related operations for a project:
+ * - Add members by name (local) or invite by email (authenticated users)
+ * - Edit member names (owners can edit any, members can edit their own)
+ * - Delete members (with activity resolution flow for members with expenses)
+ * - Resend email invitations to pending members
+ * - Display member status (pending, accepted) and roles (owner, member, guest)
+ * 
+ * Key Flows:
+ * 1. Add Member: Simple name input for quick local member creation
+ * 2. Invite by Email: Send invitation email (requires authentication)
+ * 3. Delete Member: 
+ *    - No activity: Simple confirmation dialog
+ *    - Has activity: Resolution dialog (reassign or purge expenses)
+ */
+export default function ProjectMembers() {
   const { currentProject } = useProject();
+  const { members: contextMembers, addMember, updateMember, removeMember, loadMembers, resolveMemberDeletion } = useMembers();
+  const { expenses: contextExpenses, loadExpenses } = useExpenses();
   const { user } = useAuth();
+
+  // Adapt data from contexts
+  const members = useMemo(() => contextMembers, [contextMembers]);
+  const expenses = useMemo(() => adaptExpenses(contextExpenses), [contextExpenses]);
+  const adaptedMembers = useMemo(() => adaptMembers(contextMembers), [contextMembers]);
+
+  // Calculate balances
+  const balancesByCurrency = useMemo(() =>
+    calculateBalancesByCurrency(adaptedMembers, expenses),
+    [adaptedMembers, expenses]
+  );
+
   const [newMemberName, setNewMemberName] = useState('');
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteMemberDialogOpen, setDeleteMemberDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | ContextMember | null>(null);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
@@ -91,10 +101,10 @@ export default function MembersSection({
 
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMemberName.trim()) {
-      onAddMember(newMemberName.trim());
+      await addMember({ name: newMemberName.trim() });
       setNewMemberName('');
     }
   };
@@ -139,9 +149,9 @@ export default function MembersSection({
   };
 
   // Handle save edit
-  const handleSaveEdit = (id: string) => {
+  const handleSaveEdit = async (id: string) => {
     if (editingName.trim()) {
-      onEditMember(id, editingName.trim());
+      await updateMember(id, { name: editingName.trim() });
       setEditingMemberId(null);
       setEditingName('');
     }
@@ -175,7 +185,7 @@ export default function MembersSection({
     if (result.success) {
       setInviteSuccess(true);
       setInviteEmail('');
-      onMembersRefresh?.();
+      loadMembers();
       // Reset success message after 3 seconds
       setTimeout(() => setInviteSuccess(false), 3000);
     } else {
@@ -215,7 +225,16 @@ export default function MembersSection({
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
-        {/* 1. ADD MEMBER HERO CARD (Styled like Dashboard Project Card) */}
+        {/* ========================================
+            SECTION 1: ADD MEMBER CARD
+            
+            Hero-style card for adding new members to the project.
+            Features:
+            - Two modes: Add by name (local) or Invite by email (requires auth)
+            - Themed styling based on project color
+            - Real-time validation and feedback
+            - Success/error messages for email invitations
+        ======================================== */}
         <div className="lg:sticky lg:top-4">
           <section
             className="rounded-xl p-4 transition-all shadow-md overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
@@ -238,7 +257,7 @@ export default function MembersSection({
                 </p>
               </div>
 
-              {/* Mode Toggle */}
+              {/* Mode Toggle: Switch between adding by name (local) or inviting by email (authenticated) */}
               {user && (
                 <div className="flex gap-2 mb-2">
                   <button
@@ -272,7 +291,7 @@ export default function MembersSection({
                 </div>
               )}
 
-              {/* Add by Name Form */}
+              {/* Add by Name Form: Quick local member creation without authentication */}
               {addMode === 'name' && (
                 <form onSubmit={handleSubmit} className="relative mt-2">
                   <div className="relative w-full">
@@ -301,7 +320,7 @@ export default function MembersSection({
                 </form>
               )}
 
-              {/* Invite by Email Form */}
+              {/* Invite by Email Form: Send email invitation to join project (requires authentication) */}
               {addMode === 'email' && (
                 <form onSubmit={handleInviteByEmail} className="relative mt-2 space-y-3">
                   <div className="relative w-full">
@@ -345,7 +364,7 @@ export default function MembersSection({
                   {/* Error message */}
                   {inviteError && (
                     <div className="flex items-center gap-2 text-sm font-medium animate-in fade-in text-rose-600">
-                      <Info size={16} weight="fill" />
+                      <X size={16} weight="fill" />
                       <span>{inviteError}</span>
                     </div>
                   )}
@@ -356,7 +375,20 @@ export default function MembersSection({
         </div>
 
         <div className="space-y-6">
-          {/* 2. MEMBERS LIST / GRID */}
+          {/* ========================================
+              SECTION 2: MEMBERS LIST
+              
+              Displays all project members with:
+              - Avatar with color coding
+              - Name (editable inline)
+              - Status badges (Pending, Admin, Member, Guest)
+              - Action buttons (Edit, Delete) based on permissions
+              - Resend invitation button for pending members
+              
+              Permissions:
+              - Owners: Can edit/delete any member (except themselves)
+              - Members: Can only edit their own name
+          ======================================== */}
           <section className="space-y-4">
             <div className="flex justify-between items-center px-4">
               <h4 className="text-base font-normal tracking-[0.1px] text-neutral-400">Integrantes ({members.length})</h4>
@@ -508,7 +540,7 @@ export default function MembersSection({
                         </div>
                       </div>
 
-                      {/* Resend invitation button for pending members (Full Width at Bottom) */}
+                      {/* Resend Invitation: For pending members who haven't accepted yet */}
                       {isContextMember(member) && member.status === 'pending' && member.email && !isEditing && (
                         <button
                           onClick={() => handleResendInvitation(member)}
@@ -530,84 +562,14 @@ export default function MembersSection({
             </div>
           </section>
 
-          {/* 3. SHARE LINK CARD (Premium Polish) */}
-          {members.length > 0 && (
-            <section className="bg-neutral-50 rounded-3xl p-4 border border-neutral-100 space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-green-200 rounded-2xl flex items-center justify-center text-neutral-400 shrink-0">
-                  <Info size={24} weight="bold" className="text-green-700" />
-                </div>
-                <div className="space-y-1">
-                  <h5 className="font-normal text-neutral-900 text-lg">¿Sabías que puedes sincronizar?</h5>
-                  <p className="text-xs text-neutral-500 font-medium leading-relaxed">
-                    Inicia sesión para compartir este grupo con otros integrantes y ver los cambios en tiempo real.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                onClick={onShareGroup}
-                className="w-full h-14 rounded-2xl bg-white border-neutral-200 text-neutral-900 font-semibold flex gap-2 active:scale-[0.98] transition-all"
-              >
-                <ShareNetwork size={20} weight="bold" />
-                Compartir Proyecto
-              </Button>
-            </section>
-          )}
 
-          {/* 4. DELETE PROJECT SECTION */}
-          <section className="flex justify-end pt-4 pb-2">
-            <button
-              onClick={() => setDeleteDialogOpen(true)}
-              className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors px-4 py-2"
-            >
-              <span className="font-medium text-sm">Cerrar grupo</span>
-              <Trash size={16} />
-            </button>
-          </section>
-
-          {/* DELETE PROJECT DIALOG */}
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0" showCloseButton={false}>
-              <DialogHeader className="flex flex-row items-center justify-between space-y-0 mb-4">
-                <DialogTitle className="text-2xl font-serif font-medium tracking-tight text-neutral-900 text-left leading-tight">Cerrar grupo</DialogTitle>
-                <button
-                  onClick={() => setDeleteDialogOpen(false)}
-                  className="p-2 hover:bg-neutral-200 rounded-full transition-colors text-neutral-500"
-                >
-                  <X size={20} weight="bold" />
-                </button>
-              </DialogHeader>
-              <DialogHeader className="space-y-4">
-                <DialogDescription className="text-neutral-500 font-medium text-left text-base leading-relaxed -mt-4">
-                  ¿Estás seguro que quieres cerrar este grupo? Esta acción no se puede deshacer y borrará todos los gastos y datos asociados permanentemente.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end mt-8">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="rounded-2xl w-full sm:w-auto"
-                  onClick={() => setDeleteDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  className="rounded-2xl w-full sm:w-auto"
-                  onClick={() => {
-                    onDeleteProject();
-                    setDeleteDialogOpen(false);
-                  }}
-                >
-                  Cerrar grupo
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* DELETE MEMBER DIALOG */}
+          {/* ========================================
+              DIALOG: DELETE MEMBER (No Activity)
+              
+              Simple confirmation dialog shown when deleting a member
+              who has NO expenses or transactions associated.
+              For members with activity, see Resolution Dialog below.
+          ======================================== */}
           <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
             <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-3xl p-6 gap-0" showCloseButton={false}>
               <DialogHeader className="flex flex-row items-center justify-between space-y-0 mb-4">
@@ -640,7 +602,7 @@ export default function MembersSection({
                   onClick={async () => {
                     if (memberToDelete) {
                       try {
-                        await onDeleteMember(memberToDelete.id);
+                        await removeMember(memberToDelete.id);
                         setDeleteMemberDialogOpen(false);
                       } catch {
                         setDeleteMemberDialogOpen(false);
@@ -656,7 +618,12 @@ export default function MembersSection({
             </DialogContent>
           </Dialog>
 
-          {/* ERROR DIALOG */}
+          {/* ========================================
+              DIALOG: ERROR
+              
+              Generic error dialog shown when member deletion fails
+              due to database constraints or other unexpected issues.
+          ======================================== */}
           <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
             <DialogContent className="sm:max-w-[440px] border-0 shadow-2xl rounded-[2rem] p-6 gap-0" showCloseButton={false}>
               <DialogHeader className="flex flex-row items-center justify-between space-y-0 mb-4">
@@ -689,7 +656,19 @@ export default function MembersSection({
         </div>
       </div>
 
-      {/* RESOLUTION DIALOG */}
+      {/* ========================================
+          DIALOG: DELETION RESOLUTION (Has Activity)
+          
+          Advanced dialog shown when deleting a member who has
+          expenses or transactions associated with them.
+          
+          Options:
+          1. Reassign: Transfer all expenses to another member
+          2. Purge: Delete all associated expenses (destructive)
+          
+          This ensures data integrity and gives users control
+          over how to handle the member's financial activity.
+      ======================================== */}
       {memberToDelete && (
         <DeletionResolutionDialog
           open={resolutionDialogOpen}
@@ -700,7 +679,7 @@ export default function MembersSection({
           onResolve={async (type: 'reassign' | 'purge', targetMemberId?: string) => {
             await resolveMemberDeletion(memberToDelete.id, type, targetMemberId);
             // Refresh both context states to ensure recalculation
-            if (onMembersRefresh) onMembersRefresh();
+            loadMembers();
             await loadExpenses();
           }}
         />

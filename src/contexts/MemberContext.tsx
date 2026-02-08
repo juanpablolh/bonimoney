@@ -26,6 +26,7 @@ interface MemberContextType {
     addMember: (data: AddMemberData) => Promise<Member>;
     updateMember: (id: string, data: Partial<Member>) => Promise<void>;
     removeMember: (id: string) => Promise<void>;
+    resolveMemberDeletion: (id: string, type: 'reassign' | 'purge', targetMemberId?: string) => Promise<void>;
 }
 
 interface AddMemberData {
@@ -128,6 +129,21 @@ export function MemberProvider({ children }: { children: ReactNode }) {
 
         setMembers(prev => prev.filter(m => m.id !== id));
     };
+    // Resolve member deletion via RPC
+    const resolveMemberDeletion = async (id: string, type: 'reassign' | 'purge', targetMemberId?: string) => {
+        if (!currentProject) throw new Error('No project selected');
+
+        const { error } = await supabase.rpc('resolve_member_deletion', {
+            p_member_to_delete: id,
+            p_resolution_type: type,
+            p_target_member_id: targetMemberId
+        });
+
+        if (error) throw error;
+
+        // Optimized local update: Remove from state
+        setMembers(prev => prev.filter(m => m.id !== id));
+    };
 
     // Load members when project changes
     useEffect(() => {
@@ -174,6 +190,7 @@ export function MemberProvider({ children }: { children: ReactNode }) {
                 addMember,
                 updateMember,
                 removeMember,
+                resolveMemberDeletion,
             }}
         >
             {children}
