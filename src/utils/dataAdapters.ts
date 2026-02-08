@@ -42,7 +42,8 @@ export function adaptExpense(contextExpense: ExpenseWithSplits): OldExpense {
             amountOwed: s.amount_owed
         })),
         expense_type: contextExpense.expense_type,
-        created_at: contextExpense.created_at
+        created_at: contextExpense.created_at,
+        metadata: contextExpense.metadata
     };
 }
 

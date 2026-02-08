@@ -10,7 +10,7 @@ import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { cn } from '@/lib/utils';
 import type { Member } from '@/types';
 
-interface SettlementDrawerProps {
+interface SettlementSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     transaction: Transaction;
@@ -18,13 +18,13 @@ interface SettlementDrawerProps {
     onConfirm: (amount: number, notes?: string) => Promise<void>;
 }
 
-export function SettlementDrawer({
+export function SettlementSheet({
     open,
     onOpenChange,
     transaction,
     members,
     onConfirm
-}: SettlementDrawerProps) {
+}: SettlementSheetProps) {
     const { keyboardHeight } = useContext(KeyboardViewportContext);
     const [amount, setAmount] = useState(transaction.amount.toString());
     const [notes, setNotes] = useState('');

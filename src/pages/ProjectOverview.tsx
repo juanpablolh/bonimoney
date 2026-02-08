@@ -5,7 +5,6 @@ import {
   Clock,
   ArrowsLeftRight,
   Sparkle,
-  Trash,
   Receipt
 } from '@phosphor-icons/react';
 import { Transaction, Currency } from '../types';
@@ -27,7 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button as UIButton } from '@/components/ui/button';
-import { SettlementDrawer } from '../components/settlements/SettlementDrawer';
+import { SettlementSheet } from '../components/sheets/SettlementSheet';
 
 
 /**
@@ -158,7 +157,7 @@ export default function ProjectOverview() {
   const theme = getProjectTheme(currentProject?.color, currentProject?.id);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 pb-0 lg:pb-0 w-full min-w-0 lg:h-full">
+    <div className="flex-1 min-h-0 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 pb-0 lg:pb-0 w-full min-w-0">
 
       {/* ========================================
           SECTION 1: PROJECT CARD (Left Column)
@@ -171,7 +170,7 @@ export default function ProjectOverview() {
           
           Styled with dynamic theme based on project color.
       ======================================== */}
-      <div className="lg:col-span-4 space-y-4 flex flex-col min-w-0 min-h-0 h-auto lg:h-full flex-shrink-0">
+      <div className="space-y-4 flex flex-col min-w-0">
         {/* Project Card (Dynamic Color) */}
         <div
           className="rounded-xl p-4 transition-all shadow-md overflow-hidden flex flex-col justify-between min-h-[220px] relative group"
@@ -252,27 +251,21 @@ export default function ProjectOverview() {
           SECTION 2: RECENT ACTIVITY (Middle Column)
           
           Timeline of recent expenses and settlements:
-          - Shows all expenses on desktop, first 6 on mobile
+          - Shows all expenses on desktop, first 3 on mobile
           - Displays expense description, payer, and amount
           - Settlement transactions marked with 💸 emoji
           - Quick link to full expenses page
           
           Auto-scrollable list with smooth scrolling behavior.
       ======================================== */}
-      <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
+      <section className="flex flex-col min-w-0">
         <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-[12px] border-b border-neutral-100">
-            <div className="flex items-center gap-2 text-neutral-950 h-fit">
+          <div className="flex items-center px-4 py-5 border-b border-neutral-100">
+            <div className="flex items-center gap-2 text-neutral-950">
               <Clock size={20} weight="regular" />
               <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Actividad reciente</p>
             </div>
-            <button
-              onClick={() => navigate('expenses')}
-              className="text-base font-medium text-neutral-900 flex items-center gap-2 hover:text-neutral-600 transition-colors"
-            >
-              Detalles <ArrowRight size={18} weight="bold" />
-            </button>
           </div>
 
 
@@ -287,8 +280,18 @@ export default function ProjectOverview() {
                 <p className="text-neutral-400 text-sm">No hay gastos aún</p>
               </div>
             ) : (
-              (isDesktop ? sortedExpenses : sortedExpenses.slice(0, 6)).map((expense) => {
+              (isDesktop ? sortedExpenses : sortedExpenses.slice(0, 3)).map((expense) => {
                 const paidBy = members.find(m => m.id === expense.paidBy);
+                const isPayment = (expense as any).expense_type === 'settlement' || (expense as any).expense_type === 'payment';
+
+                // Normalize title
+                let displayTitle = expense.description;
+                if (isPayment) {
+                  displayTitle = "Pago de deuda";
+                } else {
+                  displayTitle = expense.description ? (expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()) : 'Sin descripción';
+                }
+
                 return (
                   <div key={expense.id} className="flex items-start gap-4 hover:bg-neutral-50/50 transition-colors">
 
@@ -296,17 +299,17 @@ export default function ProjectOverview() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-neutral-900 text-base leading-tight truncate pb-1">
-                        {(expense as any).expense_type === 'settlement' && (
+                        {isPayment && (
                           <span className="text-emerald-600 mr-1">💸</span>
                         )}
-                        {expense.description ? (expense.description.charAt(0).toUpperCase() + expense.description.slice(1).toLowerCase()) : 'Sin descripción'}
+                        {displayTitle}
                       </p>
                       <div className="flex items-center justify-between pt-1">
                         <p className="text-sm text-neutral-400">
-                          Por {paidBy?.name || 'Alguien'}
-                          {((expense as any).expense_type === 'settlement' || (expense as any).expense_type === 'payment') && expense.splits && expense.splits.length > 0 && (() => {
+                          Por {capitalizeName(paidBy?.name) || 'Alguien'}
+                          {isPayment && expense.splits && expense.splits.length > 0 && (() => {
                             const toMember = members.find(m => m.id === expense.splits![0].memberId);
-                            return toMember ? ` a ${toMember.name}` : '';
+                            return toMember ? ` a ${capitalizeName(toMember.name)}` : '';
                           })()}
                         </p>
                         <p className="font-sans font-regular text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
@@ -321,37 +324,43 @@ export default function ProjectOverview() {
           </div>
 
           {/* Footer */}
-          <div className="p-5 pt-3">
-            <span className="text-sm text-neutral-500">{expenses.length} Últimos gastos</span>
+          <div className="py-2 px-4 flex justify-end border-t border-neutral-100">
+            <button
+              onClick={() => navigate('expenses')}
+              className="text-base font-medium text-neutral-600 flex items-center gap-2 hover:text-neutral-600 transition-colors"
+            >
+              Ver todos <ArrowRight size={18} weight="regular" />
+            </button>
           </div>
         </div>
       </section>
 
 
+
+
       {/* ========================================
-          SECTION 3: DEBTS & BALANCES (Right Column)
+          SECTION 3: DEBTS & PAYMENTS (Right Column - Top)
           
-          Financial summary showing:
-          - Optimized transactions (who owes whom)
-          - Click to mark debt as paid (settlement flow)
-          - Member balances by currency
-          - Delete project button (desktop only)
+          Optimized transactions showing who owes whom:
+          - Displays simplified payment suggestions
+          - Minimizes number of transactions needed to settle all balances
+          - Click "Saldar deuda" to mark debt as paid (opens settlement drawer)
+          - Shows "Todo saldado" when all balances are zero
           
-          Transactions are optimized to minimize number of
-          payments needed to settle all balances.
+          Only debtors (people who owe money) can see the "Saldar deuda" button
+          for their own debts.
       ======================================== */}
-      <section className="lg:col-span-4 flex flex-col h-auto lg:h-full min-w-0 min-h-0 flex-shrink-0">
-        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm flex flex-col h-full overflow-hidden">
-          {/* Header matching Actividad reciente */}
-          <div className="flex items-center justify-between p-4 border-b border-neutral-100">
+      <section className="flex flex-col min-w-0">
+        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-5 border-b border-neutral-100">
             <div className="flex items-center gap-2 text-neutral-950">
               <ArrowsLeftRight size={20} weight="regular" />
               <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Deudas y cobros</p>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6 min-h-0 p-3">
-
+          <div className="flex-1 overflow-y-auto min-h-0 p-4">
             {/* Optimized Transactions: Who owes whom */}
             <div>
 
@@ -365,7 +374,7 @@ export default function ProjectOverview() {
               ) : (
                 <div className="space-y-2">
                   {transactionsByCurrency.map((t, idx) => (
-                    <div key={idx} className="bg-neutral-50 rounded-2xl p-3 space-y-2">
+                    <div key={idx} className="bg-neutral-50 rounded-2xl p-3 space-y-2 border border-neutral-100">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5">
@@ -400,7 +409,7 @@ export default function ProjectOverview() {
                             </span>
                           </div>
                         </div>
-                        <p className="font-sans font-semibold text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
+                        <p className="font-sans font-medium text-neutral-950 text-sm" style={{ letterSpacing: '-0.3px' }}>
                           {formatCurrency(t.amount, t.currency)}
                         </p>
                       </div>
@@ -414,7 +423,7 @@ export default function ProjectOverview() {
                             setSelectedTransaction(t);
                             setSettlementDrawerOpen(true);
                           }}
-                          className="w-full"
+                          className="w-full border border-neutral-200"
                         >
                           Saldar deuda
                         </UIButton>
@@ -425,59 +434,71 @@ export default function ProjectOverview() {
               )}
 
             </div>
+          </div>
+        </div>
+      </section>
 
-            {/* Estado individual Section */}
-            <div>
-              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem] text-neutral-950 flex items-center gap-2 mb-4">
-                <ArrowsLeftRight size={18} /> Estado individual
-              </p>
-              <div className="space-y-2">
-                {Array.from(balancesByCurrency.entries()).map(([currency, currencyBalances]) => (
-                  currencyBalances.map((b, bIdx) => {
-                    const isPositive = b.balance > 0.01;
-                    const isNegative = b.balance < -0.01;
-                    return (
-                      <div
-                        key={`${currency}-${bIdx}`}
-                        className={cn(
-                          "px-4 py-3 rounded-lg text-sm flex items-center justify-between",
-                          isPositive ? "bg-neutral-100" :
-                            isNegative ? "bg-rose-50" :
-                              "bg-neutral-50"
-                        )}
-                      >
+      {/* ========================================
+          SECTION 4: INDIVIDUAL BALANCES (Right Column - Bottom)
+          
+          Shows each member's net balance by currency:
+          - Positive balance (green/neutral): Member is owed money
+          - Negative balance (red): Member owes money
+          - Zero balance (neutral): Member is settled
+          
+          Balances are calculated across all expenses and settlements.
+          Multi-currency support: separate balance per currency.
+          
+          Footer includes "Cerrar grupo" button (desktop only) to delete
+          the entire project.
+      ======================================== */}
+      <section className="flex flex-col min-w-0">
+        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-5 border-b border-neutral-100">
+            <div className="flex items-center gap-2 text-neutral-950">
+              <ArrowsLeftRight size={20} weight="regular" />
+              <p className="text-sm font-semibold leading-[1.3125rem] tracking-[0.00438rem]">Estado individual</p>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto min-h-0 p-4">
+            {/* Member Balances by Currency */}
+            <div className="space-y-2">
+              {Array.from(balancesByCurrency.entries()).map(([currency, currencyBalances]) => (
+                currencyBalances.map((b, bIdx) => {
+                  const isPositive = b.balance > 0.01;
+                  const isNegative = b.balance < -0.01;
+                  return (
+                    <div
+                      key={`${currency}-${bIdx}`}
+                      className={cn(
+                        "px-4 py-3 rounded-lg text-sm flex items-center justify-between",
+                        isPositive ? "bg-neutral-100" :
+                          isNegative ? "bg-rose-50" :
+                            "bg-neutral-50"
+                      )}
+                    >
+                      <span className={cn(
+                        "font-medium",
+                        isNegative ? "text-rose-600" : "text-neutral-700"
+                      )}>
+                        {capitalizeName(b.memberName) || 'Alguien'}
+                      </span>
+                      <div className="flex items-center gap-1">
                         <span className={cn(
                           "font-medium",
-                          isNegative ? "text-rose-600" : "text-neutral-700"
+                          isNegative ? "text-rose-600" : "text-neutral-900"
                         )}>
-                          {capitalizeName(b.memberName) || 'Alguien'}
+                          {isNegative && "- "}
+                          {formatCurrency(Math.abs(b.balance), currency)}
                         </span>
-                        <div className="flex items-center gap-1">
-                          <span className={cn(
-                            "font-bold",
-                            isNegative ? "text-rose-600" : "text-neutral-900"
-                          )}>
-                            {isNegative && "- "}
-                            {formatCurrency(Math.abs(b.balance), currency)}
-                          </span>
-                        </div>
                       </div>
-                    );
-                  })
-                ))}
-              </div>
+                    </div>
+                  );
+                })
+              ))}
             </div>
-
-
-          </div>
-          {/* Datos del grupo footer */}
-          <div className="hidden md:flex justify-end p-4 pt-4 border-t border-neutral-100">
-            <button
-              onClick={() => setDeleteDialogOpen(true)}
-              className="flex items-center gap-2 text-sm font-medium text-rose-400 hover:text-rose-600 transition-colors"
-            >
-              Cerrar grupo <Trash size={16} />
-            </button>
           </div>
         </div>
       </section>
@@ -535,7 +556,7 @@ export default function ProjectOverview() {
           Only shown when a transaction is selected.
       ======================================== */}
       {selectedTransaction && (
-        <SettlementDrawer
+        <SettlementSheet
           open={settlementDrawerOpen}
           onOpenChange={setSettlementDrawerOpen}
           transaction={selectedTransaction}

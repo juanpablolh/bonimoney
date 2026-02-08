@@ -110,9 +110,9 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
     }, [projects]); // Solo recargar cuando cambian los proyectos
 
     return (
-        <div className="min-h-screen bg-neutral-50 selection:bg-neutral-200">
+        <div className="min-h-screen bg-stone-100 selection:bg-neutral-200">
             {/* Figma-aligned Header / Breadcrumb */}
-            <header className="bg-neutral-50 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
+            <header className="bg-stone-100 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
                     {/* Left: Title */}
                     <div className="flex items-center gap-2">

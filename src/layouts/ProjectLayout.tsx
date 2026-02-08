@@ -1,20 +1,27 @@
-import { Outlet, useNavigate, useParams, useLocation, NavLink } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProject } from '@/contexts/ProjectContext';
-import { SettingsDrawer } from '@/components/settings/SettingsDrawer';
+
+
+import { SettingsSheet } from '@/components/sheets/SettingsSheet';
+import { ExpenseSheet } from '@/components/sheets/ExpenseSheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getMemberAvatarColor } from '@/utils/avatarColors';
-import { House, CaretLeft } from '@phosphor-icons/react';
+
+import { House, CaretLeft, Plus } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 export function ProjectLayout() {
     const { projectId } = useParams<{ projectId: string }>();
     const { user } = useAuth();
-    const { projects, setCurrentProject, currentProject } = useProject();
+    const { projects, setCurrentProject } = useProject();
+
+
     const navigate = useNavigate();
     const location = useLocation();
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [createExpenseOpen, setCreateExpenseOpen] = useState(false);
 
     // Set current project based on URL parameter
     useEffect(() => {
@@ -37,12 +44,14 @@ export function ProjectLayout() {
         user_id: user?.id
     });
 
+
+
     return (
-        <div className="min-h-screen flex flex-col bg-neutral-100 lg:h-screen lg:overflow-hidden">
-            <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <div className="min-h-screen flex flex-col bg-neutral-100 lg:h-screen lg:overflow-hidden relative">
+            <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
 
             {/* Header */}
-            <header className="bg-neutral-50 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
+            <header className="bg-stone-100 sticky top-0 z-40 border-b border-neutral-200 flex-shrink-0">
                 <div className="max-w-[1280px] mx-auto px-4 py-3 flex items-center justify-between">
                     {/* Left: Back button + Title */}
                     <div className="flex items-center gap-2">
@@ -54,7 +63,7 @@ export function ProjectLayout() {
                                     navigate(`/projects/${projectId}`);
                                 }
                             }}
-                            className="w-12 h-9 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors flex items-center justify-center"
+                            className="w-12 h-9 rounded-lg bg-stone-200/50 text-stone-700 hover:bg-stone-200 transition-colors flex items-center justify-center"
                         >
                             {isOverview ? (
                                 <House size={16} weight="regular" />
@@ -89,7 +98,7 @@ export function ProjectLayout() {
 
                 {/* Navigation - All Screens */}
                 <nav className="border-t border-neutral-200">
-                    <div className="max-w-[1280px] mx-auto px-4 flex gap-1 pt-2">
+                    <div className="max-w-[1280px] mx-auto px-4 flex gap-1 pt-2 bg-stone-100">
                         <NavLink
                             to={`/projects/${projectId}`}
                             end
@@ -148,10 +157,35 @@ export function ProjectLayout() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-12 lg:py-4 flex flex-col bg-neutral-50 overflow-y-auto">
+            <main className="flex-1 min-h-0 max-w-[1280px] w-full mx-auto px-4 pt-8 pb-32 lg:pb-12 lg:py-4 flex flex-col bg-stone-100 overflow-y-auto">
                 <Outlet />
             </main>
 
+            {/* Floating Action Button - Mobile */}
+            {!location.pathname.includes('/settings') && (
+                <>
+                    <button
+                        onClick={() => setCreateExpenseOpen(true)}
+                        className="fixed bottom-8 right-5 w-14 h-14 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50 sm:hidden"
+                    >
+                        <Plus size={24} weight="bold" />
+                    </button>
+
+                    {/* Floating Action Button - Desktop */}
+                    <button
+                        onClick={() => setCreateExpenseOpen(true)}
+                        className="hidden sm:flex fixed bottom-10 right-10 w-16 h-16 rounded-2xl bg-neutral-900 text-white items-center justify-center hover:bg-neutral-800 transition-all hover:scale-110 active:scale-95 shadow-2xl z-50"
+                    >
+                        <Plus size={28} weight="bold" />
+                    </button>
+                </>
+            )}
+
+            {/* Create Expense Sheet */}
+            <ExpenseSheet
+                open={createExpenseOpen}
+                onOpenChange={setCreateExpenseOpen}
+            />
 
         </div>
     );

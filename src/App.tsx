@@ -5,9 +5,8 @@ import { useProject } from './contexts/ProjectContext';
 import { AuthLanding, AuthLogin, AuthRegister, AuthForgotPassword } from './components/auth/DesktopAuthLanding';
 import { Toaster } from 'sonner';
 
-import AuthModal from './components/auth/AuthModal';
-import { CreateProjectModal } from './components/projects/CreateProjectModal';
-import { SettingsDrawer } from './components/settings/SettingsDrawer';
+import { CreateProjectSheet } from './components/sheets/CreateProjectSheet';
+import { SettingsSheet } from './components/sheets/SettingsSheet';
 
 // Import pages
 import { GlobalDashboard } from './components/dashboard/GlobalDashboard';
@@ -57,12 +56,12 @@ function HomeView() {
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
-      <SettingsDrawer
+      <SettingsSheet
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
       />
 
-      <CreateProjectModal
+      <CreateProjectSheet
         open={createProjectModalOpen}
         onOpenChange={handleCreateProjectOpenChange}
       />
@@ -73,7 +72,7 @@ function HomeView() {
 function App() {
   const { user, loading: authLoading } = useAuth();
   const { projects, loading: projectsLoading } = useProject();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  // const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Soft Loading Check: Only show full-page loader if we have NO data in state
   const isHardLoading = (authLoading || projectsLoading) && projects.length === 0;
@@ -128,7 +127,7 @@ function App() {
       </Routes>
 
       {/* Common Modals hoisted to top level */}
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      {/* <AuthSheet open={authModalOpen} onOpenChange={setAuthModalOpen} /> */}
     </>
   );
 }

@@ -1,13 +1,13 @@
 import { ResponsiveModal } from '../ui-custom/ResponsiveModal';
-import MagicLinkAuth from './MagicLinkAuth';
+import MagicLinkAuth from '../auth/MagicLinkAuth';
 
-interface AuthModalProps {
+interface AuthSheetProps {
     open: boolean;
     onClose: () => void;
     reason?: string;
 }
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthSheet({ open, onClose }: AuthSheetProps) {
     return (
         <ResponsiveModal
             open={open}

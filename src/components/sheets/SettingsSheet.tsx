@@ -13,12 +13,12 @@ import { toast } from 'sonner';
 import { User, SignOut, ShieldWarning, PencilSimple, Eye, EyeSlash, X } from '@phosphor-icons/react';
 import { compressImage } from '@/utils/imageCompression';
 
-interface SettingsDrawerProps {
+interface SettingsSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export function SettingsDrawer({ open, onOpenChange }: SettingsDrawerProps) {
+export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     const { user, signOut, refreshUser } = useAuth();
     const { projects } = useProject();
     const { loadMembers } = useMembers();

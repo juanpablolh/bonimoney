@@ -16,7 +16,7 @@ import {
   Crown,
   CheckCircle
 } from '@phosphor-icons/react';
-import { DeletionResolutionDialog } from './members/DeletionResolutionDialog';
+import { MemberDeletionSheet } from './sheets/MemberDeletionSheet';
 import { useMembers } from '@/contexts/MemberContext';
 import { useExpenses } from '@/contexts/ExpenseContext';
 import { Member } from '../types';
@@ -691,7 +691,7 @@ export default function MembersSection({
 
       {/* RESOLUTION DIALOG */}
       {memberToDelete && (
-        <DeletionResolutionDialog
+        <MemberDeletionSheet
           open={resolutionDialogOpen}
           onOpenChange={setResolutionDialogOpen}
           member={memberToDelete as Member}

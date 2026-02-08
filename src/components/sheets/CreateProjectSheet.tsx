@@ -13,16 +13,16 @@ import { getMemberAvatarColor } from '@/utils/avatarColors';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
 
-interface CreateProjectModalProps {
+interface CreateProjectSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
 
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onOpenChange }) => {
+export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, onOpenChange }) => {
     const { createProject } = useProject();
-    const inviteCardTheme = getProjectTheme('project-orange');
+    const inviteCardTheme = getProjectTheme('project-slate');
     const { user } = useAuth();
     const adminColors = getMemberAvatarColor({ name: user?.user_metadata?.full_name || user?.email || 'U' });
     const { keyboardHeight } = useContext(KeyboardViewportContext);
@@ -40,8 +40,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
 
     const [step, setStep] = useState(savedState?.step || 1);
     const [name, setName] = useState(savedState?.name || '');
-    const [icon, setIcon] = useState(savedState?.icon || '🏠');
-    const [currency, setCurrency] = useState(savedState?.currency || 'CLP');
+    const [icon, setIcon] = useState(savedState?.icon || null);
+    const [currency, setCurrency] = useState(savedState?.currency || null);
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const [showPicker, setShowPicker] = useState(false);
     const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
@@ -69,7 +69,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
 
     const CURRENCIES = [
         { code: 'CLP', name: 'Peso chileno', flag: '🇨🇱' },
-        { code: 'USD', name: 'Dólar estadounidense', flag: '🇺🇸' },
+        { code: 'USD', name: 'Dólar US', flag: '🇺🇸' },
         { code: 'BRL', name: 'Real brasileño', flag: '🇧🇷' },
         { code: 'ARS', name: 'Peso argentino', flag: '🇦🇷' },
         { code: 'PEN', name: 'Sol peruano', flag: '🇵🇪' },
@@ -90,8 +90,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 setMembers([]);
                 setInputValue('');
                 setAddMode('name');
-                setIcon('🏠');
-                setCurrency('CLP');
+                setIcon(null);
+                setCurrency(null);
                 setShowPicker(false);
                 setShowCurrencyPicker(false);
                 setStatus('idle');
@@ -125,8 +125,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             // 1. Create Project
             const newProject = await createProject({
                 name,
-                icon,
-                currency,
+                icon: icon || '🏠',
+                currency: currency || 'CLP',
                 color: randomColor
             });
 
@@ -232,7 +232,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
         }
     };
 
-    const selectedCurrencyInfo = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
+    const selectedCurrencyInfo = CURRENCIES.find(c => c.code === (currency || 'CLP')) || CURRENCIES[0];
 
     return (
         <ResponsiveModal
@@ -243,9 +243,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
             showCloseButton={false}
             fixedHeight={true}
         >
-            <div className="flex flex-col h-full bg-neutral-50 rounded-t-3xl overflow-hidden">
+            <div className="flex flex-col h-full bg-stone-100 rounded-t-3xl overflow-hidden">
                 {/* Header with X button */}
-                <div className="bg-neutral-50 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
+                <div className="bg-stone-100 shrink-0 rounded-t-3xl overflow-hidden pt-4 border-b border-neutral-100">
                     <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200 mb-4" />
                     <header className="px-6 pb-5 flex items-center justify-between">
                         <h2 className="font-serif text-2xl font-medium text-neutral-900 tracking-[-1px] leading-tight">
@@ -261,7 +261,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto bg-neutral-50 relative no-scrollbar min-h-[300px]">
+                <div className="flex-1 overflow-y-auto bg-stone-100 relative no-scrollbar min-h-[300px]">
                     {/* Progress Bar */}
                     <div className="px-6 pt-6">
                         <div className="flex justify-between items-end mb-2">
@@ -282,7 +282,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                         {step === 1 ? (
                             <>
                                 <div className="space-y-4">
-                                    <label className="text-sm font-medium text-neutral-400 tracking-normal">Nombre del grupo</label>
+                                    <label className="text-sm font-medium text-neutral-500 tracking-normal">Nombre del grupo</label>
                                     <input
                                         placeholder="Ej. Viaje a la playa"
                                         value={name}
@@ -294,7 +294,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                         }}
                                         autoFocus
                                         className={cn(
-                                            "w-full text-2xl tracking-tight font-sans text-neutral-900 placeholder:text-neutral-200 bg-transparent border-b-1 transition-colors py-4 focus:outline-none",
+                                            "w-full text-2xl tracking-tight font-sans text-neutral-900 placeholder:text-neutral-300 bg-transparent border-b-1 transition-colors py-4 focus:outline-none",
                                             showError
                                                 ? "border-red-500"
                                                 : name.trim()
@@ -308,30 +308,46 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     {/* Emoji Selector Card */}
                                     <button
                                         onClick={() => setShowPicker(true)}
-                                        className="bg-white border border-neutral-200 rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative"
+                                        className={cn(
+                                            "border rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative",
+                                            icon ? "bg-emerald-50 border-emerald-900/10" : "bg-white border-neutral-200"
+                                        )}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                            {icon}
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full border flex items-center justify-center text-xl group-hover:scale-110 transition-transform",
+                                            icon ? "bg-white border-emerald-100" : "bg-neutral-50 border-neutral-200"
+                                        )}>
+                                            {icon ? icon : <Plus size={20} className="text-neutral-400" />}
                                         </div>
-                                        <CaretDown size={14} className="absolute right-5 top-6 text-neutral-300" />
+                                        <CaretDown size={14} className={cn("absolute right-5 top-6", icon ? "text-emerald-400" : "text-neutral-300")} />
                                         <div className="mt-auto">
-                                            <p className="text-sm font-medium text-neutral-400 leading-tight">Selecciona</p>
-                                            <p className="text-sm font-medium text-neutral-400">un emoji</p>
+                                            <p className={cn("text-sm font-medium leading-tight", icon ? "text-emerald-600/70" : "text-neutral-400")}>Selecciona</p>
+                                            <p className={cn("text-sm font-medium", icon ? "text-emerald-800" : "text-neutral-400")}>un emoji</p>
                                         </div>
                                     </button>
 
                                     {/* Currency Selector Card */}
                                     <button
                                         onClick={() => setShowCurrencyPicker(true)}
-                                        className="bg-white border border-neutral-200 rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative"
+                                        className={cn(
+                                            "border rounded-[1rem] p-4 text-left flex flex-col items-start justify-between min-h-[160px] hover:shadow-md transition-all active:scale-95 group relative",
+                                            currency ? "bg-emerald-50 border-emerald-900/10" : "bg-white border-neutral-200"
+                                        )}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-neutral-50 border border-neutral-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                            {selectedCurrencyInfo.flag}
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full border flex items-center justify-center text-xl group-hover:scale-110 transition-transform",
+                                            currency ? "bg-white border-emerald-100" : "bg-neutral-50 border-neutral-200"
+                                        )}>
+                                            {currency ? selectedCurrencyInfo.flag : <Plus size={20} className="text-neutral-400" />}
                                         </div>
-                                        <CaretDown size={14} className="absolute right-5 top-6 text-neutral-300" />
+                                        <CaretDown size={14} className={cn("absolute right-5 top-6", currency ? "text-emerald-400" : "text-neutral-300")} />
                                         <div className="mt-auto">
-                                            <p className="text-sm font-medium text-neutral-400 leading-tight">Selecciona</p>
-                                            <p className="text-sm font-medium text-neutral-400">la moneda</p>
+                                            <p className={cn("text-sm font-medium leading-tight", currency ? "text-emerald-600/70" : "text-neutral-400")}>
+                                                {currency ? selectedCurrencyInfo.name : "Selecciona"}
+                                            </p>
+                                            <p className={cn("text-sm font-medium", currency ? "text-emerald-800" : "text-neutral-400")}>
+                                                {currency ? currency : "la moneda"}
+                                            </p>
                                         </div>
                                     </button>
                                 </div>
@@ -344,7 +360,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                 >
                                     <div className={cn(
                                         "absolute inset-0 pointer-events-none transition-opacity duration-300",
-                                        inviteCardTheme.overlay || "bg-gradient-to-br from-white/5 to-transparent opacity-30"
+                                        inviteCardTheme.overlay
                                     )} />
                                     <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
                                         <div className="space-y-2">
@@ -421,7 +437,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-baseline gap-2">
                                             <p className="font-semibold text-neutral-900 truncate">
-                                                Tú <span className="font-normal text-neutral-500">({user?.user_metadata?.full_name || 'Usuario'})</span>
+                                                Tú <span className="font-normal text-neutral-500">
+                                                    ({(user?.user_metadata?.full_name || 'Usuario').toLowerCase().replace(/(?:^|\s)\S/g, (a: string) => a.toUpperCase())})
+                                                </span>
                                             </p>
                                         </div>
                                         <p className="text-xs text-neutral-500">Administrador</p>
@@ -464,7 +482,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, on
 
                 {/* Footer */}
                 <footer
-                    className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-200 transition-[padding] duration-200"
+                    className="shrink-0 p-6 bg-stone-100 border-t border-neutral-200 transition-[padding] duration-200"
                     style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 24}px` : 'max(1.5rem, env(safe-area-inset-bottom))' }}
                 >
                     <div className="flex gap-3">

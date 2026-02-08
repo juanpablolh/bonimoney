@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button as UIButton } from '@/components/ui/button';
-import { SettlementDrawer } from './settlements/SettlementDrawer';
+import { SettlementSheet } from '../components/sheets/SettlementSheet';
 
 interface DashboardProps {
   members: Member[];
@@ -456,7 +456,7 @@ export default function Dashboard({
       {/* Settlement Drawer */}
       {
         selectedTransaction && (
-          <SettlementDrawer
+          <SettlementSheet
             open={settlementDrawerOpen}
             onOpenChange={setSettlementDrawerOpen}
             transaction={selectedTransaction}

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from '@/utils/calculations';
 
-interface DeletionResolutionDialogProps {
+interface MemberDeletionSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     member: Member | null;
@@ -33,14 +33,14 @@ interface DeletionResolutionDialogProps {
     };
 }
 
-export function DeletionResolutionDialog({
+export function MemberDeletionSheet({
     open,
     onOpenChange,
     member,
     otherMembers,
     onResolve,
     activitySummary
-}: DeletionResolutionDialogProps) {
+}: MemberDeletionSheetProps) {
     const { keyboardHeight } = useContext(KeyboardViewportContext);
     const [resolutionType, setResolutionType] = useState<'reassign' | 'purge'>('reassign');
     const [targetMemberId, setTargetMemberId] = useState<string>('');
@@ -71,9 +71,9 @@ export function DeletionResolutionDialog({
             fixedHeight={true}
             showCloseButton={false}
         >
-            <div className="flex flex-col h-full bg-neutral-50 rounded-t-[2rem] sm:rounded-none overflow-hidden">
+            <div className="flex flex-col h-full bg-stone-100 rounded-t-[2rem] sm:rounded-none overflow-hidden">
                 {/* Header - Styled like standard app sheets */}
-                <div className="bg-neutral-50 shrink-0 pt-4 border-b border-neutral-100 tracking-tighter">
+                <div className="bg-stone-100 shrink-0 pt-4 border-b border-neutral-100 tracking-tighter">
                     {/* Drawer Handle (Mobile Only) */}
                     <div className="sm:hidden mx-auto h-1.5 w-12 rounded-full bg-neutral-200 mb-4" />
 
@@ -158,7 +158,7 @@ export function DeletionResolutionDialog({
                                                 <SelectContent className="rounded-lg border-neutral-200 shadow-md p-2">
                                                     {otherMembers.map(m => (
                                                         <SelectItem key={m.id} value={m.id} className="rounded-sm p-2">
-                                                            {m.name}
+                                                            {m.name.toLowerCase().replace(/(?:^|\s)\S/g, (a: string) => a.toUpperCase())}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -200,7 +200,7 @@ export function DeletionResolutionDialog({
 
                 {/* Footer - Fixed at bottom */}
                 <footer
-                    className="shrink-0 p-6 bg-neutral-50 border-t border-neutral-100 flex flex-col sm:flex-row gap-3 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]"
+                    className="shrink-0 p-6 bg-stone-100 border-t border-neutral-100 flex flex-col sm:flex-row gap-3 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]"
                     style={{ paddingBottom: keyboardHeight > 0 ? `${keyboardHeight + 24}px` : 'max(1.5rem, env(safe-area-inset-bottom))' }}
                 >
                     <Button

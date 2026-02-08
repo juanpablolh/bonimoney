@@ -14,7 +14,7 @@ import {
   Crown,
   CheckCircle
 } from '@phosphor-icons/react';
-import { DeletionResolutionDialog } from '../components/members/DeletionResolutionDialog';
+import { MemberDeletionSheet } from '../components/sheets/MemberDeletionSheet';
 import { useMembers } from '@/contexts/MemberContext';
 import { useExpenses } from '@/contexts/ExpenseContext';
 import { Member } from '../types';
@@ -248,9 +248,9 @@ export default function ProjectMembers() {
 
             <div className="relative z-10 space-y-6 flex-1 flex flex-col justify-between">
               <div className="space-y-2">
-                <h3 className="text-[22px] font-serif tracking-tight leading-none flex items-center gap-3" style={{ color: theme.textColor }}>
-                  <span className="text-4xl filter drop-shadow-sm">{currentProject?.icon || <UsersThree size={32} weight="fill" />}</span>
-                  Agranda el Círculo
+                <h3 className="text-xl font-serif tracking-tight leading-none flex items-center gap-3" style={{ color: theme.textColor }}>
+                  <span className="text-2xl filter drop-shadow-sm">{currentProject?.icon || <UsersThree size={32} weight="fill" />}</span>
+                  Agrega integrantes
                 </h3>
                 <p className="text-sm font-medium leading-normal max-w-sm" style={{ color: theme.mutedTextColor }}>
                   Suma a todas las personas que compartirán gastos en este grupo para empezar a organizar.
@@ -670,7 +670,7 @@ export default function ProjectMembers() {
           over how to handle the member's financial activity.
       ======================================== */}
       {memberToDelete && (
-        <DeletionResolutionDialog
+        <MemberDeletionSheet
           open={resolutionDialogOpen}
           onOpenChange={setResolutionDialogOpen}
           member={memberToDelete as Member}
