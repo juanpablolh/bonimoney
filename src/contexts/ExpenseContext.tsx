@@ -306,6 +306,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         loadExpensesRef.current = loadExpenses;
     }, [loadExpenses]);
 
+    // Debounce timer to avoid multiple rapid reloads
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const debouncedReload = useCallback(() => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+            loadExpensesRef.current();
+        }, 500); // 500ms debounce to batch expense + splits changes
+    }, []);
+
     // Subscribe to real-time changes for expenses and splits
     useEffect(() => {
         if (!currentProject) return;
@@ -321,7 +333,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     filter: `project_id=eq.${currentProject.id}`
                 },
                 () => {
-                    loadExpensesRef.current();
+                    debouncedReload();
                 }
             )
             .on(
@@ -332,15 +344,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
                     table: 'splits'
                 },
                 () => {
-                    loadExpensesRef.current();
+                    debouncedReload();
                 }
             )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
         };
-    }, [currentProject]);
+    }, [currentProject, debouncedReload]);
 
     return (
         <ExpenseContext.Provider

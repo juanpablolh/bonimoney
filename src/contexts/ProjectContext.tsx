@@ -253,7 +253,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         }, 300); // 300ms debounce
     }, []);
 
-    // Subscribe to real-time changes for projects and project members
+    // Subscribe to real-time changes for projects only
+    // Note: project_members changes are handled by MemberContext per-project
     useEffect(() => {
         if (!user) return;
 
@@ -270,23 +271,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                     debouncedReload();
                 }
             )
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'project_members'
-                },
-                () => {
-                    debouncedReload();
-                }
-            )
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [user, debouncedReload]);
 
     return (
         <ProjectContext.Provider
