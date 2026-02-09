@@ -29,6 +29,7 @@ interface MemberDeletionSheetProps {
     activitySummary?: {
         totalPaid: number;
         totalOwed: number;
+        netBalance: number;
         currency: string;
     };
 }
@@ -111,13 +112,13 @@ export function MemberDeletionSheet({
                                 <div className="h-10 w-px bg-neutral-100" />
                                 <div className="text-right">
                                     <p className="text-sm font-medium text-neutral-500 tracking-tight mb-2">
-                                        {activitySummary.totalPaid - activitySummary.totalOwed >= 0 ? 'Le deben' : 'Debe'}
+                                        {activitySummary.netBalance >= 0 ? 'Le deben' : 'Debe'}
                                     </p>
                                     <p className={cn(
                                         "text-xl font-medium leading-none",
-                                        activitySummary.totalPaid - activitySummary.totalOwed >= 0 ? "text-emerald-600" : "text-rose-600"
+                                        activitySummary.netBalance >= 0 ? "text-emerald-600" : "text-rose-600"
                                     )}>
-                                        {formatCurrency(activitySummary.totalPaid - activitySummary.totalOwed, activitySummary.currency as any)}
+                                        {formatCurrency(Math.abs(activitySummary.netBalance), activitySummary.currency as any)}
                                     </p>
                                 </div>
                             </div>

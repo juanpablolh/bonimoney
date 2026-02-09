@@ -87,7 +87,7 @@ export default function ProjectMembers() {
 
   // Resolution Dialog state
   const [resolutionDialogOpen, setResolutionDialogOpen] = useState(false);
-  const [memberActivity, setMemberActivity] = useState<{ totalPaid: number, totalOwed: number, currency: string } | undefined>(undefined);
+  const [memberActivity, setMemberActivity] = useState<{ totalPaid: number, totalOwed: number, netBalance: number, currency: string } | undefined>(undefined);
 
   // Email invitation state
   const [addMode, setAddMode] = useState<'name' | 'email'>('name');
@@ -115,7 +115,7 @@ export default function ProjectMembers() {
 
     // Check if member has activity
     let hasActivity = false;
-    let activityData = { totalPaid: 0, totalOwed: 0, currency: 'CLP' };
+    let activityData = { totalPaid: 0, totalOwed: 0, netBalance: 0, currency: 'CLP' };
 
     if (balancesByCurrency) {
       for (const [currency, balances] of balancesByCurrency.entries()) {
@@ -125,6 +125,7 @@ export default function ProjectMembers() {
           activityData = {
             totalPaid: balance.totalPaid,
             totalOwed: balance.totalOwed,
+            netBalance: balance.balance,
             currency: currency as string
           };
           break;

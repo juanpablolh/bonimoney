@@ -316,7 +316,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
                     {/* CONCEPT */}
                     <section className="space-y-4 mb-6">
-                        <label className="text-sm font-medium text-neutral-500 tracking-normal">¿Qué compraste?</label>
+                        <label className="text-sm font-medium text-neutral-500 tracking-normal">¿Qué pagaste?</label>
                         <input
                             placeholder="Ej. Cena sushi"
                             value={description}

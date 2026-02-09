@@ -495,7 +495,7 @@ export const CreateProjectSheet: React.FC<CreateProjectSheetProps> = ({ open, on
                                 disabled={status === 'loading'}
                                 className="flex-1 h-14 rounded-xl text-base font-semibold bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-900"
                             >
-                                {step === 1 ? 'Atrás' : 'Volver'}
+                                {step === 1 ? 'Cancelar' : 'Volver'}
                             </Button>
                         )}
                         <Button
